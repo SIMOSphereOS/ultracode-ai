@@ -58,7 +58,14 @@ export interface ExecutionEngineOptions {
   temperature?: number;
   /** Working directory handed to tools. Defaults to `process.cwd()`. */
   cwd?: string;
-  /** Environment snapshot handed to tools. Defaults to `process.env`. */
+  /**
+   * Environment snapshot handed to tools as `ctx.env`. Defaults to the full
+   * `process.env`. Note that `system`-category tools that spawn child
+   * processes (notably `bash`) additionally run this through credential
+   * sanitisation before exposing it to the child — so even the default never
+   * leaks API keys/tokens/passwords into command output. Embedders that need
+   * strict isolation should pass a minimal explicit `env` here.
+   */
   env?: Readonly<Record<string, string | undefined>>;
 }
 

@@ -231,6 +231,12 @@ export class JsonSessionStore implements ISessionStore {
         }
       } catch (err) {
         if (hasFsCode(err, "ENOENT")) continue; // released between calls — retry now
+        // Any other stat failure (e.g. EACCES on the lock directory) is durable:
+        // stale-reclaim is unreachable, so retrying would spin forever. Fail hard.
+        throw new SessionError(`Failed to inspect session lock for "${id}"`, {
+          cause: err,
+          details: { id, lockPath },
+        });
       }
       await delay(backoff);
       backoff = Math.min(backoff * 2, 50);

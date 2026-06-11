@@ -4,6 +4,18 @@ All notable changes to the `@ultracode/core` package. Format: [Keep a Changelog]
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-06-11
+
+### Security
+- GrepTool (ReDoS, real fix): the prior 10,000-char haystack cap did **not** stop catastrophic backtracking — a single *non-matching* pathological line (e.g. `"a".repeat(9999)+"b"` against `(a+)+$`) still blocked the event loop for minutes, and the between-lines abort check could never interrupt one synchronous `RegExp.test()`. The walk-and-match now runs in a `node:worker_threads` worker that the host hard-terminates (`worker.terminate()`) when the effective per-tool timeout elapses or `ctx.signal` aborts, returning a `ToolTimeoutError` (`ok:false`) instead of hanging. The worker path resolves to the compiled `grepWorker.js` in `dist/` and to the `.ts` source under the vitest transform; grep behaviour (line numbers, `max_matches`, ignore list, flag validation, Unicode) is unchanged.
+- BashTool / ExecutionEngine (API-key leak, end-to-end fix): completed the env wiring the 0.2.2 note anticipated. `env` now threads through `UltraCode.create({ env })` → `createAgentManager({ env })` → `BaseAgent` → `ExecutionEngine`, and **system**-category tools that spawn a child process sanitise the environment at the unavoidable choke point: a new `sanitizeEnv` helper drops every variable matching `/(_API_KEY|_TOKEN|_SECRET|PASSWORD|CREDENTIAL)$/i`, plus the configured `providers.apiKeys` variable names and their `ULTRACODE_*` aliases, before `spawn`. The default tool env is therefore `process.env` **minus** credentials; benign variables (`PATH`, `HOME`, `LANG`, …) are preserved. Even an embedder-supplied `ctx.env` is sanitised for system tools, since a shell child's stdout is returned to the model.
+
+### Fixed
+- JsonSessionStore.acquireLock: a durable non-ENOENT failure of the stale-lock `fs.stat` (e.g. EACCES) was swallowed, so the `for (;;)` acquisition loop spun forever instead of throwing or reclaiming. Such failures now fail fast with a `SessionError`.
+
+### Changed
+- ExecutionEngine: documented that the default tool env is the full `process.env` and that system tools sanitise credentials from it; embedders wanting strict isolation should pass an explicit `env`.
+
 ## [0.2.2] - 2026-06-11
 
 ### Security

@@ -6,9 +6,10 @@
  * configuration, logger and optional event bus.
  */
 
+import { ENV_PREFIX } from "@ultracode/shared";
 import type { IEventBus, Logger, PerToolConfig, UltraCodeConfig } from "@ultracode/shared";
 import { ToolRegistry } from "./ToolRegistry.js";
-import { ToolExecutor } from "./ToolExecutor.js";
+import { ToolExecutor, DEFAULT_TOOL_TIMEOUT_SECONDS } from "./ToolExecutor.js";
 import { ReadTool } from "./builtin/ReadTool.js";
 import { WriteFileTool } from "./builtin/WriteFileTool.js";
 import { EditTool } from "./builtin/EditTool.js";
@@ -39,6 +40,29 @@ function stringArrayOption(entry: PerToolConfig | undefined, key: string): strin
 function numberOption(entry: PerToolConfig | undefined, key: string): number | undefined {
   const value = entry?.[key];
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+/** The `providers` section, narrowed to the optional in-memory API-key store. */
+interface ProvidersWithKeys {
+  apiKeys?: Record<string, string>;
+}
+
+/**
+ * Derive the explicit set of secret environment-variable names to strip from
+ * `system`-tool child processes, from the configured provider keys
+ * (`config.providers.apiKeys`). For a provider `anthropic` this yields both
+ * `ANTHROPIC_API_KEY` and `ULTRACODE_ANTHROPIC_API_KEY` (matching the loader's
+ * env resolution). Pattern-based stripping in `sanitizeEnv` covers the rest.
+ */
+function secretEnvKeysFromConfig(config: UltraCodeConfig): string[] {
+  const apiKeys = (config.providers as ProvidersWithKeys).apiKeys;
+  if (apiKeys === undefined) return [];
+  const keys: string[] = [];
+  for (const provider of Object.keys(apiKeys)) {
+    const varName = `${provider.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_API_KEY`;
+    keys.push(varName, `${ENV_PREFIX}${varName}`);
+  }
+  return keys;
 }
 
 /**
@@ -76,10 +100,15 @@ export function createToolSystem(
   );
   registry.register(new EditTool({ allowedDirs: dirs("edit") }));
   registry.register(new DeleteFileTool({ allowedDirs: dirs("delete_file") }));
+  // Grep runs its match in a worker the host hard-terminates on timeout (ReDoS
+  // backstop). Mirror the executor's effective per-tool timeout so the worker
+  // is killed no later than the executor would have aborted it.
+  const grepTimeoutSeconds = numberOption(perTool["grep"], "timeout") ?? DEFAULT_TOOL_TIMEOUT_SECONDS;
   registry.register(
     new GrepTool({
       allowedDirs: dirs("grep"),
       maxMatches: numberOption(perTool["grep"], "maxMatches"),
+      timeoutMs: grepTimeoutSeconds * 1000,
     }),
   );
   registry.register(
@@ -88,7 +117,9 @@ export function createToolSystem(
       maxResults: numberOption(perTool["glob"], "maxMatches"),
     }),
   );
-  registry.register(new BashTool({ allowedDirs: dirs("bash") }));
+  registry.register(
+    new BashTool({ allowedDirs: dirs("bash"), secretEnvKeys: secretEnvKeysFromConfig(config) }),
+  );
   registry.register(new GitStatusTool());
   registry.register(new GitDiffTool());
   registry.register(new GitLogTool());

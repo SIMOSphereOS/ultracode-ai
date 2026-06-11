@@ -23,6 +23,7 @@ import type { ToolContext, ToolDefinition } from "@ultracode/shared";
 import { BaseTool } from "../BaseTool.js";
 import type { ToolRunOutcome } from "../BaseTool.js";
 import { PathGuard } from "../PathGuard.js";
+import { sanitizeEnv } from "../sanitizeEnv.js";
 
 const schema = z.object({
   /** Shell command line to execute. */
@@ -51,6 +52,13 @@ export interface BashToolOutput {
 export interface BashToolOptions {
   /** Extra allow-listed directories the `cwd` argument may point into. */
   allowedDirs?: readonly string[];
+  /**
+   * Additional exact environment-variable names (case-insensitive) to strip
+   * from the child environment, on top of the built-in credential patterns.
+   * Production wiring feeds the configured provider API-key variable names
+   * (`config.providers.apiKeys` and their `ULTRACODE_`-prefixed aliases).
+   */
+  secretEnvKeys?: readonly string[];
 }
 
 /** Cross-platform shell command execution with process-tree kill. */
@@ -73,10 +81,13 @@ export class BashTool extends BaseTool<typeof schema, BashToolOutput> {
   protected readonly schema = schema;
 
   private readonly guard: PathGuard;
+  /** Extra exact secret variable names (upper-cased) to strip from child env. */
+  private readonly secretEnvKeys: ReadonlySet<string>;
 
   constructor(options: BashToolOptions = {}) {
     super();
     this.guard = new PathGuard({ allowedDirs: options.allowedDirs });
+    this.secretEnvKeys = new Set((options.secretEnvKeys ?? []).map((k) => k.toUpperCase()));
   }
 
   protected async run(
@@ -98,9 +109,12 @@ export class BashTool extends BaseTool<typeof schema, BashToolOutput> {
     }
 
     const isWin = process.platform === "win32";
-    // Pass only the tool context's environment — never inherit the parent
-    // `process.env`, which would leak API keys/credentials into command output.
-    const childEnv = { ...ctx.env };
+    // The child process feeds its stdout/stderr straight back to the model, so
+    // it is a credential-exfiltration channel. Strip known secrets (API keys,
+    // tokens, passwords, …) from the inherited environment before spawning —
+    // this is the unavoidable choke point that holds even when an embedder
+    // hands a non-sanitised `ctx.env` (or the engine defaults to `process.env`).
+    const childEnv = sanitizeEnv(ctx.env, this.secretEnvKeys);
     const child = isWin
       ? spawn("cmd.exe", ["/d", "/s", "/c", args.command], {
           cwd,

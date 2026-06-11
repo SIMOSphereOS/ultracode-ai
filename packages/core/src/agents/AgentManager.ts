@@ -51,6 +51,8 @@ export interface AgentManagerOptions {
   maxTurns?: number;
   /** Working directory forwarded to agents/tools. */
   cwd?: string;
+  /** Environment snapshot forwarded to agents/tools (defaults to `process.env`). */
+  env?: Readonly<Record<string, string | undefined>>;
   /** Optional context collector forwarded to every agent. */
   contextCollector?: ContextCollector;
 }
@@ -115,6 +117,7 @@ export class AgentManager {
   private readonly events?: IEventBus;
   private readonly maxTurns?: number;
   private readonly cwd?: string;
+  private readonly env?: Readonly<Record<string, string | undefined>>;
   private readonly contextCollector?: ContextCollector;
   private readonly delegationSemaphore: Semaphore;
   private activeName: string;
@@ -128,6 +131,7 @@ export class AgentManager {
     this.events = options.events;
     this.maxTurns = options.maxTurns;
     this.cwd = options.cwd;
+    this.env = options.env;
     this.contextCollector = options.contextCollector;
 
     for (const def of BUILT_IN_AGENTS) this.definitions.set(def.name, { ...def });
@@ -222,6 +226,7 @@ export class AgentManager {
     if (this.events !== undefined) agentOptions.events = this.events;
     if (this.maxTurns !== undefined) agentOptions.maxTurns = this.maxTurns;
     if (this.cwd !== undefined) agentOptions.cwd = this.cwd;
+    if (this.env !== undefined) agentOptions.env = this.env;
     if (this.contextCollector !== undefined) agentOptions.contextCollector = this.contextCollector;
     agentOptions.maxTokens = this.config.core.maxTokens;
     agentOptions.temperature = this.config.core.temperature;

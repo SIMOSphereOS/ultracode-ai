@@ -134,26 +134,36 @@ describe("BashTool", () => {
     expect(() => tool.validate({ command: "x", timeout: 999999 })).toThrow();
   });
 
-  // SEC-001: spawn must not inherit the parent process.env (API-key leak).
-  it("does not leak parent process.env into command output", async () => {
+  // SEC-001 (real fix): BashTool sanitises the env it spawns with, even when
+  // handed the FULL process.env (the engine default). The previous test passed
+  // a pre-cleaned ctx.env and so never exercised the choke point — it only
+  // proved the spawn used ctx.env, not that secrets are stripped from it.
+  it("strips credentials from the spawned env even when given the full process.env", async () => {
     const secret = "uc-secret-should-not-leak-12345";
     process.env.ANTHROPIC_API_KEY = secret;
+    process.env.SOME_OTHER_TOKEN = "tok-also-secret";
+    process.env.UC_BENIGN_VALUE = "visible-value";
     try {
       const result = await tool.execute(
         tool.validate({
           command: nodeCmd(
-            "process.stdout.write((process.env.ANTHROPIC_API_KEY||'')+'|'+(process.env.CUSTOM||''))",
+            "process.stdout.write([process.env.ANTHROPIC_API_KEY||'', process.env.SOME_OTHER_TOKEN||'', process.env.UC_BENIGN_VALUE||'', process.env.PATH?'has-path':''].join('|'))",
           ),
         }),
-        ctx({ env: { CUSTOM: "x", PATH: process.env.PATH ?? "" } }),
+        // Hand the tool the *real* process.env, exactly as the engine default does.
+        ctx({ env: process.env as Record<string, string | undefined> }),
       );
       expect(result.ok).toBe(true);
-      // The parent-only secret must be absent…
+      // Credential variables (pattern-matched) must be stripped…
       expect(result.output.stdout).not.toContain(secret);
-      // …but the context's own env variable must be visible.
-      expect(result.output.stdout).toContain("x");
+      expect(result.output.stdout).not.toContain("tok-also-secret");
+      // …while benign variables (PATH, a non-secret custom var) survive.
+      expect(result.output.stdout).toContain("visible-value");
+      expect(result.output.stdout).toContain("has-path");
     } finally {
       delete process.env.ANTHROPIC_API_KEY;
+      delete process.env.SOME_OTHER_TOKEN;
+      delete process.env.UC_BENIGN_VALUE;
     }
   });
 

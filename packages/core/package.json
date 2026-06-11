@@ -1,6 +1,6 @@
 {
   "name": "@ultracode/core",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "type": "module",
   "license": "MIT",
   "description": "UltraCode core: agents, tools, memory, context, execution, providers, config and AI versioning",

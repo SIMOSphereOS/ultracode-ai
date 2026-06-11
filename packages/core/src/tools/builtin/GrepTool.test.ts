@@ -159,31 +159,40 @@ describe("GrepTool", () => {
     expect(result.ok).toBe(false);
   });
 
-  // SEC-003: a ReDoS-prone user regex tested against a very long line must not
-  // hang — the haystack is bounded before `.test()`.
-  it("bounds the line length fed to a catastrophic regex (terminates fast)", async () => {
-    // Classic exponential pattern; an unbounded haystack of 'a's would freeze.
-    await fs.writeFile(path.join(root, "evil.txt"), `${"a".repeat(100_000)}!`);
+  // SEC-003 (real fix): a catastrophic-backtracking user regex against a
+  // *non-matching* pathological line cannot be defused by a haystack cap — the
+  // 10k-char slice of `"a".repeat(9999)+"b"` is still 10k 'a's followed by a 'b'
+  // (a non-match), driving `(a+)+$` into exponential backtracking that blocks a
+  // synchronous `.test()` for minutes. The search now runs in a worker the host
+  // hard-terminates at the configured tool timeout, so it must surface as a
+  // ToolTimeoutError (ok:false) within that small budget — never hang.
+  it("terminates a non-matching catastrophic regex as a timeout (does not hang)", async () => {
+    // Single non-matching line: 9999 'a's then a 'b'. `(a+)+$` backtracks forever.
+    await fs.writeFile(path.join(root, "evil.txt"), `${"a".repeat(9999)}b`);
+    const fast = new GrepTool({ timeoutMs: 2000 });
     const started = Date.now();
-    const result = await tool.execute(
-      tool.validate({ pattern: "(a+)+$" }),
-      ctx(),
-    );
-    expect(result.ok).toBe(true);
-    expect(Date.now() - started).toBeLessThan(2000);
-  }, 10_000);
+    const result = await fast.execute(fast.validate({ pattern: "(a+)+$" }), ctx());
+    expect(result.ok).toBe(false);
+    expect(result.error?.code).toBe("TOOL_TIMEOUT");
+    // Terminated near the configured timeout, far below the 15s test budget.
+    expect(Date.now() - started).toBeLessThan(8000);
+  }, 15_000);
 
-  // SEC-003: abort raised while iterating lines must surface as ok:false.
-  it("aborts mid-search when iterating many lines", async () => {
-    // Many lines so the in-loop signal check fires.
-    await fs.writeFile(path.join(root, "big.txt"), `${"line\n".repeat(50_000)}`);
+  // SEC-003 (real fix): aborting via ctx.signal must terminate the worker and
+  // surface ok:false even mid-flight (the same pathological non-matching line).
+  it("aborts a running search via ctx.signal (terminates the worker)", async () => {
+    await fs.writeFile(path.join(root, "evil.txt"), `${"a".repeat(9999)}b`);
+    // Long worker timeout so the abort — not the timer — is what stops it.
+    const slow = new GrepTool({ timeoutMs: 60_000 });
     const controller = new AbortController();
-    const pending = tool.execute(
-      tool.validate({ pattern: "line" }),
+    const pending = slow.execute(
+      slow.validate({ pattern: "(a+)+$" }),
       ctx({ signal: controller.signal }),
     );
-    controller.abort(new Error("cancel"));
+    // Give the worker a moment to start spinning, then abort.
+    setTimeout(() => controller.abort(new Error("cancel")), 100);
     const result = await pending;
     expect(result.ok).toBe(false);
-  }, 10_000);
+    expect(result.error?.code).toBe("TOOL_TIMEOUT");
+  }, 15_000);
 });

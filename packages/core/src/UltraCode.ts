@@ -109,6 +109,14 @@ export interface UltraCodeCreateOptions {
   logger?: Logger;
   /** Named config profile to apply. */
   profile?: string;
+  /**
+   * Environment snapshot handed to tools. Defaults to `process.env`. For
+   * `system`-category tools (e.g. `bash`) it is additionally run through
+   * credential sanitisation regardless of this value — secrets must never
+   * reach a shell child whose output is returned to the model. Embedders that
+   * want strict isolation should pass a minimal explicit `env`.
+   */
+  env?: Readonly<Record<string, string | undefined>>;
 }
 
 /** Options for {@link UltraCode.run}. */
@@ -444,6 +452,7 @@ export class UltraCode {
             ),
       events,
       cwd,
+      env: options.env ?? (process.env as Readonly<Record<string, string | undefined>>),
       contextCollector: (prompt) =>
         contextEngine.collect({ cwd, prompt, maxTokens: config.core.maxTokens }),
     });

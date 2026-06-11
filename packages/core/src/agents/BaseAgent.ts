@@ -50,6 +50,8 @@ export interface BaseAgentOptions {
   temperature?: number;
   /** Working directory for tool execution. */
   cwd?: string;
+  /** Environment snapshot for tool execution (defaults to `process.env`). */
+  env?: Readonly<Record<string, string | undefined>>;
   /** Optional context collector invoked once per run with the prompt. */
   contextCollector?: ContextCollector;
 }
@@ -98,6 +100,7 @@ export class BaseAgent implements IAgent {
     if (options.maxTokens !== undefined) engineOptions.maxTokens = options.maxTokens;
     if (options.temperature !== undefined) engineOptions.temperature = options.temperature;
     if (options.cwd !== undefined) engineOptions.cwd = options.cwd;
+    if (options.env !== undefined) engineOptions.env = options.env;
     this.engine = new ExecutionEngine(engineOptions);
   }
 

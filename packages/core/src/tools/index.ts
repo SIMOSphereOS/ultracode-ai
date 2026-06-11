@@ -22,6 +22,8 @@ export type { ToolQueueItem, ToolQueueOptions } from "./ToolQueue.js";
 export { PathGuard, resolvePath, resolveHome, isPathInside } from "./PathGuard.js";
 export type { ResolvePathOptions } from "./PathGuard.js";
 
+export { sanitizeEnv, isSecretEnvKey } from "./sanitizeEnv.js";
+
 export { BaseTool } from "./BaseTool.js";
 export type { ToolRunOutcome } from "./BaseTool.js";
 
