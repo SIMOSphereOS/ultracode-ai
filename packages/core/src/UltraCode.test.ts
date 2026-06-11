@@ -1,11 +1,18 @@
-import { describe, expect, it, vi } from "vitest";
+import os from "node:os";
+import path from "node:path";
+import { promises as fs } from "node:fs";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_CONFIG,
   EventBus,
   NoopLogger,
   ProviderError,
   SessionError,
+  ValidationError,
 } from "@ultracode/shared";
+import type { AgentRunResult } from "@ultracode/shared";
+import type { AgentManager } from "./agents/AgentManager.js";
+import { createTaskTool } from "./UltraCode.js";
 import type {
   ChangeAnalysis,
   ChatMessage,
@@ -357,6 +364,20 @@ describe("UltraCode facade", () => {
     expect(h.events.listenerCount("error")).toBe(0);
   });
 
+  // RES-002: dispose() must close a session store that exposes close().
+  it("dispose() closes the session store when it has a close() method", async () => {
+    const close = vi.fn();
+    const closableStore = Object.assign(new FakeSessionStore(), { close });
+    const h = makeHarness([], undefined, { sessions: closableStore });
+    await h.ultra.dispose();
+    expect(close).toHaveBeenCalledOnce();
+  });
+
+  it("dispose() tolerates a session store without close()", async () => {
+    const h = makeHarness([]); // FakeSessionStore has no close()
+    await expect(h.ultra.dispose()).resolves.toBeUndefined();
+  });
+
   it("a successful run is not destroyed by a failing appendMessages", async () => {
     const h = makeHarness([stop("kept")]);
     h.store.appendMessages = async () => {
@@ -364,5 +385,106 @@ describe("UltraCode facade", () => {
     };
     const result = await h.ultra.run("x");
     expect(result.text).toBe("kept");
+  });
+});
+
+/* ----------------------------------------------------------------------------
+ * Q-1: UltraCode.create() integration (deterministic / offline)
+ * ------------------------------------------------------------------------- */
+
+describe("UltraCode.create", () => {
+  let cwd: string;
+  const savedEnv: Record<string, string | undefined> = {};
+
+  afterEach(async () => {
+    for (const [k, v] of Object.entries(savedEnv)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+    if (cwd !== undefined) await fs.rm(cwd, { recursive: true, force: true });
+  });
+
+  function clearKey(name: string): void {
+    savedEnv[name] = process.env[name];
+    delete process.env[name];
+  }
+
+  it("wires a fully-functional instance offline and fails to run without an API key", async () => {
+    cwd = await fs.mkdtemp(path.join(os.tmpdir(), "uc-create-"));
+    // Ensure no anthropic key is present so ensureProviderReady fails.
+    clearKey("ANTHROPIC_API_KEY");
+    clearKey("ULTRACODE_ANTHROPIC_API_KEY");
+
+    const ultra = await UltraCode.create({
+      cwd,
+      logger: new NoopLogger(),
+      configOverrides: {
+        core: { activeProvider: "anthropic", defaultAgent: "default" },
+        sessions: { enablePersistence: false },
+      },
+    });
+
+    try {
+      // Read-only surfaces are wired and work offline.
+      expect(ultra.listTools().map((t) => t.name)).toContain("task");
+      expect(ultra.listAgents().length).toBeGreaterThan(0);
+      expect(ultra.configManager).toBeDefined();
+      expect(ultra.sessions).toBeDefined();
+      expect(typeof ultra.versioning.quality).toBe("function");
+
+      // run() surfaces a clear ProviderError because no key is configured.
+      const err = await ultra.run("hello").catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ProviderError);
+      expect((err as ProviderError).message).toContain("API key");
+    } finally {
+      await ultra.dispose();
+    }
+  });
+});
+
+/* ----------------------------------------------------------------------------
+ * Q-2: createTaskTool unit tests
+ * ------------------------------------------------------------------------- */
+
+describe("createTaskTool", () => {
+  function fakeAgents(delegate: AgentManager["delegate"]): AgentManager {
+    return { delegate } as unknown as AgentManager;
+  }
+
+  const ctx = () => ({ cwd: ".", env: {}, logger: new NoopLogger() });
+
+  it("validate rejects empty agent or prompt with ValidationError", () => {
+    const tool = createTaskTool(fakeAgents(async () => ({}) as AgentRunResult));
+    expect(() => tool.validate({ agent: "", prompt: "x" })).toThrow(ValidationError);
+    expect(() => tool.validate({ agent: "plan", prompt: "" })).toThrow(ValidationError);
+    expect(() => tool.validate("not-an-object")).toThrow(ValidationError);
+    expect(tool.validate({ agent: "plan", prompt: "do it" })).toEqual({
+      agent: "plan",
+      prompt: "do it",
+    });
+  });
+
+  it("execute returns ok:true with the delegate result", async () => {
+    const result: AgentRunResult = {
+      text: "delegated answer",
+      toolCallsExecuted: 2,
+      usage: { inputTokens: 5, outputTokens: 7 },
+      turns: 3,
+    };
+    const tool = createTaskTool(fakeAgents(async () => result));
+    const out = await tool.execute({ agent: "plan", prompt: "go" }, ctx());
+    expect(out.ok).toBe(true);
+    expect(out.output).toMatchObject({ agent: "plan", text: "delegated answer", turns: 3 });
+  });
+
+  it("execute returns ok:false (never throws) when delegate rejects", async () => {
+    const tool = createTaskTool(
+      fakeAgents(async () => {
+        throw new Error("boom");
+      }),
+    );
+    const out = await tool.execute({ agent: "plan", prompt: "go" }, ctx());
+    expect(out.ok).toBe(false);
+    expect(out.error?.message).toContain("boom");
   });
 });

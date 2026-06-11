@@ -158,4 +158,32 @@ describe("GrepTool", () => {
     );
     expect(result.ok).toBe(false);
   });
+
+  // SEC-003: a ReDoS-prone user regex tested against a very long line must not
+  // hang — the haystack is bounded before `.test()`.
+  it("bounds the line length fed to a catastrophic regex (terminates fast)", async () => {
+    // Classic exponential pattern; an unbounded haystack of 'a's would freeze.
+    await fs.writeFile(path.join(root, "evil.txt"), `${"a".repeat(100_000)}!`);
+    const started = Date.now();
+    const result = await tool.execute(
+      tool.validate({ pattern: "(a+)+$" }),
+      ctx(),
+    );
+    expect(result.ok).toBe(true);
+    expect(Date.now() - started).toBeLessThan(2000);
+  }, 10_000);
+
+  // SEC-003: abort raised while iterating lines must surface as ok:false.
+  it("aborts mid-search when iterating many lines", async () => {
+    // Many lines so the in-loop signal check fires.
+    await fs.writeFile(path.join(root, "big.txt"), `${"line\n".repeat(50_000)}`);
+    const controller = new AbortController();
+    const pending = tool.execute(
+      tool.validate({ pattern: "line" }),
+      ctx({ signal: controller.signal }),
+    );
+    controller.abort(new Error("cancel"));
+    const result = await pending;
+    expect(result.ok).toBe(false);
+  }, 10_000);
 });

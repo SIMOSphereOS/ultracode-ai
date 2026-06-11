@@ -28,6 +28,18 @@ import {
 /** Ids are used as file names — restrict to a safe, traversal-free charset. */
 const SAFE_ID = /^[A-Za-z0-9_-]+$/;
 
+/**
+ * A lock held longer than this (judged by the lockfile's mtime) is treated as
+ * stale — left behind by a crashed process — and forcibly reclaimed. Generous
+ * so a slow-but-live writer is never stolen from.
+ */
+const STALE_LOCK_MS = 30_000;
+
+/** Cancellable async pause. */
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /** `true` for fs errors carrying the given `code` (e.g. `"ENOENT"`). */
 function hasFsCode(err: unknown, code: string): boolean {
   return (
@@ -96,38 +108,44 @@ export class JsonSessionStore implements ISessionStore {
 
   /** Append messages, bumping `updatedAt` and `messageCount`. */
   async appendMessages(id: string, msgs: ChatMessage[]): Promise<void> {
-    await this.withLock(async () => {
-      if (!SAFE_ID.test(id)) {
-        throw new SessionError(`Cannot append messages: unknown session "${id}"`, {
-          details: { id },
-        });
-      }
-      const file = this.fileFor(id);
-      let raw: string;
-      try {
-        raw = await fs.readFile(file, "utf8");
-      } catch (err) {
-        if (hasFsCode(err, "ENOENT")) {
+    // In-process serialisation (`withLock`) only guards a single store
+    // instance. A cross-instance/cross-process file lock around the
+    // read-modify-write closes the lost-update race when several stores point
+    // at the same session directory.
+    await this.withLock(() =>
+      this.withSessionLock(id, async () => {
+        if (!SAFE_ID.test(id)) {
           throw new SessionError(`Cannot append messages: unknown session "${id}"`, {
             details: { id },
           });
         }
-        throw new SessionError(`Failed to read session "${id}"`, {
-          cause: err,
-          details: { id, file },
-        });
-      }
-      const record = this.parseRecord(raw, file);
-      if (!record) {
-        throw new SessionError(`Cannot append messages: session file for "${id}" is corrupt`, {
-          details: { id, file },
-        });
-      }
-      record.messages = record.messages.concat(cloneMessages(msgs));
-      record.messageCount = record.messages.length;
-      record.updatedAt = nowIso();
-      await this.writeRecord(record);
-    });
+        const file = this.fileFor(id);
+        let raw: string;
+        try {
+          raw = await fs.readFile(file, "utf8");
+        } catch (err) {
+          if (hasFsCode(err, "ENOENT")) {
+            throw new SessionError(`Cannot append messages: unknown session "${id}"`, {
+              details: { id },
+            });
+          }
+          throw new SessionError(`Failed to read session "${id}"`, {
+            cause: err,
+            details: { id, file },
+          });
+        }
+        const record = this.parseRecord(raw, file);
+        if (!record) {
+          throw new SessionError(`Cannot append messages: session file for "${id}" is corrupt`, {
+            details: { id, file },
+          });
+        }
+        record.messages = record.messages.concat(cloneMessages(msgs));
+        record.messageCount = record.messages.length;
+        record.updatedAt = nowIso();
+        await this.writeRecord(record);
+      }),
+    );
   }
 
   /** List session headers, most-recent first; corrupt files are skipped. */
@@ -161,6 +179,62 @@ export class JsonSessionStore implements ISessionStore {
 
   private fileFor(id: string): string {
     return path.join(this.dir, `${id}.json`);
+  }
+
+  private lockFileFor(id: string): string {
+    return path.join(this.dir, `${id}.json.lock`);
+  }
+
+  /**
+   * Run `fn` while holding an exclusive on-disk lock for `id`. The lock is a
+   * file created with `O_EXCL` (`wx`); contenders retry with backoff. A lock
+   * whose mtime is older than {@link STALE_LOCK_MS} is reclaimed (its owner
+   * crashed). The lock is always released in `finally`.
+   */
+  private async withSessionLock<T>(id: string, fn: () => Promise<T>): Promise<T> {
+    if (!SAFE_ID.test(id)) return fn(); // invalid id: let `fn` produce the error
+    await this.ensureDir();
+    const lockPath = this.lockFileFor(id);
+    await this.acquireLock(lockPath, id);
+    try {
+      return await fn();
+    } finally {
+      await fs.rm(lockPath, { force: true }).catch(() => undefined);
+    }
+  }
+
+  /** Spin until the lock file can be created exclusively (reclaiming stale locks). */
+  private async acquireLock(lockPath: string, id: string): Promise<void> {
+    let backoff = 2;
+    // Generous budget rather than an artificial wall-clock timeout: with
+    // backoff capped at ~50ms this tolerates very long legitimate critical
+    // sections before declaring a peer dead.
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        const handle = await fs.open(lockPath, "wx");
+        await handle.close();
+        return;
+      } catch (err) {
+        if (!hasFsCode(err, "EEXIST")) {
+          throw new SessionError(`Failed to acquire session lock for "${id}"`, {
+            cause: err,
+            details: { id, lockPath },
+          });
+        }
+      }
+      // Lock exists — reclaim it if stale, otherwise wait and retry.
+      try {
+        const stat = await fs.stat(lockPath);
+        if (Date.now() - stat.mtimeMs > STALE_LOCK_MS) {
+          await fs.rm(lockPath, { force: true }).catch(() => undefined);
+          continue; // try to take it immediately
+        }
+      } catch (err) {
+        if (hasFsCode(err, "ENOENT")) continue; // released between calls — retry now
+      }
+      await delay(backoff);
+      backoff = Math.min(backoff * 2, 50);
+    }
   }
 
   private withLock<T>(fn: () => Promise<T>): Promise<T> {

@@ -3,8 +3,17 @@
  * merge used to layer configuration (project over user over defaults).
  */
 
+import { ValidationError } from "../errors.js";
+
 /** Keys that must never be assigned during a merge (prototype-pollution guard). */
 const FORBIDDEN_KEYS = new Set<string>(["__proto__", "constructor", "prototype"]);
+
+/**
+ * Maximum nesting depth `deepMerge`/`clonePlain` will recurse before failing
+ * fast with a {@link ValidationError}. Guards against stack-overflow crashes
+ * from pathologically deep (or cyclic) override trees.
+ */
+export const MAX_MERGE_DEPTH = 100;
 
 /**
  * Whether `value` is a "plain" object: a non-null object whose prototype is
@@ -37,14 +46,30 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
  * @typeParam T - the (resolved) shape of the base object.
  */
 export function deepMerge<T>(base: T, override: unknown): T {
-  // Non-mergeable override (primitive, array, class instance) wins outright,
-  // unless it is `undefined` (treated as "no override").
-  if (override === undefined) return clonePlain(base) as T;
-  if (!isPlainObject(base) || !isPlainObject(override)) {
-    return clonePlain(override) as T;
+  return deepMergeAt(base, override, 0);
+}
+
+/** Recursive worker for {@link deepMerge}; tracks nesting `depth`. */
+function deepMergeAt<T>(base: T, override: unknown, depth: number): T {
+  if (depth > MAX_MERGE_DEPTH) {
+    throw new ValidationError(
+      `deepMerge exceeded maximum nesting depth of ${MAX_MERGE_DEPTH} ` +
+        `(cyclic or pathologically deep override)`,
+      { details: { maxDepth: MAX_MERGE_DEPTH } },
+    );
   }
 
-  const out: Record<string, unknown> = clonePlain(base) as Record<string, unknown>;
+  // Non-mergeable override (primitive, array, class instance) wins outright,
+  // unless it is `undefined` (treated as "no override").
+  if (override === undefined) return clonePlainAt(base, depth, new WeakSet()) as T;
+  if (!isPlainObject(base) || !isPlainObject(override)) {
+    return clonePlainAt(override, depth, new WeakSet()) as T;
+  }
+
+  const out: Record<string, unknown> = clonePlainAt(base, depth, new WeakSet()) as Record<
+    string,
+    unknown
+  >;
 
   for (const key of Object.keys(override)) {
     if (FORBIDDEN_KEYS.has(key)) continue;
@@ -55,9 +80,9 @@ export function deepMerge<T>(base: T, override: unknown): T {
 
     const baseVal = out[key];
     if (isPlainObject(baseVal) && isPlainObject(overrideVal)) {
-      out[key] = deepMerge(baseVal, overrideVal);
+      out[key] = deepMergeAt(baseVal, overrideVal, depth + 1);
     } else {
-      out[key] = clonePlain(overrideVal);
+      out[key] = clonePlainAt(overrideVal, depth + 1, new WeakSet());
     }
   }
 
@@ -67,17 +92,43 @@ export function deepMerge<T>(base: T, override: unknown): T {
 /**
  * Shallow-recursive clone that copies plain objects and arrays while leaving
  * other values (primitives, class instances) by reference. Drops forbidden keys.
+ * Tracks nesting `depth` and the chain of `seen` containers (cycle guard).
+ *
+ * Cyclic references and pathologically deep trees are rejected with a
+ * {@link ValidationError} rather than crashing the stack.
  */
-function clonePlain<T>(value: T): T {
+function clonePlainAt<T>(value: T, depth: number, seen: WeakSet<object>): T {
+  if (depth > MAX_MERGE_DEPTH) {
+    throw new ValidationError(
+      `deepMerge exceeded maximum nesting depth of ${MAX_MERGE_DEPTH} ` +
+        `(cyclic or pathologically deep override)`,
+      { details: { maxDepth: MAX_MERGE_DEPTH } },
+    );
+  }
   if (Array.isArray(value)) {
-    return value.map((item) => clonePlain(item)) as unknown as T;
+    if (seen.has(value)) {
+      throw new ValidationError("deepMerge detected a circular reference", {
+        details: { kind: "array" },
+      });
+    }
+    seen.add(value);
+    const cloned = value.map((item) => clonePlainAt(item, depth + 1, seen)) as unknown as T;
+    seen.delete(value);
+    return cloned;
   }
   if (isPlainObject(value)) {
+    if (seen.has(value)) {
+      throw new ValidationError("deepMerge detected a circular reference", {
+        details: { kind: "object" },
+      });
+    }
+    seen.add(value);
     const out: Record<string, unknown> = {};
     for (const key of Object.keys(value)) {
       if (FORBIDDEN_KEYS.has(key)) continue;
-      out[key] = clonePlain((value as Record<string, unknown>)[key]);
+      out[key] = clonePlainAt((value as Record<string, unknown>)[key], depth + 1, seen);
     }
+    seen.delete(value);
     return out as T;
   }
   return value;

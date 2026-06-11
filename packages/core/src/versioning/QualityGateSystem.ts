@@ -36,34 +36,59 @@ export type CommandRunner = (
   options: { cwd: string; signal?: AbortSignal },
 ) => Promise<CommandResult>;
 
-/** Default {@link CommandRunner} based on `child_process.spawn` (no shell). */
-export const defaultCommandRunner: CommandRunner = (command, args, options) =>
-  new Promise<CommandResult>((resolve, reject) => {
-    let child: ReturnType<typeof spawn>;
-    try {
-      child = spawn(command, [...args], {
-        cwd: options.cwd,
-        shell: false,
-        windowsHide: true,
-        signal: options.signal,
+/**
+ * Build a {@link CommandRunner} based on `child_process.spawn`.
+ *
+ * On Windows, executables such as `npm`/`pnpm`/`vitest` are `.cmd`/`.bat`
+ * shims that `spawn` with `shell: false` cannot launch directly (it raises
+ * `ENOENT`). There the command is run through `cmd.exe /d /s /c <command> …`,
+ * matching the cross-platform shell logic used by the `bash` tool. On every
+ * other platform the command is spawned directly without a shell.
+ *
+ * `platform` is injectable so the win32 branch can be exercised deterministically
+ * in tests without actually running on Windows.
+ */
+export function createDefaultCommandRunner(
+  platform: NodeJS.Platform = process.platform,
+): CommandRunner {
+  return (command, args, options) =>
+    new Promise<CommandResult>((resolve, reject) => {
+      const isWin = platform === "win32";
+      let child: ReturnType<typeof spawn>;
+      try {
+        child = isWin
+          ? spawn("cmd.exe", ["/d", "/s", "/c", command, ...args], {
+              cwd: options.cwd,
+              windowsHide: true,
+              signal: options.signal,
+            })
+          : spawn(command, [...args], {
+              cwd: options.cwd,
+              shell: false,
+              windowsHide: true,
+              signal: options.signal,
+            });
+      } catch (err) {
+        reject(err);
+        return;
+      }
+      let stdout = "";
+      let stderr = "";
+      child.stdout?.setEncoding("utf8");
+      child.stderr?.setEncoding("utf8");
+      child.stdout?.on("data", (chunk: string) => {
+        stdout += chunk;
       });
-    } catch (err) {
-      reject(err);
-      return;
-    }
-    let stdout = "";
-    let stderr = "";
-    child.stdout?.setEncoding("utf8");
-    child.stderr?.setEncoding("utf8");
-    child.stdout?.on("data", (chunk: string) => {
-      stdout += chunk;
+      child.stderr?.on("data", (chunk: string) => {
+        stderr += chunk;
+      });
+      child.once("error", reject);
+      child.once("close", (code) => resolve({ exitCode: code ?? -1, stdout, stderr }));
     });
-    child.stderr?.on("data", (chunk: string) => {
-      stderr += chunk;
-    });
-    child.once("error", reject);
-    child.once("close", (code) => resolve({ exitCode: code ?? -1, stdout, stderr }));
-  });
+}
+
+/** Default {@link CommandRunner} for the current platform. */
+export const defaultCommandRunner: CommandRunner = createDefaultCommandRunner();
 
 /** A test command (executable + argument array, run without a shell). */
 export interface TestCommand {

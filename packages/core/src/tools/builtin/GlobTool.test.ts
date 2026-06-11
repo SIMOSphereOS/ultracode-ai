@@ -113,6 +113,27 @@ describe("GlobTool", () => {
     expect(result.error?.message).toContain("alternatives");
   });
 
+  // SEC-002: an over-deep segment bomb is reported as ok:false, never thrown.
+  it("fails as a result for excessively deep segment patterns", async () => {
+    const tooDeep = Array.from({ length: 150 }, () => "*").join("/");
+    const result = await tool.execute(tool.validate({ pattern: tooDeep }), ctx());
+    expect(result.ok).toBe(false);
+    expect(result.error?.message).toContain("segments");
+  });
+
+  // SEC-002: pathological consecutive ** must terminate quickly (collapsed).
+  it("does not hang on consecutive ** patterns against a long path", async () => {
+    await touch("deep/dir/structure/file.txt");
+    const started = Date.now();
+    const result = await tool.execute(
+      tool.validate({ pattern: "**/**/**/**/**/**/nope.zzz" }),
+      ctx(),
+    );
+    expect(result.ok).toBe(true);
+    expect(result.output.files).toEqual([]);
+    expect(Date.now() - started).toBeLessThan(2000);
+  });
+
   it("caps results at maxResults", async () => {
     await Promise.all(Array.from({ length: 20 }, (_, i) => touch(`f${i}.txt`)));
     const capped = new GlobTool({ maxResults: 5 });

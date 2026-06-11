@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { deepMerge, isPlainObject } from "./object.js";
+import { deepMerge, isPlainObject, MAX_MERGE_DEPTH } from "./object.js";
+import { ValidationError } from "../errors.js";
 
 describe("isPlainObject", () => {
   it("accepts plain objects and null-prototype objects", () => {
@@ -102,6 +103,50 @@ describe("deepMerge", () => {
       const out = deepMerge<Record<string, unknown>>({ nested: { ok: 1 } }, malicious);
       expect(out).toEqual({ nested: { ok: 1 } });
       expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    });
+  });
+
+  describe("cycle and depth protection (EXT-003)", () => {
+    it("throws a controlled ValidationError on a circular override (not RangeError)", () => {
+      const override: Record<string, unknown> = { a: 1 };
+      override.self = override; // direct cycle
+      expect(() => deepMerge<Record<string, unknown>>({ base: 1 }, override)).toThrow(
+        ValidationError,
+      );
+    });
+
+    it("throws ValidationError on a circular base", () => {
+      const base: Record<string, unknown> = { a: 1 };
+      base.self = base;
+      expect(() => deepMerge<Record<string, unknown>>(base, { b: 2 })).toThrow(ValidationError);
+    });
+
+    it("throws ValidationError on a circular array reference", () => {
+      const arr: unknown[] = [1, 2];
+      arr.push(arr);
+      expect(() => deepMerge<Record<string, unknown>>({}, { list: arr })).toThrow(ValidationError);
+    });
+
+    it("throws a controlled ValidationError on pathologically deep nesting (not stack crash)", () => {
+      // Build a 1000-level-deep override object.
+      let deep: Record<string, unknown> = { leaf: true };
+      for (let i = 0; i < 1000; i += 1) deep = { child: deep };
+      expect(() => deepMerge<Record<string, unknown>>({}, deep)).toThrow(ValidationError);
+      expect(() => deepMerge<Record<string, unknown>>({}, deep)).toThrow(/maximum nesting depth/);
+    });
+
+    it("merges normally within the depth limit", () => {
+      // Nest just under the limit so it succeeds.
+      let deep: Record<string, unknown> = { leaf: 1 };
+      for (let i = 0; i < MAX_MERGE_DEPTH - 5; i += 1) deep = { child: deep };
+      const out = deepMerge<Record<string, unknown>>({ keep: 1 }, deep);
+      expect(out.keep).toBe(1);
+      expect(out.child).toBeDefined();
+    });
+
+    it("leaves ordinary merges unchanged", () => {
+      const out = deepMerge({ a: 1, nested: { x: 1 } }, { nested: { y: 2 } });
+      expect(out).toEqual({ a: 1, nested: { x: 1, y: 2 } });
     });
   });
 });

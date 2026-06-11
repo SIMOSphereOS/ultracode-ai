@@ -14,6 +14,12 @@ import { ToolError } from "@ultracode/shared";
 export const MAX_BRACE_EXPANSIONS = 1000;
 
 /**
+ * Maximum number of path segments a single glob pattern may contain. Guards
+ * against pathological patterns (segment bombs) before regex compilation.
+ */
+export const MAX_GLOB_SEGMENTS = 100;
+
+/**
  * Expand `{a,b,...}` alternations (recursively, supporting nesting) into the
  * list of plain glob patterns they represent.
  *
@@ -94,11 +100,43 @@ function segmentToRegex(segment: string): string {
 }
 
 /**
+ * Normalise a pattern's segment list:
+ * - collapse `//` (empty interior segments),
+ * - collapse runs of consecutive `**` into a single `**`.
+ *
+ * Collapsing consecutive `**` is semantics-preserving (`a/**​/**​/b` matches
+ * exactly the same paths as `a/**​/b`) and is the key defence against
+ * catastrophic regex backtracking: each non-trailing `**` emits a
+ * `(?:[^/]+/)*` group, and several of those in a row produce exponential
+ * backtracking on long non-matching inputs.
+ */
+function normaliseSegments(pattern: string): string[] {
+  const raw = pattern.split("/").filter((s, i) => !(s === "" && i > 0)); // collapse `//`
+  const out: string[] = [];
+  for (const segment of raw) {
+    if (segment === "**" && out.length > 0 && out[out.length - 1] === "**") {
+      continue; // collapse consecutive `**`
+    }
+    out.push(segment);
+  }
+  return out;
+}
+
+/**
  * Compile a single (already brace-expanded) glob pattern to an anchored
  * RegExp matching `/`-separated relative paths.
+ *
+ * @throws {ToolError} when the pattern has more than {@link MAX_GLOB_SEGMENTS}
+ *   segments (after normalisation) — a defence against segment bombs.
  */
 export function globToRegExp(pattern: string): RegExp {
-  const segments = pattern.split("/").filter((s, i) => !(s === "" && i > 0)); // collapse `//`
+  const segments = normaliseSegments(pattern);
+  if (segments.length > MAX_GLOB_SEGMENTS) {
+    throw new ToolError(
+      `Glob pattern has more than ${MAX_GLOB_SEGMENTS} path segments`,
+      { toolName: "glob" },
+    );
+  }
   let re = "^";
   for (let i = 0; i < segments.length; i += 1) {
     const segment = segments[i] ?? "";

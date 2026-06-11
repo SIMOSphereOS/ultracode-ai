@@ -178,6 +178,8 @@ idempotent unsubscribe. Helpers: `listenerCount(type)`, `removeAll(type?)`.
   suffix counts toward `max`; `max<=0` → `""`.
 - `deepMerge(base, override)` — config layering; arrays replace, `undefined`
   skipped, `__proto__`/`constructor`/`prototype` dropped; inputs not mutated.
+  Cyclic references and trees deeper than `MAX_MERGE_DEPTH` (100) are rejected
+  with a `ValidationError` (no stack overflow / `RangeError`).
 - `isPlainObject(v)` — true only for `Object.prototype`/null-prototype objects.
 - `sleep(ms, signal?)` — cancellable; rejects with the abort reason (or
   `AbortError`); clamps negative/non-finite to 0.

@@ -16,8 +16,9 @@
 
 import { spawn } from "node:child_process";
 import { promises as fs } from "node:fs";
+import { StringDecoder } from "node:string_decoder";
 import { z } from "zod";
-import { MAX_TOOL_OUTPUT_CHARS, ToolError, ToolTimeoutError } from "@ultracode/shared";
+import { MAX_TOOL_OUTPUT_CHARS, ToolError, ToolTimeoutError, truncate } from "@ultracode/shared";
 import type { ToolContext, ToolDefinition } from "@ultracode/shared";
 import { BaseTool } from "../BaseTool.js";
 import type { ToolRunOutcome } from "../BaseTool.js";
@@ -97,33 +98,51 @@ export class BashTool extends BaseTool<typeof schema, BashToolOutput> {
     }
 
     const isWin = process.platform === "win32";
+    // Pass only the tool context's environment — never inherit the parent
+    // `process.env`, which would leak API keys/credentials into command output.
+    const childEnv = { ...ctx.env };
     const child = isWin
       ? spawn("cmd.exe", ["/d", "/s", "/c", args.command], {
           cwd,
+          env: childEnv,
           windowsVerbatimArguments: true,
           windowsHide: true,
         })
-      : spawn("/bin/sh", ["-c", args.command], { cwd, detached: true });
+      : spawn("/bin/sh", ["-c", args.command], {
+          cwd,
+          env: childEnv,
+          detached: true,
+          windowsHide: true,
+        });
 
     let stdout = "";
     let stderr = "";
     let outputCapped = false;
-    const append = (target: "out" | "err", chunk: Buffer | string): void => {
-      const text = typeof chunk === "string" ? chunk : chunk.toString("utf8");
+    // One UTF-8 decoder per stream: multibyte characters whose bytes straddle a
+    // chunk boundary are buffered across `write()` calls instead of being
+    // mangled into U+FFFD. Flushed once via `decoder.end()` after `close`.
+    const outDecoder = new StringDecoder("utf8");
+    const errDecoder = new StringDecoder("utf8");
+    const append = (target: "out" | "err", text: string): void => {
+      if (text.length === 0) return;
       const current = target === "out" ? stdout : stderr;
       if (current.length >= MAX_TOOL_OUTPUT_CHARS) {
         outputCapped = true;
         return;
       }
       const next = current + text;
+      // Unicode-safe cap: `truncate` never splits a surrogate pair, unlike
+      // `String.prototype.slice`.
       const capped =
-        next.length > MAX_TOOL_OUTPUT_CHARS ? next.slice(0, MAX_TOOL_OUTPUT_CHARS) : next;
+        next.length > MAX_TOOL_OUTPUT_CHARS
+          ? truncate(next, MAX_TOOL_OUTPUT_CHARS, { suffix: "" })
+          : next;
       if (capped.length < next.length) outputCapped = true;
       if (target === "out") stdout = capped;
       else stderr = capped;
     };
-    child.stdout?.on("data", (c: Buffer) => append("out", c));
-    child.stderr?.on("data", (c: Buffer) => append("err", c));
+    child.stdout?.on("data", (c: Buffer) => append("out", outDecoder.write(c)));
+    child.stderr?.on("data", (c: Buffer) => append("err", errDecoder.write(c)));
 
     const killTree = (): void => {
       const pid = child.pid;
@@ -185,6 +204,11 @@ export class BashTool extends BaseTool<typeof schema, BashToolOutput> {
           child.once("close", (code, sig) => resolve({ code, signal: sig }));
         },
       );
+
+      // Flush any bytes the decoders were holding for an incomplete trailing
+      // multibyte sequence.
+      append("out", outDecoder.end());
+      append("err", errDecoder.end());
 
       if (timedOut) {
         throw new ToolTimeoutError(

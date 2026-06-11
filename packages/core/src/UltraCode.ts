@@ -50,19 +50,22 @@ import type { IToolRunner } from "./execution/types.js";
 import type { ConfigManager } from "./config/ConfigManager.js";
 
 /* ----------------------------------------------------------------------------
- * Factory contracts of the parallel modules (loaded dynamically in create()).
+ * Factory contracts of the parallel modules.
+ *
+ * `create()` loads the neighbouring modules via dynamic `import()`. Their result
+ * is typed with the compiler-derived `typeof import("./<module>/index.js")`
+ * (not hand-maintained mirror interfaces), so any drift in a factory's real
+ * signature is caught at compile time instead of being hidden behind an
+ * `as unknown as` cast.
  * ------------------------------------------------------------------------- */
 
+/** Constructor options accepted by the real `ConfigManager` (drift-checked at the call site). */
 interface ConfigManagerCtorOptions {
   cwd?: string;
   overrides?: DeepPartial<UltraCodeConfig>;
   env?: NodeJS.ProcessEnv;
   profile?: string;
   logger?: Logger;
-}
-
-interface ConfigModule {
-  ConfigManager: new (options?: ConfigManagerCtorOptions) => ConfigManager;
 }
 
 /**
@@ -73,57 +76,11 @@ interface ProvidersWithKeys {
   apiKeys?: Record<string, string>;
 }
 
-interface ProvidersModule {
-  createProvider(name: ProviderId, options: ProviderOptions & { logger?: Logger }): ILLMProvider;
-}
-
 /** Minimal `ITool`-like shape the facade registers for the `task` tool. */
 interface RegistrableTool {
   readonly definition: ToolDefinition;
   validate(args: unknown): unknown;
   execute(args: unknown, ctx: ToolContext): Promise<ToolResult>;
-}
-
-interface ToolsModule {
-  createToolSystem(
-    config: UltraCodeConfig,
-    logger: Logger,
-    events?: IEventBus,
-  ): {
-    registry: {
-      list(): ToolDefinition[];
-      has(name: string): boolean;
-      register(tool: RegistrableTool): void;
-    };
-    executor: {
-      execute(name: string, args: Record<string, unknown>, ctx: ToolContext): Promise<ToolResult>;
-    };
-  };
-}
-
-interface MemoryModule {
-  createSessionStore(config: UltraCodeConfig, logger: Logger): Promise<ISessionStore>;
-}
-
-interface ContextModule {
-  createContextEngine(
-    config: UltraCodeConfig,
-    logger: Logger,
-  ): { collect(req: { cwd: string; prompt: string; maxTokens?: number }): Promise<string> };
-}
-
-interface VersioningModule {
-  createVersioningSystem(opts: {
-    cwd: string;
-    logger: Logger;
-    provider?: ILLMProvider;
-    config?: UltraCodeConfig;
-  }): {
-    analyze(range?: string): Promise<ChangeAnalysis>;
-    suggest(range?: string): Promise<VersionSuggestion>;
-    plan(version?: string): Promise<ReleasePlan>;
-    quality(): Promise<QualityReport>;
-  };
 }
 
 /* ----------------------------------------------------------------------------
@@ -241,8 +198,11 @@ interface TaskToolArgs {
  * Build the `task` tool that delegates a prompt to a (sub)agent via
  * {@link AgentManager.delegate} (depth limit enforced by the manager). Tools
  * never throw from `execute`; failures are reported as `ok: false` results.
+ *
+ * Exported for unit testing; production wiring registers it inside {@link
+ * UltraCode.create}.
  */
-function createTaskTool(agents: AgentManager): RegistrableTool {
+export function createTaskTool(agents: AgentManager): RegistrableTool {
   const definition: ToolDefinition = {
     name: "task",
     description:
@@ -318,6 +278,29 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
+ * Close `target` if it exposes a `close()` method or a `Symbol.dispose`/
+ * `Symbol.asyncDispose` handler. Used to release optional resources (e.g. a
+ * SQLite handle) that the `ISessionStore` contract does not require.
+ */
+async function closeIfDisposable(target: unknown): Promise<void> {
+  if (target === null || typeof target !== "object") return;
+  const obj = target as Record<PropertyKey, unknown>;
+  if (typeof obj["close"] === "function") {
+    await (obj["close"] as () => unknown | Promise<unknown>)();
+    return;
+  }
+  const asyncDispose = obj[Symbol.asyncDispose as unknown as PropertyKey];
+  if (typeof asyncDispose === "function") {
+    await (asyncDispose as () => Promise<unknown>).call(target);
+    return;
+  }
+  const dispose = obj[Symbol.dispose as unknown as PropertyKey];
+  if (typeof dispose === "function") {
+    (dispose as () => unknown).call(target);
+  }
+}
+
+/**
  * Wrap a provider factory so the underlying {@link ILLMProvider} is only built
  * on first actual use. This keeps `UltraCode.create()` (and therefore the
  * read-only CLI commands: `tools list`, `agents list`, `config show`, `doctor`,
@@ -390,7 +373,7 @@ export class UltraCode {
     const logger = options.logger ?? new NoopLogger();
     const cwd = options.cwd ?? process.cwd();
 
-    const configModule = (await import("./config/index.js")) as unknown as ConfigModule;
+    const configModule = await import("./config/index.js");
     const ctorOptions: ConfigManagerCtorOptions = { cwd, logger };
     if (options.configOverrides !== undefined) ctorOptions.overrides = options.configOverrides;
     if (options.profile !== undefined) ctorOptions.profile = options.profile;
@@ -399,7 +382,7 @@ export class UltraCode {
 
     const events = new EventBus();
 
-    const providersModule = (await import("./providers/index.js")) as unknown as ProvidersModule;
+    const providersModule = await import("./providers/index.js");
     const providerOptionsFor = (name: ProviderId): ProviderOptions & { logger?: Logger } => {
       const opts: ProviderOptions & { logger?: Logger } = {
         timeoutMs: config.providers.timeout * 1000,
@@ -421,20 +404,20 @@ export class UltraCode {
       providersModule.createProvider(activeProviderName, providerOptionsFor(activeProviderName)),
     );
 
-    const toolsModule = (await import("./tools/index.js")) as unknown as ToolsModule;
+    const toolsModule = await import("./tools/index.js");
     const { registry, executor } = toolsModule.createToolSystem(config, logger, events);
     const toolRunner: IToolRunner = {
       execute: (name, args, ctx) => executor.execute(name, args, ctx),
       list: () => registry.list(),
     };
 
-    const memoryModule = (await import("./memory/index.js")) as unknown as MemoryModule;
+    const memoryModule = await import("./memory/index.js");
     const sessions = await memoryModule.createSessionStore(config, logger);
 
-    const contextModule = (await import("./context/index.js")) as unknown as ContextModule;
+    const contextModule = await import("./context/index.js");
     const contextEngine = contextModule.createContextEngine(config, logger);
 
-    const versioningModule = (await import("./versioning/index.js")) as unknown as VersioningModule;
+    const versioningModule = await import("./versioning/index.js");
     const versioningSystem = versioningModule.createVersioningSystem({
       cwd,
       logger,
@@ -582,6 +565,16 @@ export class UltraCode {
           error: err instanceof Error ? err.message : String(err),
         });
       }
+    }
+    // The session store may hold an OS handle (e.g. SqliteSessionStore's
+    // DatabaseSync). `ISessionStore` does not mandate cleanup, so feature-detect
+    // a `close()` / `Symbol.dispose` method and call whichever exists.
+    try {
+      await closeIfDisposable(this.sessions);
+    } catch (err) {
+      this.logger.warn("session store close threw during dispose", {
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
     if (this.events instanceof EventBus) {
       this.events.removeAll();

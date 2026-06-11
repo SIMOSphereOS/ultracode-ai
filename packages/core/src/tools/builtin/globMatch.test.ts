@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ToolError } from "@ultracode/shared";
-import { compileGlob, expandBraces, matchGlob } from "./globMatch.js";
+import { compileGlob, expandBraces, matchGlob, MAX_GLOB_SEGMENTS } from "./globMatch.js";
 
 describe("expandBraces", () => {
   it("returns the pattern unchanged without braces", () => {
@@ -93,5 +93,29 @@ describe("matchGlob", () => {
     const started = Date.now();
     expect(matcher(candidate)).toBe(true);
     expect(Date.now() - started).toBeLessThan(2000);
+  });
+
+  // SEC-002: many consecutive `**` would emit several `(?:[^/]+/)*` groups and
+  // backtrack exponentially. They must collapse to a single `**` first, so a
+  // pathological non-matching path terminates near-instantly.
+  it("collapses consecutive ** to avoid catastrophic backtracking (<50ms)", () => {
+    const matcher = compileGlob("**/**/**/**/**/**/**/**/end");
+    const nonMatching = `${"a/".repeat(60)}nope`;
+    const started = Date.now();
+    expect(matcher(nonMatching)).toBe(false);
+    expect(Date.now() - started).toBeLessThan(50);
+  });
+
+  // Collapsing `**/**` ≡ `**` must not change which paths match.
+  it("preserves semantics when collapsing consecutive ** (** vs **/**)", () => {
+    const single = compileGlob("a/**/b");
+    const doubled = compileGlob("a/**/**/b");
+    const cases = ["a/b", "a/x/b", "a/x/y/b", "a/b/c", "x/a/b"];
+    for (const c of cases) {
+      expect(doubled(c)).toBe(single(c));
+    }
+    expect(doubled("a/b")).toBe(true);
+    expect(doubled("a/x/y/b")).toBe(true);
+    expect(doubled("a/b/c")).toBe(false);
   });
 });

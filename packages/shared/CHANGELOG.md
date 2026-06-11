@@ -4,6 +4,11 @@ All notable changes to the `@ultracode/shared` package. Format: [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-11
+
+### Fixed
+- `deepMerge`/`clonePlain`: reject cyclic references and trees deeper than `MAX_MERGE_DEPTH` (100) with a controlled `ValidationError` instead of a `RangeError`/stack overflow (documented in CONTRACTS.md).
+
 ## [0.2.0] - 2026-06-11
 
 ### Added

@@ -29,6 +29,6 @@
 ## Qualitäts-Gates vor einem Release
 
 - Build grün (`pnpm build`), alle Unit-Tests grün (`pnpm test`), E2E grün (`pnpm test:e2e`).
-- Deep-Audit-Findings (Extremwerte, Fehlersimulation, Security) behoben oder dokumentiert.
-- Evaluator-Score ≥ 90/100.
+- Deep-Audit: **NULL bestätigte High- und Medium-Befunde** (Critical ohnehin null). Verbleibende Low/Info dokumentiert.
+- **Qualitäts-Score ≥ 99/100** (Stufe-1-Direktive Andreas, 2026-06-11).
 - Cross-Platform-Kompatibilität: Linux, macOS, Windows (keine Unix-only-Annahmen).

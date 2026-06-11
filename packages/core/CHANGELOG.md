@@ -4,6 +4,24 @@ All notable changes to the `@ultracode/core` package. Format: [Keep a Changelog]
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-06-11
+
+### Security
+- BashTool: stop inheriting the parent `process.env` in spawned commands (`env: { ...ctx.env }`, `windowsHide: true`) to prevent API-key/credential leakage into tool output.
+- GrepTool: bound each line to 10,000 chars before testing the user-supplied regex (ReDoS mitigation) and check the abort signal periodically during search.
+- GlobTool/globMatch: collapse consecutive `**` segments before regex compilation and cap segment depth, eliminating catastrophic backtracking; over-deep patterns are reported as `ok:false`.
+
+### Fixed
+- BashTool: decode stdout/stderr with a per-stream `StringDecoder` so multibyte characters split across chunks are no longer corrupted to U+FFFD.
+- BashTool: cap output with the Unicode-safe `truncate` helper instead of `String.slice`, never splitting a surrogate pair.
+- JsonSessionStore: add a cross-instance on-disk lock (O_EXCL with backoff and stale-lock reclaim) around the append read-modify-write, closing a lost-update race between separate store instances/processes.
+- UltraCode.dispose: close the session store when it exposes `close()`/`Symbol.dispose`, releasing the SQLite handle.
+
+### Changed
+- QualityGateSystem: the default command runner now runs through `cmd.exe /d /s /c` on Windows so `.cmd`/`.bat` shims (npm/pnpm/vitest) resolve; added injectable `createDefaultCommandRunner(platform)`.
+- UltraCode: type dynamic factory imports via `typeof import(...)` instead of hand-maintained mirror interfaces and `as unknown as` casts, so factory signature drift is caught at compile time.
+- Test coverage raised to 94.44% lines (+18 regression tests for every audit finding, incl. `UltraCode.create` and `createTaskTool`).
+
 ## [0.2.1] - 2026-06-11
 
 ### Fixed

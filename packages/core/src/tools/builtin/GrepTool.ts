@@ -10,7 +10,7 @@
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { z } from "zod";
-import { ToolError, truncate } from "@ultracode/shared";
+import { ToolError, ToolTimeoutError, truncate } from "@ultracode/shared";
 import type { ToolContext, ToolDefinition } from "@ultracode/shared";
 import { BaseTool } from "../BaseTool.js";
 import type { ToolRunOutcome } from "../BaseTool.js";
@@ -22,8 +22,15 @@ import { walkFiles } from "./walk.js";
 export const DEFAULT_MAX_MATCHES = 1000;
 /** Files larger than this are skipped during search (bytes). */
 const MAX_SEARCH_FILE_BYTES = 5 * 1024 * 1024;
-/** Match line text is capped at this many code points. */
+/** Match line text is capped at this many code points (for reporting). */
 const MAX_LINE_CHARS = 500;
+/**
+ * Maximum number of characters of a line fed to the user-supplied regex's
+ * `.test()`. A user regex can have super-linear (ReDoS) backtracking; bounding
+ * the haystack length bounds the worst-case work per line and keeps a single
+ * pathological line from blocking the event loop indefinitely.
+ */
+const MAX_REGEX_TEST_CHARS = 10_000;
 
 const schema = z.object({
   /** JavaScript regular expression source. */
@@ -131,7 +138,8 @@ export class GrepTool extends BaseTool<typeof schema, GrepToolOutput> {
     const base = rootStat.isFile() ? path.dirname(root) : root;
 
     for await (const file of files) {
-      const searched = await this.searchFile(file, base, regex, matches, limit);
+      this.throwIfAborted(ctx);
+      const searched = await this.searchFile(file, base, regex, matches, limit, ctx);
       if (searched === "limit") {
         limitReached = true;
         break;
@@ -144,13 +152,21 @@ export class GrepTool extends BaseTool<typeof schema, GrepToolOutput> {
     };
   }
 
-  /** Search one file; pushes matches; returns "limit" when the cap is hit. */
+  /**
+   * Search one file; pushes matches; returns "limit" when the cap is hit.
+   *
+   * Each line is truncated to {@link MAX_REGEX_TEST_CHARS} before being passed
+   * to the user-supplied regex, bounding worst-case backtracking (ReDoS) per
+   * line. The abort signal is checked periodically so a long file (or a slow
+   * regex) can be cancelled.
+   */
   private async searchFile(
     file: string,
     base: string,
     regex: RegExp,
     matches: GrepMatch[],
     limit: number,
+    ctx: ToolContext,
   ): Promise<"ok" | "limit"> {
     let buf: Buffer;
     try {
@@ -166,8 +182,18 @@ export class GrepTool extends BaseTool<typeof schema, GrepToolOutput> {
     const lines = splitLines(buf.toString("utf8"));
     const rel = path.relative(base, file).split(path.sep).join("/");
     for (let i = 0; i < lines.length; i += 1) {
+      // Periodically honour cancellation: a single pathological line cannot run
+      // forever, but a huge file of them still should be abortable.
+      if ((i & 0x3ff) === 0 && ctx.signal?.aborted) {
+        throw new ToolTimeoutError("grep aborted", {
+          toolName: this.definition.name,
+          cause: ctx.signal.reason instanceof Error ? ctx.signal.reason : undefined,
+        });
+      }
       const line = lines[i] ?? "";
-      if (regex.test(line)) {
+      // Bound the haystack handed to a (potentially ReDoS-prone) user regex.
+      const haystack = line.length > MAX_REGEX_TEST_CHARS ? line.slice(0, MAX_REGEX_TEST_CHARS) : line;
+      if (regex.test(haystack)) {
         matches.push({ file: rel, line: i + 1, text: truncate(line, MAX_LINE_CHARS) });
         if (matches.length >= limit) return "limit";
       }

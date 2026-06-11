@@ -11,7 +11,7 @@
   "packageManager": "pnpm@11.5.2",
   "scripts": {
     "build": "tsc -b packages/shared packages/core packages/cli",
-    "clean": "rm -rf packages/*/dist packages/*/*.tsbuildinfo",
+    "clean": "node scripts/clean.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
