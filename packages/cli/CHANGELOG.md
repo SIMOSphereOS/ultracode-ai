@@ -4,6 +4,11 @@ All notable changes to the `ultracode` CLI package. Format: [Keep a Changelog](h
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-11
+
+### Fixed
+- CLI streaming callback now consumes real `CompletionChunk`s instead of the temporary ambient stub's `string` signature; the stub (`src/types/core-facade.d.ts`) was removed now that `@ultracode/core` type declarations are built.
+
 ## [0.2.0] - 2026-06-11
 
 ### Added

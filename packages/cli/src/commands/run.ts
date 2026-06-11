@@ -8,6 +8,7 @@
  */
 
 import type { Command } from "commander";
+import type { CompletionChunk } from "@ultracode/shared";
 import type { CliContext } from "../context.js";
 import { safeDispose } from "../context.js";
 
@@ -36,9 +37,11 @@ export function registerRunCommand(program: Command, ctx: CliContext): void {
         let streamed = false;
         const result = await facade.run(opts.print, {
           agent: opts.agent,
-          onChunk: (text: string) => {
-            streamed = true;
-            ctx.stdout.write(text);
+          onChunk: (chunk: CompletionChunk) => {
+            if (chunk.type === "text" && typeof chunk.text === "string" && chunk.text !== "") {
+              streamed = true;
+              ctx.stdout.write(chunk.text);
+            }
           },
         });
         // Providers that do not stream still produce a final text.

@@ -14,26 +14,16 @@
  *   Windows).
  */
 
-import os from "node:os";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { ToolError } from "@ultracode/shared";
+import { resolveHome } from "../config/paths.js";
 
-/**
- * Expand a leading `~` (home directory) in a path, cross-platform.
- *
- * `~` alone, `~/...` and `~\...` are expanded via `os.homedir()`. Anything
- * else (including `~user/...`) is returned unchanged.
- *
- * @param p - path that may start with a tilde.
- */
-export function resolveHome(p: string): string {
-  if (p === "~") return os.homedir();
-  if (p.startsWith("~/") || p.startsWith("~\\")) {
-    return path.join(os.homedir(), p.slice(2));
-  }
-  return p;
-}
+// Integration note: `resolveHome` is consolidated in `../config/paths.js` and
+// re-exported here so the tool sandbox and its tests keep a single
+// implementation. The config version adds an optional `homeDir` override but is
+// otherwise behaviourally identical (`~`, `~/...`, `~\...` expansion).
+export { resolveHome };
 
 /** Normalise a path for containment comparison (case-folds on win32). */
 function comparable(p: string): string {

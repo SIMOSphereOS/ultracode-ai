@@ -9,6 +9,7 @@ import {
   EventBus,
   type AgentDefinition,
   type ChangeAnalysis,
+  type CompletionChunk,
   type QualityReport,
   type ReleasePlan,
   type ToolDefinition,
@@ -233,9 +234,10 @@ describe("runCli — global behaviour", () => {
 describe("runCli — run command", () => {
   it("streams chunks live to stdout in order and exits 0", async () => {
     const facade = makeFacade({
-      run: vi.fn(async (_p: string, opts?: { onChunk?: (t: string) => void }) => {
-        opts?.onChunk?.("Hello ");
-        opts?.onChunk?.("World");
+      run: vi.fn(async (_p: string, opts?: { onChunk?: (c: CompletionChunk) => void }) => {
+        opts?.onChunk?.({ type: "text", text: "Hello " });
+        opts?.onChunk?.({ type: "text", text: "World" });
+        opts?.onChunk?.({ type: "done", usage: { inputTokens: 1, outputTokens: 1 } });
         return { text: "Hello World", toolCallsExecuted: 0, usage: { inputTokens: 1, outputTokens: 1 }, turns: 1 };
       }),
     });

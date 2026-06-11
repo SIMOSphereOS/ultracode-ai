@@ -7,6 +7,7 @@ import {
   EventBus,
   type AgentDefinition,
   type AgentRunResult,
+  type CompletionChunk,
   type ToolDefinition,
 } from "@ultracode/shared";
 import type { UltraCodeFacade } from "../context.js";
@@ -30,7 +31,7 @@ interface RunOpts {
   agent?: string;
   sessionId?: string;
   signal?: AbortSignal;
-  onChunk?: (text: string) => void;
+  onChunk?: (c: CompletionChunk) => void;
 }
 
 function agentDef(name: string): AgentDefinition {
@@ -156,8 +157,8 @@ describe("App — running prompts", () => {
   it("streams chunks live, then shows the final answer and token usage", async () => {
     let release: (() => void) | undefined;
     const run = vi.fn((_p: string, opts?: RunOpts) => {
-      opts?.onChunk?.("Hel");
-      opts?.onChunk?.("lo");
+      opts?.onChunk?.({ type: "text", text: "Hel" });
+      opts?.onChunk?.({ type: "text", text: "lo" });
       return new Promise<AgentRunResult>((resolve) => {
         release = () => resolve(RESULT);
       });

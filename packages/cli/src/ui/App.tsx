@@ -14,6 +14,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Text, useApp, useInput } from "ink";
 import { serializeError } from "@ultracode/shared";
+import type { CompletionChunk } from "@ultracode/shared";
 import type { UltraCodeFacade } from "../context.js";
 import { ThemeManager } from "../themes/index.js";
 import { redactConfig } from "../utils/text.js";
@@ -134,9 +135,11 @@ export function App({ facade, initialTheme, onExit }: AppProps): React.JSX.Eleme
           agent: agentName,
           sessionId,
           signal: controller.signal,
-          onChunk: (text: string) => {
-            acc += text;
-            setStream(acc);
+          onChunk: (chunk: CompletionChunk) => {
+            if (chunk.type === "text" && typeof chunk.text === "string" && chunk.text !== "") {
+              acc += chunk.text;
+              setStream(acc);
+            }
           },
         });
         setUsage((u) => ({

@@ -13,7 +13,15 @@
  * integrator verifies the wiring once all modules exist.
  */
 
-import { EventBus, NoopLogger, ProviderError, SessionError, ENV_PREFIX } from "@ultracode/shared";
+import {
+  EventBus,
+  NoopLogger,
+  ProviderError,
+  SessionError,
+  ValidationError,
+  serializeError,
+  ENV_PREFIX,
+} from "@ultracode/shared";
 import type {
   AgentDefinition,
   AgentRunResult,
@@ -39,23 +47,41 @@ import type {
 import { AgentManager, createAgentManager } from "./agents/AgentManager.js";
 import type { BaseAgentRunInput } from "./agents/BaseAgent.js";
 import type { IToolRunner } from "./execution/types.js";
+import type { ConfigManager } from "./config/ConfigManager.js";
 
 /* ----------------------------------------------------------------------------
  * Factory contracts of the parallel modules (loaded dynamically in create()).
  * ------------------------------------------------------------------------- */
 
+interface ConfigManagerCtorOptions {
+  cwd?: string;
+  overrides?: DeepPartial<UltraCodeConfig>;
+  env?: NodeJS.ProcessEnv;
+  profile?: string;
+  logger?: Logger;
+}
+
 interface ConfigModule {
-  loadConfig(options?: {
-    cwd?: string;
-    overrides?: DeepPartial<UltraCodeConfig>;
-    env?: NodeJS.ProcessEnv;
-    profile?: string;
-    logger?: Logger;
-  }): Promise<UltraCodeConfig>;
+  ConfigManager: new (options?: ConfigManagerCtorOptions) => ConfigManager;
+}
+
+/**
+ * The subset of the {@link UltraCodeConfig} `providers` section that carries the
+ * in-memory API-key store assembled by the config loader (env + `~/.ultracode/.env`).
+ */
+interface ProvidersWithKeys {
+  apiKeys?: Record<string, string>;
 }
 
 interface ProvidersModule {
   createProvider(name: ProviderId, options: ProviderOptions & { logger?: Logger }): ILLMProvider;
+}
+
+/** Minimal `ITool`-like shape the facade registers for the `task` tool. */
+interface RegistrableTool {
+  readonly definition: ToolDefinition;
+  validate(args: unknown): unknown;
+  execute(args: unknown, ctx: ToolContext): Promise<ToolResult>;
 }
 
 interface ToolsModule {
@@ -64,7 +90,11 @@ interface ToolsModule {
     logger: Logger,
     events?: IEventBus,
   ): {
-    registry: { list(): ToolDefinition[] };
+    registry: {
+      list(): ToolDefinition[];
+      has(name: string): boolean;
+      register(tool: RegistrableTool): void;
+    };
     executor: {
       execute(name: string, args: Record<string, unknown>, ctx: ToolContext): Promise<ToolResult>;
     };
@@ -132,7 +162,7 @@ export interface UltraCodeRunOptions {
   sessionId?: string;
   /** Cancellation signal for the run. */
   signal?: AbortSignal;
-  /** Streaming callback for incremental output. */
+  /** Streaming callback for incremental output (raw completion chunks). */
   onChunk?: (c: CompletionChunk) => void;
 }
 
@@ -153,6 +183,12 @@ export interface UltraCodeParts {
   /** Versioning sub-system facade. */
   versioning: VersioningFacade;
   /**
+   * Optional stateful config manager. When present the CLI uses it for
+   * `config get/set/validate/save` and the redacted view; otherwise those
+   * mutating commands degrade gracefully.
+   */
+  configManager?: ConfigManager;
+  /**
    * Pre-flight check invoked by {@link UltraCode.run}; should throw a clear
    * {@link ProviderError} when the active provider is not usable (e.g. no
    * API key configured).
@@ -170,14 +206,139 @@ function apiKeyEnvVar(provider: string): string {
 }
 
 /** Resolve a provider API key from the environment (provider- or UltraCode-prefixed). */
-function resolveApiKey(provider: string, env: NodeJS.ProcessEnv): string | undefined {
+function resolveApiKeyFromEnv(provider: string, env: NodeJS.ProcessEnv): string | undefined {
   return env[apiKeyEnvVar(provider)] ?? env[`${ENV_PREFIX}${apiKeyEnvVar(provider)}`];
+}
+
+/**
+ * Resolve a provider API key, preferring the in-memory store assembled by the
+ * config loader (`providers.apiKeys`, fed from the environment and
+ * `~/.ultracode/.env`) and falling back to a direct environment lookup.
+ */
+function resolveApiKey(
+  provider: string,
+  config: UltraCodeConfig,
+  env: NodeJS.ProcessEnv,
+): string | undefined {
+  const fromConfig = (config.providers as ProvidersWithKeys).apiKeys?.[provider];
+  if (typeof fromConfig === "string" && fromConfig.trim() !== "") return fromConfig;
+  return resolveApiKeyFromEnv(provider, env);
 }
 
 /** Derive a single-line session title from a prompt. */
 function titleFromPrompt(prompt: string): string {
   const line = prompt.replace(/\s+/g, " ").trim();
   return line.length > 64 ? `${line.slice(0, 63)}…` : line || "New session";
+}
+
+/** Validated arguments of the `task` tool. */
+interface TaskToolArgs {
+  agent: string;
+  prompt: string;
+}
+
+/**
+ * Build the `task` tool that delegates a prompt to a (sub)agent via
+ * {@link AgentManager.delegate} (depth limit enforced by the manager). Tools
+ * never throw from `execute`; failures are reported as `ok: false` results.
+ */
+function createTaskTool(agents: AgentManager): RegistrableTool {
+  const definition: ToolDefinition = {
+    name: "task",
+    description:
+      "Delegate a self-contained subtask to a named agent (e.g. \"plan\", \"review\", " +
+      "\"security\") and return its final answer. Use for focused, independent work.",
+    category: "ai",
+    permission: "always",
+    parameters: {
+      type: "object",
+      properties: {
+        agent: {
+          type: "string",
+          description: "Name of the agent to delegate to (e.g. default, build, plan, review, security).",
+        },
+        prompt: {
+          type: "string",
+          description: "The self-contained instruction for the delegated agent.",
+        },
+      },
+      required: ["agent", "prompt"],
+    },
+  };
+
+  return {
+    definition,
+    validate(args: unknown): TaskToolArgs {
+      if (!isRecord(args)) {
+        throw new ValidationError('Invalid arguments for tool "task": expected an object');
+      }
+      const agent = args["agent"];
+      const prompt = args["prompt"];
+      if (typeof agent !== "string" || agent.trim() === "") {
+        throw new ValidationError('Invalid arguments for tool "task": "agent" must be a non-empty string');
+      }
+      if (typeof prompt !== "string" || prompt.trim() === "") {
+        throw new ValidationError('Invalid arguments for tool "task": "prompt" must be a non-empty string');
+      }
+      return { agent, prompt };
+    },
+    async execute(args: unknown, ctx: ToolContext): Promise<ToolResult> {
+      const start = Date.now();
+      const { agent, prompt } = args as TaskToolArgs;
+      try {
+        const options: { depth: number; signal?: AbortSignal } = { depth: 1 };
+        if (ctx.signal !== undefined) options.signal = ctx.signal;
+        const result = await agents.delegate(agent, prompt, options);
+        return {
+          ok: true,
+          output: {
+            agent,
+            text: result.text,
+            toolCallsExecuted: result.toolCallsExecuted,
+            usage: result.usage,
+            turns: result.turns,
+          },
+          durationMs: Date.now() - start,
+        };
+      } catch (err) {
+        return {
+          ok: false,
+          output: null,
+          error: serializeError(err),
+          durationMs: Date.now() - start,
+        };
+      }
+    },
+  };
+}
+
+/** True only for plain (non-array) objects. */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Wrap a provider factory so the underlying {@link ILLMProvider} is only built
+ * on first actual use. This keeps `UltraCode.create()` (and therefore the
+ * read-only CLI commands: `tools list`, `agents list`, `config show`, `doctor`,
+ * `version …`) working offline even when no API key is configured — a missing
+ * key only surfaces when a run actually needs the model.
+ *
+ * @param name - provider name (used for the lazy `.name` getter).
+ * @param factory - constructs the real provider (may throw `ProviderError`).
+ */
+function lazyProvider(name: ProviderId, factory: () => ILLMProvider): ILLMProvider {
+  let instance: ILLMProvider | undefined;
+  const resolve = (): ILLMProvider => (instance ??= factory());
+  return {
+    get name() {
+      return String(name);
+    },
+    listModels: (...args) => resolve().listModels(...args),
+    complete: (...args) => resolve().complete(...args),
+    stream: (...args) => resolve().stream(...args),
+    healthCheck: (...args) => resolve().healthCheck(...args),
+  } as ILLMProvider;
 }
 
 /**
@@ -195,6 +356,11 @@ export class UltraCode {
   public readonly sessions: ISessionStore;
   /** The versioning sub-API. */
   public readonly versioning: VersioningFacade;
+  /**
+   * The stateful config manager, when wired (always set by {@link create}).
+   * The CLI feature-detects this for `config get/set/validate/save`.
+   */
+  public readonly configManager?: ConfigManager;
 
   private readonly logger: Logger;
   private readonly toolRunner: IToolRunner;
@@ -211,6 +377,7 @@ export class UltraCode {
     this.toolRunner = parts.tools;
     this.agentManager = parts.agents;
     this.versioning = parts.versioning;
+    if (parts.configManager !== undefined) this.configManager = parts.configManager;
     this.ensureProviderReady = parts.ensureProviderReady;
     this.disposables = [...(parts.disposables ?? [])];
   }
@@ -224,10 +391,11 @@ export class UltraCode {
     const cwd = options.cwd ?? process.cwd();
 
     const configModule = (await import("./config/index.js")) as unknown as ConfigModule;
-    const loadOptions: Parameters<ConfigModule["loadConfig"]>[0] = { cwd, logger };
-    if (options.configOverrides !== undefined) loadOptions.overrides = options.configOverrides;
-    if (options.profile !== undefined) loadOptions.profile = options.profile;
-    const config = await configModule.loadConfig(loadOptions);
+    const ctorOptions: ConfigManagerCtorOptions = { cwd, logger };
+    if (options.configOverrides !== undefined) ctorOptions.overrides = options.configOverrides;
+    if (options.profile !== undefined) ctorOptions.profile = options.profile;
+    const configManager = new configModule.ConfigManager(ctorOptions);
+    const config = (await configManager.load()) as unknown as UltraCodeConfig;
 
     const events = new EventBus();
 
@@ -239,15 +407,18 @@ export class UltraCode {
         retryDelayMs: config.providers.retryDelay * 1000,
         logger,
       };
-      const apiKey = resolveApiKey(String(name), process.env);
+      const apiKey = resolveApiKey(String(name), config, process.env);
       if (apiKey !== undefined) opts.apiKey = apiKey;
       if (name === "local") opts.baseUrl = config.providers.local.endpoint;
       return opts;
     };
     const activeProviderName = config.core.activeProvider;
-    const provider = providersModule.createProvider(
-      activeProviderName,
-      providerOptionsFor(activeProviderName),
+    // Build providers lazily: constructing a keyed provider throws when no API
+    // key is configured, but read-only commands (tools/agents/config/doctor/
+    // version) must work offline. The key check happens in `ensureProviderReady`
+    // (run path) and on first real provider use.
+    const provider = lazyProvider(activeProviderName, () =>
+      providersModule.createProvider(activeProviderName, providerOptionsFor(activeProviderName)),
     );
 
     const toolsModule = (await import("./tools/index.js")) as unknown as ToolsModule;
@@ -285,16 +456,25 @@ export class UltraCode {
       resolveProvider: (name) =>
         name === activeProviderName
           ? provider
-          : providersModule.createProvider(name, providerOptionsFor(name)),
+          : lazyProvider(name, () =>
+              providersModule.createProvider(name, providerOptionsFor(name)),
+            ),
       events,
       cwd,
-      contextCollector: (prompt) => contextEngine.collect({ cwd, prompt }),
+      contextCollector: (prompt) =>
+        contextEngine.collect({ cwd, prompt, maxTokens: config.core.maxTokens }),
     });
+
+    // Register the `task` tool, backed by bounded subagent delegation. Skipped
+    // when the tool module already provides one (forward-compatible).
+    if (!registry.has("task")) {
+      registry.register(createTaskTool(agents));
+    }
 
     const ensureProviderReady = (): void => {
       const name = String(config.core.activeProvider);
       if (name === "local") return;
-      if (resolveApiKey(name, process.env) === undefined) {
+      if (resolveApiKey(name, config, process.env) === undefined) {
         throw new ProviderError(
           `No API key configured for provider "${name}". Set the ${apiKeyEnvVar(name)} ` +
             `environment variable (for example in ~/.ultracode/.env) or run the UltraCode ` +
@@ -312,6 +492,7 @@ export class UltraCode {
       tools: toolRunner,
       agents,
       versioning,
+      configManager,
       ensureProviderReady,
       cwd,
     });

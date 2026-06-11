@@ -3,25 +3,11 @@
  *
  * Shared constants such as `DEFAULT_SESSION_DIR` use a `~` prefix that does
  * not exist on Windows; {@link resolveHome} expands it via `os.homedir()`.
+ *
+ * Integration note: `resolveHome` is the single canonical implementation in
+ * `../config/paths.js` (re-exported here so existing memory imports and tests
+ * keep working). The config version accepts an optional `homeDir` override but
+ * is otherwise behaviourally identical.
  */
 
-import os from "node:os";
-import path from "node:path";
-
-/**
- * Expand a leading `~` (the user's home directory) in a path.
- *
- * Handles `~`, `~/...` and `~\...` (Windows separators). Any other value —
- * including `~user/...` — is returned unchanged. The result uses the
- * platform's native separators via `path.join`.
- *
- * @param p - A path that may start with `~`.
- * @returns The expanded, platform-native path.
- */
-export function resolveHome(p: string): string {
-  if (p === "~") return os.homedir();
-  if (p.startsWith("~/") || p.startsWith("~\\")) {
-    return path.join(os.homedir(), p.slice(2));
-  }
-  return p;
-}
+export { resolveHome } from "../config/paths.js";
