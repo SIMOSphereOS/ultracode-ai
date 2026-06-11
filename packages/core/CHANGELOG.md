@@ -4,6 +4,12 @@ All notable changes to the `@ultracode/core` package. Format: [Keep a Changelog]
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-11
+
+### Changed
+- Stable 1.0.0: core API frozen — config, providers, tools, memory, context, execution, agents, AI-versioning and the `UltraCode` facade.
+
+
 ## [0.2.4] - 2026-06-11
 
 ### Security

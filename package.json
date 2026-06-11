@@ -1,9 +1,9 @@
 {
   "name": "ultracode-monorepo",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "UltraCode – Open-Source AI Code Assistant with AI-powered versioning and release planning",
+  "description": "UltraCode \u2013 Open-Source AI Code Assistant with AI-powered versioning and release planning",
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0"

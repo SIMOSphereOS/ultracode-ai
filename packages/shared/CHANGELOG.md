@@ -4,6 +4,12 @@ All notable changes to the `@ultracode/shared` package. Format: [Keep a Changelo
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-11
+
+### Changed
+- Stable 1.0.0: contract layer (types, errors, EventBus, utils) API frozen.
+
+
 ## [0.2.1] - 2026-06-11
 
 ### Fixed

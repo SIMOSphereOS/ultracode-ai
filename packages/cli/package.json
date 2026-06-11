@@ -1,6 +1,6 @@
 {
   "name": "ultracode",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "type": "module",
   "license": "MIT",
   "description": "UltraCode CLI \u2013 interactive AI code assistant for the terminal",

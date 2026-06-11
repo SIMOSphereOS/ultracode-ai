@@ -4,6 +4,12 @@ All notable changes to the `ultracode` CLI package. Format: [Keep a Changelog](h
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-11
+
+### Changed
+- Stable 1.0.0: CLI command surface frozen — `run`, `config`, `tools`/`agents list`, `version`, `release`, `quality`, `doctor`, `--setup` and the interactive Ink UI.
+
+
 ## [0.2.1] - 2026-06-11
 
 ### Fixed

@@ -1,6 +1,6 @@
 {
   "name": "@ultracode/shared",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "type": "module",
   "license": "MIT",
   "description": "Shared types, contracts, errors and utilities for UltraCode",
