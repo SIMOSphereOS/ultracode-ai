@@ -1,0 +1,396 @@
+# Mistral Vibe → UltraCode Migration
+
+> **Komplette Anleitung für die Migration von Mistral Vibe zu UltraCode**
+
+---
+
+## 🎯 Übersicht
+
+Diese Anleitung hilft dir, **nahtlos von Mistral Vibe zu UltraCode zu migrieren**. UltraCode kombiniert die besten Features von Vibe mit OpenCode und Claude Code.
+
+---
+
+## 📊 Vergleich: Mistral Vibe vs UltraCode
+
+| **Feature** | **Mistral Vibe** | **UltraCode** | **Hinweise** |
+|-------------|------------------|---------------|--------------|
+| **Sprache** | Python | TypeScript (+ Python) | ✅ Multi-Language in UltraCode |
+| **Runtime** | Python 3.12+ | Node.js 20+ (+ Bun) | ⚠️ Runtime-Wechsel |
+| **UI** | React + Rich | React + Ink | ⚠️ Unterschiedliche UI-Bibliothek |
+| **Agenten** | ❌ (begrenzt) | ✅++ (10+ Agenten) | ✅ Volles Agenten-System |
+| **Tools** | ~25 | **80+** | ✅ Alle Vibe-Tools + viele mehr |
+| **Skills** | ✅ | ✅++ (erweitert) | ✅ Kompatibel |
+| **MCP Support** | ✅ | ✅ | ✅ Voll unterstützt |
+| **LSP Support** | ❌ | ✅ | ✅ Neu in UltraCode |
+| **AI-Versionierung** | ❌ | ✅ **UNIQUE** | ✅ UltraCode USP |
+| **Multi-Model** | ✅ | ✅ (Mistral, Anthropic, OpenAI, lokal) | ✅ Erweitert |
+| **Konfiguration** | TOML | TOML | ✅ Kompatibel |
+| **Session Management** | ✅ | ✅++ | ✅ Verbessert |
+
+---
+
+## 📁 Dateistruktur-Vergleich
+
+```
+Mistral Vibe:                 UltraCode:
+┌─────────────────┐          ┌─────────────────┐
+│ ~/.vibe/         │          │ ~/.ultracode/   │
+│ ├── config.toml  │          │ ├── config.toml  │
+│ ├── .env         │          │ ├── .env         │
+│ ├── skills/       │  ✅      │ ├── skills/      │
+│ │   └── */       │ ───────▶ │ │   └── */       │
+│ ├── agents/       │          │ ├── agents/      │
+│ │   └── *.toml   │          │ │   └── *.toml   │
+│ ├── prompts/      │          │ ├── prompts/      │
+│ │   └── *.md     │          │ │   └── *.md     │
+│ └── logs/        │          │ └── logs/        │
+└─────────────────┘          └─────────────────┘
+```
+
+---
+
+## 🔄 Migration Schritt-für-Schritt
+
+### Phase 1: Vorbereitung
+
+#### 1. Backup erstellen
+
+```bash
+# Vibe-Konfiguration sichern
+cp -r ~/.vibe ~/.vibe-backup-$(date +%Y%m%d)
+
+# API-Keys sichern
+if [ -f ~/.vibe/.env ]; then
+  cp ~/.vibe/.env ~/.vibe-backup.env
+fi
+```
+
+#### 2. UltraCode installieren
+
+```bash
+npm install -g ultracode
+```
+
+#### 3. UltraCode-Verzeichnis erstellen
+
+```bash
+mkdir -p ~/.ultracode
+```
+
+---
+
+### Phase 2: Konfiguration migrieren
+
+#### 1. Automatische Migration
+
+```bash
+# Trockenlauf
+ultracode --migrate-from vibe --dry-run
+
+# Echte Migration
+ultracode --migrate-from vibe --backup
+```
+
+**Was wird migriert:**
+- `config.toml` (1:1 kompatibel)
+- `.env` (API-Keys)
+- Skills (Python → TypeScript Portierung)
+- Prompts
+- Trusted Folders
+
+---
+
+#### 2. Manuelle Migration
+
+**a) API-Keys kopieren**
+
+```bash
+# Vibe verwendet .env in ~/.vibe/
+if [ -f ~/.vibe/.env ]; then
+  cp ~/.vibe/.env ~/.ultracode/.env
+fi
+
+# Oder manuell
+cat ~/.vibe/.env >> ~/.ultracode/.env
+```
+
+**b) Konfiguration kopieren**
+
+**Mistral Vibe (`~/.vibe/config.toml`):**
+```toml
+[core]
+default_agent = "default"
+active_model = "mistral-large"
+
+[tools]
+disabled = ["bash"]
+
+[ui]
+theme = "dracula"
+
+[providers]
+mistral_api_key = "sk-..."
+```
+
+**UltraCode (`~/.ultracode/config.toml`):**
+```toml
+# Die Konfiguration ist 1:1 kompatibel!
+[core]
+default_agent = "default"
+active_model = "mistral-large"
+
+[tools]
+disabled = ["bash"]
+
+[ui]
+theme = "dracula"
+
+[providers]
+mistral_api_key = "sk-..."
+```
+
+**✅ Die Vibe-Konfiguration ist mit UltraCode kompatibel!**
+
+---
+
+### Phase 3: Skills migrieren
+
+#### 1. Skills-Verzeichnis kopieren
+
+```bash
+# Skills von Vibe zu UltraCode kopieren
+cp -r ~/.vibe/skills/ ~/.ultracode/skills/
+```
+
+**Hinweis:** UltraCode unterstützt **beide Skill-Formate**:
+- **Vibe-Format** (Python-basiert)
+- **Agent Skills Specification** (Standard)
+
+---
+
+#### 2. Skills anpassen (falls nötig)
+
+**Vibe-Skill (Python):**
+```python
+# ~/.vibe/skills/my-skill/SKILL.md
+---
+name: my-skill
+description: Mein Vibe Skill
+user-invocable: true
+---
+
+# Skill-Logik in Python
+```
+
+**UltraCode-Skill (kompatibel):**
+```markdown
+# ~/.ultracode/skills/my-skill/SKILL.md
+---
+name: my-skill
+description: Mein UltraCode Skill
+user-invocable: true
+allowed-tools:
+  - read
+  - grep
+---
+
+# Skill-Logik (wird von UltraCode unterstützt)
+```
+
+**✅ Vibe-Skills funktionieren in UltraCode ohne Änderungen!**
+
+---
+
+#### 3. Skills registrieren
+
+UltraCode findet Skills automatisch in:
+- `~/.ultracode/skills/` (Benutzer)
+- `./.vibe/skills/` (Projekt)
+- `./.agents/skills/` (Agent Skills Standard)
+
+**Konfiguration:**
+```toml
+[skills]
+# Standardmäßig aktivierte Skills
+enabled = ["my-skill"]
+
+# Skill-Pfade
+skill_paths = ["~/.ultracode/skills", "./.vibe/skills"]
+```
+
+---
+
+### Phase 4: Prompts migrieren
+
+Vibe-Prompts sind **1:1 kompatibel** mit UltraCode:
+
+```bash
+# Prompts kopieren
+cp -r ~/.vibe/prompts/ ~/.ultracode/prompts/
+```
+
+**Unterstützte Prompt-Typen:**
+- System Prompts (`system_prompt_id`)
+- Compaction Prompts (`compaction_prompt_id`)
+- Custom Prompts
+
+---
+
+### Phase 5: Trusted Folders migrieren
+
+```bash
+# Trusted Folders kopieren
+if [ -f ~/.vibe/trusted_folders.toml ]; then
+  cp ~/.vibe/trusted_folders.toml ~/.ultracode/trusted_folders.toml
+fi
+```
+
+---
+
+### Phase 6: Testen
+
+#### 1. Grundlegende Funktionalität
+
+```bash
+ultracode
+
+> "Hallo UltraCode"
+> /agents default
+> /skills list
+```
+
+#### 2. Skills testen
+
+```
+> /skills my-skill
+> "Führe meinen Skill aus"
+```
+
+#### 3. MCP testen
+
+```
+> /mcp list
+> mcp_list()
+```
+
+---
+
+### Phase 7: Python-Spezifika anpassen
+
+Falls du **Python-spezifische Tools oder Skripte** hattest:
+
+#### 1. Python-Tools in UltraCode
+
+UltraCode hat **native Python-Unterstützung** durch:
+- **Python-Integration Paket** (`packages/python/`)
+- **Vibe-CLI Portierung**
+
+**Python-Tool verwenden:**
+```bash
+# Python-Skript ausführen
+> bash(command="python3 script.py")
+
+# Oder mit dem Python-Provider
+> python_execute(code="print('Hello')")
+```
+
+#### 2. Python-Skills
+
+Python-basierte Skills können in UltraCode verwendet werden durch:
+- **Subprocess-Aufrufe**
+- **Python-Provider**
+- **MCP-Python-Server**
+
+---
+
+## 🔧 Kompatibilitätsmodus
+
+Falls du Probleme hast:
+
+```bash
+ultracode --compat vibe
+```
+
+**Features:**
+- Vibe-Konfiguration wird unterstützt
+- Vibe-Skills funktionieren
+- Vibe-Keybindings werden emuliert
+
+---
+
+## ⚠️ Bekannte Unterschiede
+
+| **Unterschied** | **Mistral Vibe** | **UltraCode** | **Lösung** |
+|----------------|------------------|---------------|------------|
+| **Runtime** | Python | Node.js | Node.js installieren |
+| **CLI** | Python CLI | TypeScript CLI | UltraCode CLI verwenden |
+| **Skills** | Python-basiert | TypeScript + Python | Beide unterstützt |
+| **Agenten** | Begrenzt | Vollständig | UltraCode-Agenten verwenden |
+| **Tools** | ~25 | 80+ | Neue Tools entdecken |
+| **LSP** | ❌ | ✅ | LSP-Tools verwenden |
+| **AI-Versionierung** | ❌ | ✅ | Neue Features nutzen |
+
+---
+
+## 📝 Migrations-Checkliste
+
+- [ ] **Backup** von Vibe-Konfiguration erstellt
+- [ ] **UltraCode** installiert
+- [ ] **API-Keys** migriert
+- [ ] **config.toml** kopiert
+- [ ] **Skills** migriert
+- [ ] **Prompts** migriert
+- [ ] **Trusted Folders** migriert
+- [ ] **Neue Features** ausprobiert (Agenten, AI-Versionierung, LSP)
+- [ ] **Alte Konfiguration** archiviert
+
+---
+
+## 💡 Tipps für Vibe-Nutzer
+
+### 1. Gewohnte Workflows
+
+| **Vibe-Workflow** | **UltraCode-Workflow** |
+|--------------------|------------------------|
+| `vibe` | `ultracode` |
+| `vibe --agent plan` | `ultracode --agent plan` |
+| `vibe --prompt "..."` | `ultracode "..."` |
+| `/skills` | `/skills` |
+| `/mcp` | `/mcp` |
+
+### 2. Neue Features entdecken
+
+- **Agenten-System:** `/agents build`, `/agents review`
+- **AI-Versionierung:** `version_analyze()`, `release_plan()`
+- **LSP-Integration:** `lsp_hover()`, `lsp_completion()`
+- **80+ Tools:** Viele neue Tools verfügbar
+- **Desktop App:** Voll unterstützte Desktop-Version
+
+### 3. Performance-Verbesserungen
+
+- UltraCode ist **schneller** (Node.js vs Python)
+- **Parallel Execution** für Tools
+- **Besseres Caching**
+- **Streaming** von LLM-Antworten
+
+---
+
+## 🚀 Nächste Schritte
+
+1. **Migration abschließen** mit der Checkliste
+2. **Neue Features ausprobieren:**
+   - [Agenten-Referenz →](../DEVELOPMENT/agents-reference.md)
+   - [AI-Versionierung →](../AI-FEATURES/versioning-system.md)
+   - [LSP-Integration →](../DEVELOPMENT/architecture.md#lsp-integration)
+3. **Feedback geben:**
+   - [GitHub Issues](https://github.com/ultracode-ai/ultracode/issues) (Label: `migration`)
+   - [Discord #migration](https://discord.gg/ultracode)
+
+---
+
+## 🔗 Nützliche Links
+
+- [UltraCode Dokumentation →](../../README.md)
+- [Konfiguration →](../../GETTING-STARTED/configuration.md)
+- [Skills-System →](../DEVELOPMENT/architecture.md)
+- [MCP-Integration →](../DEVELOPMENT/architecture.md#mcp-server-integration)

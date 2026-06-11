@@ -1,0 +1,21 @@
+# Changelog — @ultracode/shared
+
+All notable changes to the `@ultracode/shared` package. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer 2.0](https://semver.org/). Versioned independently from the monorepo release.
+
+## [Unreleased]
+
+## [0.2.0] - 2026-06-11
+
+### Added
+
+- Complete contract layer: error hierarchy (`UltraCodeError` + 9 domain errors), tool/provider/agent/config/memory/versioning/event type contracts
+- `EventBus` with handler error isolation, `ConsoleLogger`/`NoopLogger`
+- Utilities: `serializeError`, unicode-safe `truncate`, prototype-pollution-safe `deepMerge`, `sleep` (abortable), `clamp`, `generateId`
+- `DEFAULT_CONFIG` matching the documented configuration reference, `CONTRACTS.md` implementation guide
+- 86 unit tests incl. extreme values (1M-char strings, surrogate pairs, `__proto__` attack vectors, throwing event handlers)
+
+## [0.1.0] - 2026-06-11
+
+### Added
+
+- Package scaffold within the UltraCode monorepo (strict TypeScript ESM, vitest)
