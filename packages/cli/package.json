@@ -1,15 +1,17 @@
 {
   "name": "ultracode",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "license": "MIT",
-  "description": "UltraCode CLI – interactive AI code assistant for the terminal",
+  "description": "UltraCode CLI \u2013 interactive AI code assistant for the terminal",
   "bin": {
     "ultracode": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -b",
     "test": "vitest run",

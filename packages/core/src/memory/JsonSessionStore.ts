@@ -1,0 +1,272 @@
+/**
+ * JSON-file backed {@link ISessionStore}.
+ *
+ * One JSON file per session inside the configured session directory
+ * (`SessionsConfig.saveDir`, `~` expanded via {@link resolveHome}). Writes are
+ * atomic (write to a temp file, then rename). Corrupt files are tolerated on
+ * read paths: a warning is logged and the file is skipped — never a crash.
+ */
+
+import fs from "node:fs/promises";
+import path from "node:path";
+
+import { SessionError, generateId, serializeError } from "@ultracode/shared";
+import type { ChatMessage, ISessionStore, Logger, SessionMeta, SessionRecord } from "@ultracode/shared";
+
+import { resolveHome } from "./paths.js";
+import {
+  DEFAULT_SESSION_TITLE,
+  applyListLimit,
+  cloneMessages,
+  compareMetaDesc,
+  isSessionRecordShape,
+  nowIso,
+  selectPruneVictims,
+  toMeta,
+} from "./sessionInternals.js";
+
+/** Ids are used as file names — restrict to a safe, traversal-free charset. */
+const SAFE_ID = /^[A-Za-z0-9_-]+$/;
+
+/** `true` for fs errors carrying the given `code` (e.g. `"ENOENT"`). */
+function hasFsCode(err: unknown, code: string): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    (err as NodeJS.ErrnoException).code === code
+  );
+}
+
+/**
+ * File-per-session JSON store. Usable standalone and as the fallback chosen
+ * by `createSessionStore` when `node:sqlite` is unavailable.
+ */
+export class JsonSessionStore implements ISessionStore {
+  /** Resolved session directory (after `~` expansion). */
+  public readonly dir: string;
+  private readonly logger: Logger;
+  /** Serialises mutating operations to avoid read-modify-write races. */
+  private queue: Promise<unknown> = Promise.resolve();
+  private dirReady: Promise<void> | null = null;
+
+  /**
+   * @param dir - Session directory; a leading `~` is expanded to the home dir.
+   * @param logger - Logger for warnings about corrupt or skipped files.
+   */
+  constructor(dir: string, logger: Logger) {
+    this.dir = resolveHome(dir);
+    this.logger = logger;
+  }
+
+  /** Create a new, empty session and return its header. */
+  async create(agentName: string, title?: string): Promise<SessionMeta> {
+    return this.withLock(async () => {
+      const ts = nowIso();
+      const record: SessionRecord = {
+        id: generateId("session"),
+        title: title ?? DEFAULT_SESSION_TITLE,
+        createdAt: ts,
+        updatedAt: ts,
+        agentName,
+        messageCount: 0,
+        messages: [],
+      };
+      await this.writeRecord(record);
+      return toMeta(record);
+    });
+  }
+
+  /** Load a full session by id; `null` for unknown ids or corrupt files. */
+  async get(id: string): Promise<SessionRecord | null> {
+    if (!SAFE_ID.test(id)) return null;
+    const file = this.fileFor(id);
+    let raw: string;
+    try {
+      raw = await fs.readFile(file, "utf8");
+    } catch (err) {
+      if (hasFsCode(err, "ENOENT")) return null;
+      throw new SessionError(`Failed to read session "${id}"`, {
+        cause: err,
+        details: { id, file },
+      });
+    }
+    const record = this.parseRecord(raw, file);
+    return record ? structuredClone(record) : null;
+  }
+
+  /** Append messages, bumping `updatedAt` and `messageCount`. */
+  async appendMessages(id: string, msgs: ChatMessage[]): Promise<void> {
+    await this.withLock(async () => {
+      if (!SAFE_ID.test(id)) {
+        throw new SessionError(`Cannot append messages: unknown session "${id}"`, {
+          details: { id },
+        });
+      }
+      const file = this.fileFor(id);
+      let raw: string;
+      try {
+        raw = await fs.readFile(file, "utf8");
+      } catch (err) {
+        if (hasFsCode(err, "ENOENT")) {
+          throw new SessionError(`Cannot append messages: unknown session "${id}"`, {
+            details: { id },
+          });
+        }
+        throw new SessionError(`Failed to read session "${id}"`, {
+          cause: err,
+          details: { id, file },
+        });
+      }
+      const record = this.parseRecord(raw, file);
+      if (!record) {
+        throw new SessionError(`Cannot append messages: session file for "${id}" is corrupt`, {
+          details: { id, file },
+        });
+      }
+      record.messages = record.messages.concat(cloneMessages(msgs));
+      record.messageCount = record.messages.length;
+      record.updatedAt = nowIso();
+      await this.writeRecord(record);
+    });
+  }
+
+  /** List session headers, most-recent first; corrupt files are skipped. */
+  async list(limit?: number): Promise<SessionMeta[]> {
+    const records = await this.readAllRecords();
+    const metas = records.map(toMeta).sort(compareMetaDesc);
+    return applyListLimit(metas, limit);
+  }
+
+  /** Delete a session file; `true` if it existed. */
+  async delete(id: string): Promise<boolean> {
+    return this.withLock(() => this.deleteUnlocked(id));
+  }
+
+  /** Retain only the `maxSessions` most-recent sessions; returns the count removed. */
+  async prune(maxSessions: number): Promise<number> {
+    return this.withLock(async () => {
+      const records = await this.readAllRecords();
+      const victims = selectPruneVictims(records.map(toMeta), maxSessions);
+      let removed = 0;
+      for (const id of victims) {
+        if (await this.deleteUnlocked(id)) removed++;
+      }
+      return removed;
+    });
+  }
+
+  /* ----------------------------------------------------------------------
+   * Internals
+   * -------------------------------------------------------------------- */
+
+  private fileFor(id: string): string {
+    return path.join(this.dir, `${id}.json`);
+  }
+
+  private withLock<T>(fn: () => Promise<T>): Promise<T> {
+    const result = this.queue.then(fn, fn);
+    this.queue = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }
+
+  private ensureDir(): Promise<void> {
+    this.dirReady ??= fs.mkdir(this.dir, { recursive: true }).then(
+      () => undefined,
+      (err: unknown) => {
+        this.dirReady = null;
+        throw new SessionError(`Failed to create session directory "${this.dir}"`, {
+          cause: err,
+          details: { dir: this.dir },
+        });
+      },
+    );
+    return this.dirReady;
+  }
+
+  /** Parse + validate a session file; warn and return `null` when corrupt. */
+  private parseRecord(raw: string, file: string): SessionRecord | null {
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (!isSessionRecordShape(parsed)) {
+        this.logger.warn("Skipping session file with unexpected shape", { file });
+        return null;
+      }
+      // Normalise messageCount from the actual message list.
+      parsed.messageCount = parsed.messages.length;
+      return parsed;
+    } catch (err) {
+      this.logger.warn("Skipping corrupt session file", {
+        file,
+        error: serializeError(err),
+      });
+      return null;
+    }
+  }
+
+  /** Atomic write: temp file in the same directory, then rename. */
+  private async writeRecord(record: SessionRecord): Promise<void> {
+    await this.ensureDir();
+    const file = this.fileFor(record.id);
+    const tmp = `${file}.${process.pid.toString(36)}-${Math.random().toString(36).slice(2)}.tmp`;
+    try {
+      await fs.writeFile(tmp, JSON.stringify(record), "utf8");
+      await fs.rename(tmp, file);
+    } catch (err) {
+      await fs.rm(tmp, { force: true }).catch(() => undefined);
+      throw new SessionError(`Failed to write session "${record.id}"`, {
+        cause: err,
+        details: { id: record.id, file },
+      });
+    }
+  }
+
+  private async deleteUnlocked(id: string): Promise<boolean> {
+    if (!SAFE_ID.test(id)) return false;
+    try {
+      await fs.unlink(this.fileFor(id));
+      return true;
+    } catch (err) {
+      if (hasFsCode(err, "ENOENT")) return false;
+      throw new SessionError(`Failed to delete session "${id}"`, {
+        cause: err,
+        details: { id },
+      });
+    }
+  }
+
+  /** Read every parseable `*.json` session file in the directory. */
+  private async readAllRecords(): Promise<SessionRecord[]> {
+    let names: string[];
+    try {
+      names = await fs.readdir(this.dir);
+    } catch (err) {
+      if (hasFsCode(err, "ENOENT")) return [];
+      throw new SessionError(`Failed to read session directory "${this.dir}"`, {
+        cause: err,
+        details: { dir: this.dir },
+      });
+    }
+    const records: SessionRecord[] = [];
+    for (const name of names) {
+      if (!name.endsWith(".json")) continue;
+      const file = path.join(this.dir, name);
+      let raw: string;
+      try {
+        raw = await fs.readFile(file, "utf8");
+      } catch (err) {
+        if (hasFsCode(err, "ENOENT")) continue; // deleted concurrently
+        this.logger.warn("Skipping unreadable session file", {
+          file,
+          error: serializeError(err),
+        });
+        continue;
+      }
+      const record = this.parseRecord(raw, file);
+      if (record) records.push(record);
+    }
+    return records;
+  }
+}
