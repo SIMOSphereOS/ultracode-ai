@@ -20,8 +20,10 @@
  * Variable-name patterns treated as secrets. Matched case-insensitively against
  * the *whole* key. Suffix anchors (`$`) so e.g. `MY_API_KEY` is dropped but a
  * harmless `API_KEY_PATH` would not be (it does not end in the secret token).
+ * `CREDENTIALS?` covers both the singular and the GCP-style plural
+ * (`GOOGLE_APPLICATION_CREDENTIALS`).
  */
-const SECRET_KEY_PATTERN = /(_API_KEY|_TOKEN|_SECRET|PASSWORD|CREDENTIAL)$/i;
+const SECRET_KEY_PATTERN = /(_API_KEY|_TOKEN|_SECRET|PASSWORD|CREDENTIALS?)$/i;
 
 /**
  * `true` when `key` names a credential that must never reach a child process.

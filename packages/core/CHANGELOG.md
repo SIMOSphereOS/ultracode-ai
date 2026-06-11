@@ -4,6 +4,14 @@ All notable changes to the `@ultracode/core` package. Format: [Keep a Changelog]
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-06-11
+
+### Security
+- sanitizeEnv: extend the credential denylist to the plural `CREDENTIALS$` so GCP-style `GOOGLE_APPLICATION_CREDENTIALS`/`GOOGLE_CREDENTIALS` are stripped from system-tool environments.
+
+### Fixed
+- Test coverage: add a dedicated `sanitizeEnv` suite and JsonSessionStore lock tests (stale-lock reclaim and a 48-append cross-instance no-lost-update race), closing the verification gaps flagged by the final release audit.
+
 ## [0.2.3] - 2026-06-11
 
 ### Security
