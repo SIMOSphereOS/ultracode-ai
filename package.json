@@ -1,0 +1,27 @@
+{
+  "name": "ultracode-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "UltraCode – Open-Source AI Code Assistant with AI-powered versioning and release planning",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "pnpm@11.5.2",
+  "scripts": {
+    "build": "tsc -b packages/shared packages/core packages/cli",
+    "clean": "rm -rf packages/*/dist packages/*/*.tsbuildinfo",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "vitest run --project e2e",
+    "typecheck": "tsc -b packages/shared packages/core packages/cli"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}

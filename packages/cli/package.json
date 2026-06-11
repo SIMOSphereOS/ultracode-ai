@@ -1,0 +1,29 @@
+{
+  "name": "ultracode",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "description": "UltraCode CLI – interactive AI code assistant for the terminal",
+  "bin": {
+    "ultracode": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run",
+    "dev": "node --enable-source-maps dist/index.js"
+  },
+  "dependencies": {
+    "@ultracode/core": "workspace:*",
+    "@ultracode/shared": "workspace:*",
+    "commander": "^12.1.0",
+    "ink": "^5.1.0",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "ink-testing-library": "^4.0.0"
+  }
+}
