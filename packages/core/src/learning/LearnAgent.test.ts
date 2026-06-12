@@ -313,7 +313,11 @@ describe("module wiring", () => {
   it("createLearnAgent exposes the seeded library", async () => {
     const agent = createLearnAgent({ homeDir: home });
     const sources = await agent.library.list();
-    expect(sources.map((s: LearnSource) => s.id).sort()).toEqual(["azure-docs", "azure-training"]);
+    expect(sources.map((s: LearnSource) => s.id).sort()).toEqual([
+      "azure-docs",
+      "azure-training",
+      "pytest-docs",
+    ]);
   });
 
   it("defaultSqliteLoader is exported and is a function", () => {
