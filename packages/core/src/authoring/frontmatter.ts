@@ -226,7 +226,10 @@ function quoteIfNeeded(value: string): string {
 
 /** Render a frontmatter list field as a block list, or `[]` when empty. */
 function renderList(key: string, items: string[]): string {
-  if (items.length === 0) return `${key}: []`;
+  // Defensive: a missing/non-array `items` (e.g. a hand-built object that
+  // omits an optional list field) renders as an empty list rather than
+  // throwing on `.length`/`.map`.
+  if (!Array.isArray(items) || items.length === 0) return `${key}: []`;
   const body = items.map((it) => `  - ${quoteIfNeeded(it)}`).join("\n");
   return `${key}:\n${body}`;
 }

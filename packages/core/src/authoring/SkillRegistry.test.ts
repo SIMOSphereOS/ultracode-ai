@@ -149,4 +149,104 @@ describe("SkillRegistry", () => {
     const reg = new SkillRegistry(home);
     expect(await reg.get("")).toBeNull();
   });
+
+  it("get returns null for a non-existent skill among existing ones", async () => {
+    const reg = new SkillRegistry(home);
+    await reg.save(makeSkill({ name: "present" }));
+    expect(await reg.get("absent")).toBeNull();
+  });
+
+  it("get returns null for a non-string name without touching disk", async () => {
+    const reg = new SkillRegistry(home);
+    // @ts-expect-error deliberate misuse: a non-string name short-circuits.
+    expect(await reg.get(123)).toBeNull();
+  });
+
+  it("loads across multiple catalogs and filters list per catalog", async () => {
+    const reg = new SkillRegistry(home);
+    await reg.save(makeSkill({ name: "a", catalog: "alpha" }));
+    await reg.save(makeSkill({ name: "b", catalog: "beta" }));
+    await reg.save(makeSkill({ name: "c", catalog: "beta" }));
+    const all = await reg.load();
+    expect(all.map((s) => s.name).sort()).toEqual(["a", "b", "c"]);
+    expect((await reg.list("beta")).map((s) => s.name).sort()).toEqual(["b", "c"]);
+    expect(await reg.list("absent")).toEqual([]);
+  });
+
+  it("skips an empty catalog directory and a partially-corrupt one", async () => {
+    const { logger, warns } = captureLogger();
+    const reg = new SkillRegistry(home, logger);
+    await reg.save(makeSkill({ name: "good", catalog: "cat1" }));
+    const skillsRoot = path.join(home, ".ultracode", "skills");
+    // An empty catalog dir contributes nothing.
+    await fs.mkdir(path.join(skillsRoot, "empty"), { recursive: true });
+    // A catalog with a markdown file whose frontmatter is invalid (missing
+    // required fields) is warned about and skipped.
+    const partial = path.join(skillsRoot, "cat1");
+    await fs.writeFile(
+      path.join(partial, "invalid.md"),
+      "---\nname: x\nstatus: active\n---\nbody",
+      "utf8",
+    );
+    const loaded = await reg.load();
+    expect(loaded.map((s) => s.name)).toEqual(["good"]);
+    expect(warns).toContain("authoring.skill.corrupt");
+  });
+
+  it("warns and skips when a catalog dir cannot be read (readdir fails)", async () => {
+    const { logger, warns } = captureLogger();
+    const reg = new SkillRegistry(home, logger);
+    await reg.save(makeSkill({ name: "ok" }));
+    const real = fs.readdir.bind(fs);
+    let call = 0;
+    vi.spyOn(fs, "readdir").mockImplementation((async (
+      dir: Parameters<typeof fs.readdir>[0],
+      opts?: Parameters<typeof fs.readdir>[1],
+    ) => {
+      call += 1;
+      // Call 1: listDirs(root) (withFileTypes) → real result so a catalog is
+      // discovered. Call 2: the per-catalog readdir → fail (non-ENOENT).
+      if (call === 1) return real(dir as never, opts as never);
+      throw Object.assign(new Error("EACCES"), { code: "EACCES" });
+    }) as never);
+    const loaded = await reg.load();
+    vi.restoreAllMocks();
+    expect(loaded).toEqual([]);
+    expect(warns).toContain("authoring.skill.readdir-failed");
+  });
+
+  it("warns and skips when a markdown file cannot be read (readFile fails)", async () => {
+    const { logger, warns } = captureLogger();
+    const reg = new SkillRegistry(home, logger);
+    await reg.save(makeSkill({ name: "ok" }));
+    vi.spyOn(fs, "readFile").mockRejectedValue(
+      Object.assign(new Error("EACCES"), { code: "EACCES" }),
+    );
+    const loaded = await reg.load();
+    vi.restoreAllMocks();
+    expect(loaded).toEqual([]);
+    expect(warns).toContain("authoring.skill.read-failed");
+  });
+
+  it("wraps a non-ENOENT failure enumerating the skills root", async () => {
+    const reg = new SkillRegistry(home);
+    vi.spyOn(fs, "readdir").mockRejectedValue(
+      Object.assign(new Error("EACCES"), { code: "EACCES" }),
+    );
+    await expect(reg.load()).rejects.toBeInstanceOf(AuthoringError);
+    vi.restoreAllMocks();
+  });
+
+  it("wraps a filesystem failure during save in an AuthoringError", async () => {
+    const reg = new SkillRegistry(home);
+    vi.spyOn(fs, "writeFile").mockRejectedValue(
+      Object.assign(new Error("ENOSPC"), { code: "ENOSPC" }),
+    );
+    await expect(reg.save(makeSkill())).rejects.toBeInstanceOf(AuthoringError);
+    vi.restoreAllMocks();
+    // No partial temp file is left behind after the cleanup path runs.
+    const dir = path.join(home, ".ultracode", "skills", "cat1");
+    const leftover = await fs.readdir(dir).catch(() => [] as string[]);
+    expect(leftover.filter((f) => f.endsWith(".tmp"))).toEqual([]);
+  });
 });

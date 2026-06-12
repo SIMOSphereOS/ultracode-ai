@@ -62,6 +62,34 @@ describe("isBlockedIp range table", () => {
     expect(isBlockedIp("2001:4860:4860::8888")).toBe(false);
     expect(isBlockedIp("::ffff:8.8.8.8")).toBe(false);
   });
+
+  it("returns false for a non-IP string (neither v4 nor v6)", () => {
+    // Exercises the final `return false` when parseIpv4 and parseIpv6 both fail.
+    expect(isBlockedIp("not-an-ip")).toBe(false);
+    expect(isBlockedIp("example.com")).toBe(false);
+    expect(isBlockedIp("")).toBe(false);
+  });
+
+  it("classifies a fully-expanded IPv6 literal without '::' shorthand", () => {
+    // No double-colon path: parseIpv6 takes the 8-group branch (lines 293-299).
+    expect(isBlockedIp("0000:0000:0000:0000:0000:0000:0000:0001")).toBe(true); // ::1 expanded
+    expect(isBlockedIp("fe80:0000:0000:0000:0000:0000:0000:0001")).toBe(true); // link-local
+    expect(isBlockedIp("2001:4860:4860:0000:0000:0000:0000:8888")).toBe(false); // public, expanded
+  });
+
+  it("rejects malformed IPv6 (too many groups / bad hextet / multiple '::')", () => {
+    // Each of these must parse to null → isBlockedIp returns false.
+    expect(isBlockedIp("1:2:3:4:5:6:7:8:9")).toBe(false); // 9 groups, no "::"
+    expect(isBlockedIp("gggg::1")).toBe(false); // non-hex hextet
+    expect(isBlockedIp("12345::1")).toBe(false); // 5-digit hextet
+    expect(isBlockedIp("1::2::3")).toBe(false); // two "::"
+    expect(isBlockedIp("fe80::1%eth0")).toBe(false); // zone id rejected
+  });
+
+  it("handles bracketed IPv6 literals and an embedded-IPv4 tail", () => {
+    expect(isBlockedIp("[::1]")).toBe(true); // brackets stripped
+    expect(isBlockedIp("::ffff:1.2.3")).toBe(false); // malformed v4 tail → null
+  });
 });
 
 describe("isFetchAllowed scoping + literals", () => {
@@ -143,6 +171,48 @@ describe("isFetchAllowedAsync DNS rebinding", () => {
     // allowPrivate short-circuits DNS entirely.
     expect(d.ok).toBe(true);
     expect(dnsLookup).not.toHaveBeenCalled();
+  });
+
+  it("blocks when DNS resolves to zero records", async () => {
+    const dnsLookup: DnsLookupAll = vi.fn(async () => []);
+    const d = await isFetchAllowedAsync("https://docs.example.com/x", { sourceUrl: SOURCE, dnsLookup });
+    expect(d.ok).toBe(false);
+    expect(d.reason).toBe("dns-no-records");
+  });
+
+  it("returns the sync decision unchanged when no resolver is configured", async () => {
+    // No dnsLookup → the async path returns the base scope decision.
+    const d = await isFetchAllowedAsync("https://docs.example.com/x", { sourceUrl: SOURCE });
+    expect(d.ok).toBe(true);
+  });
+
+  it("propagates a blocked sync decision without invoking DNS", async () => {
+    const dnsLookup: DnsLookupAll = vi.fn(async () => [{ address: "8.8.8.8", family: 4 }]);
+    const d = await isFetchAllowedAsync("https://evil.example.org/x", { sourceUrl: SOURCE, dnsLookup });
+    expect(d.ok).toBe(false);
+    expect(d.reason).toBe("cross-host");
+    expect(dnsLookup).not.toHaveBeenCalled();
+  });
+
+  it("skips DNS for an allow-listed IP-literal host that is public", async () => {
+    // classifyHost(host) !== "name" → DNS layer is skipped, base decision returned.
+    const dnsLookup: DnsLookupAll = vi.fn(async () => [{ address: "10.0.0.1", family: 4 }]);
+    const d = await isFetchAllowedAsync("https://8.8.8.8/x", {
+      sourceUrl: "https://8.8.8.8/",
+      dnsLookup,
+    });
+    expect(d.ok).toBe(true);
+    expect(dnsLookup).not.toHaveBeenCalled();
+  });
+
+  it("resolves multiple records and blocks if any is private", async () => {
+    const dnsLookup: DnsLookupAll = vi.fn(async () => [
+      { address: "8.8.8.8", family: 4 },
+      { address: "127.0.0.1", family: 4 },
+    ]);
+    const d = await isFetchAllowedAsync("https://docs.example.com/x", { sourceUrl: SOURCE, dnsLookup });
+    expect(d.ok).toBe(false);
+    expect(d.reason).toContain("resolved-private-ip");
   });
 });
 

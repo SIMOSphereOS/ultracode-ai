@@ -115,3 +115,36 @@ describe("frontmatter corruption tolerance", () => {
     expect(parseFrontmatter(doc)?.triggers).toEqual(["DORA", "operational resilience"]);
   });
 });
+
+describe("serializeFrontmatter renderList defensive guard", () => {
+  it("renders [] for a missing list field instead of throwing", () => {
+    // A hand-built skill object whose required list fields are absent
+    // (e.g. constructed from partial/untrusted data) must not crash on
+    // `items.length`/`items.map` — it serialises to empty `[]` lists.
+    const skill = makeSkill();
+    // @ts-expect-error deliberately drop a required list field at runtime.
+    delete skill.triggers;
+    // @ts-expect-error deliberately drop a required list field at runtime.
+    delete skill.sources;
+
+    let serialized = "";
+    expect(() => {
+      serialized = serializeFrontmatter(skill);
+    }).not.toThrow();
+    expect(serialized).toContain("triggers: []");
+    expect(serialized).toContain("sources: []");
+    // The output is still well-formed and round-trips to empty lists.
+    const round = parseFrontmatter(serialized);
+    expect(round?.triggers).toEqual([]);
+    expect(round?.sources).toEqual([]);
+  });
+
+  it("renders [] for an explicitly undefined items value", () => {
+    const skill = makeSkill();
+    // @ts-expect-error force an undefined list value at runtime.
+    skill.triggers = undefined;
+    const serialized = serializeFrontmatter(skill);
+    expect(serialized).toContain("triggers: []");
+    expect(parseFrontmatter(serialized)?.triggers).toEqual([]);
+  });
+});
