@@ -34,6 +34,11 @@ import { createAgentManager } from "./agents/AgentManager.js";
 import type { IToolRunner } from "./execution/types.js";
 import { UltraCode } from "./UltraCode.js";
 import type { UltraCodeParts, VersioningFacade } from "./UltraCode.js";
+import type {
+  AuthoringFacade,
+  BudgetFacade,
+  LearningFacade,
+} from "./facade/ext-types.js";
 
 /* ----------------------------------------------------------------------------
  * Fakes
@@ -179,6 +184,93 @@ const versioningFake = (): VersioningFacade & { calls: string[] } => {
   };
 };
 
+/** Minimal stub of the budget sub-API (unused by the facade run tests). */
+function budgetFacadeStub(): BudgetFacade {
+  return {
+    status: async () => ({ spentUsd: 0, capUsd: null, remainingUsd: 0 }),
+    plan: async () => ({ capUsd: null }),
+    setPlan: async () => {},
+    estimate: () => ({
+      tokensIn: 0,
+      tokensOut: 0,
+      byModel: [],
+      usdLow: 0,
+      usdHigh: 0,
+      eur: 0,
+      fxRate: 0.92,
+      assumptions: [],
+    }),
+    check: () => ({
+      allowed: true,
+      requiresApproval: false,
+      remainingUsd: 0,
+      capUsd: null,
+      reason: "",
+    }),
+    formatReport: () => "",
+    history: async () => [],
+  };
+}
+
+/** Minimal stub of the authoring sub-API. */
+function authoringFacadeStub(): AuthoringFacade {
+  return {
+    skills: { list: async () => [], get: async () => null },
+    createSkill: async () => ({ kind: "skill", name: "", rationale: "" }),
+    createAgent: async () => ({ kind: "agent", name: "", rationale: "" }),
+    evolveAgent: async () => ({ kind: "agent", name: "", rationale: "" }),
+    test: async () => ({ passed: true, checks: [] }),
+    persist: async () => {},
+    scoreSkill: () => 0,
+  };
+}
+
+/** Minimal stub of the learning sub-API. */
+function learningFacadeStub(): LearningFacade {
+  return {
+    sources: {
+      list: async () => [],
+      add: async (s) => ({
+        id: "stub",
+        url: s.url,
+        type: "web-docs",
+        catalog: "stub",
+        schedule: "on-demand",
+        localeDefault: "de-de",
+      }),
+      remove: async () => false,
+    },
+    plan: async (sourceId) => ({
+      sourceId,
+      candidatePages: [],
+      estimate: {
+        tokensIn: 0,
+        tokensOut: 0,
+        byModel: [],
+        usdLow: 0,
+        usdHigh: 0,
+        eur: 0,
+        fxRate: 0.92,
+        assumptions: [],
+      },
+    }),
+    run: async (sourceId) => ({
+      sourceId,
+      pagesChecked: 0,
+      notModified: 0,
+      unchanged: 0,
+      processed: 0,
+      errors: 0,
+      estimatedUsd: 0,
+      actualUsd: 0,
+      skillsCreated: 0,
+      skillsUpdated: 0,
+      startedAt: new Date(0).toISOString(),
+      finishedAt: new Date(0).toISOString(),
+    }),
+  };
+}
+
 interface Harness {
   ultra: UltraCode;
   provider: FakeProvider;
@@ -210,6 +302,9 @@ function makeHarness(
     tools,
     agents,
     versioning,
+    budget: budgetFacadeStub(),
+    authoring: authoringFacadeStub(),
+    learning: learningFacadeStub(),
     ...partsOverride,
   });
   return { ultra, provider, store, tools, versioning, events };

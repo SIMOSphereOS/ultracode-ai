@@ -44,10 +44,17 @@ import type {
   UltraCodeConfig,
   VersionSuggestion,
 } from "@ultracode/shared";
+import os from "node:os";
 import { AgentManager, createAgentManager } from "./agents/AgentManager.js";
 import type { BaseAgentRunInput } from "./agents/BaseAgent.js";
 import type { IToolRunner } from "./execution/types.js";
 import type { ConfigManager } from "./config/ConfigManager.js";
+import type { BudgetFacade, AuthoringFacade, LearningFacade } from "./facade/ext-types.js";
+import {
+  buildBudgetFacade,
+  buildAuthoringFacade,
+  buildLearningFacade,
+} from "./facade/ext-adapters.js";
 
 /* ----------------------------------------------------------------------------
  * Factory contracts of the parallel modules.
@@ -147,6 +154,12 @@ export interface UltraCodeParts {
   agents: AgentManager;
   /** Versioning sub-system facade. */
   versioning: VersioningFacade;
+  /** Budget sub-API (Module A). */
+  budget: BudgetFacade;
+  /** Skill/agent authoring sub-API (Module B). */
+  authoring: AuthoringFacade;
+  /** Documentation-learning sub-API (Module C). */
+  learning: LearningFacade;
   /**
    * Optional stateful config manager. When present the CLI uses it for
    * `config get/set/validate/save` and the redacted view; otherwise those
@@ -347,6 +360,12 @@ export class UltraCode {
   public readonly sessions: ISessionStore;
   /** The versioning sub-API. */
   public readonly versioning: VersioningFacade;
+  /** The budget sub-API (Module A): cost estimation, plan, ledger. */
+  public readonly budget: BudgetFacade;
+  /** The authoring sub-API (Module B): skills + agents. */
+  public readonly authoring: AuthoringFacade;
+  /** The learning sub-API (Module C): documentation sources + runs. */
+  public readonly learning: LearningFacade;
   /**
    * The stateful config manager, when wired (always set by {@link create}).
    * The CLI feature-detects this for `config get/set/validate/save`.
@@ -368,6 +387,9 @@ export class UltraCode {
     this.toolRunner = parts.tools;
     this.agentManager = parts.agents;
     this.versioning = parts.versioning;
+    this.budget = parts.budget;
+    this.authoring = parts.authoring;
+    this.learning = parts.learning;
     if (parts.configManager !== undefined) this.configManager = parts.configManager;
     this.ensureProviderReady = parts.ensureProviderReady;
     this.disposables = [...(parts.disposables ?? [])];
@@ -439,6 +461,52 @@ export class UltraCode {
       quality: () => versioningSystem.quality(),
     };
 
+    // --- Modules A/B/C (budget / authoring / learning) ----------------------
+    // All cross-module dependencies are passed by constructor injection against
+    // the agreed contracts; no module imports a sibling. The LLM provider is
+    // shared with authoring/learning ONLY when a key is actually configured —
+    // offline they fall back to deterministic behaviour.
+    const homeDir = os.homedir();
+    const nowIso = (): string => new Date().toISOString();
+
+    const budgetModule = await import("./budget/index.js");
+    const planner = budgetModule.createBudgetPlanner({ logger, events, homeDir });
+    // Load any persisted plan + ledger; install the sensible default plan the
+    // first time so `budget status`/`show` report a real plan (caps + EUR/USD).
+    await planner.loadPlan();
+    if (planner.getPlan().envelopes.length === 0) {
+      await planner.installDefaultPlan();
+    }
+    await planner.loadLedger();
+    const budget = buildBudgetFacade(planner, homeDir, nowIso);
+
+    const extProvider =
+      resolveApiKey(String(activeProviderName), config, process.env) !== undefined
+        ? provider
+        : undefined;
+
+    const authoringModule = await import("./authoring/index.js");
+    const authoringInstance = authoringModule.createAuthoring({
+      logger,
+      events,
+      homeDir,
+      budget: planner,
+      ...(extProvider !== undefined ? { provider: extProvider } : {}),
+    });
+    const authoring = buildAuthoringFacade(authoringInstance);
+
+    const learningModule = await import("./learning/index.js");
+    const learnAgent = learningModule.createLearnAgent({
+      logger,
+      events,
+      homeDir,
+      budget: planner,
+      author: authoringInstance,
+      ingestion: new learningModule.NativeCrawlerProvider(),
+      ...(extProvider !== undefined ? { provider: extProvider } : {}),
+    });
+    const learning = buildLearningFacade(learnAgent, logger);
+
     const agents = createAgentManager({
       config,
       logger,
@@ -484,6 +552,9 @@ export class UltraCode {
       tools: toolRunner,
       agents,
       versioning,
+      budget,
+      authoring,
+      learning,
       configManager,
       ensureProviderReady,
       cwd,

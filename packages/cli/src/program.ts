@@ -18,6 +18,10 @@ import { registerListCommands } from "./commands/list.js";
 import { registerRunCommand } from "./commands/run.js";
 import { runSetup } from "./commands/setup.js";
 import { registerVersioningCommands } from "./commands/versioning.js";
+import { registerBudgetCommands } from "./commands/budget.js";
+import { registerSkillsCommands } from "./commands/skills.js";
+import { registerAuthoringAgentCommands } from "./commands/authoring-agents.js";
+import { registerLearnCommands } from "./commands/learn.js";
 import { getCliVersion } from "./utils/cli-version.js";
 import { paint } from "./utils/text.js";
 
@@ -49,7 +53,12 @@ export function createProgram(ctx: CliContext): Command {
   registerRunCommand(program, ctx);
   registerConfigCommand(program, ctx);
   registerListCommands(program, ctx);
+  // Must run after registerListCommands so it attaches to the existing `agents` group.
+  registerAuthoringAgentCommands(program, ctx);
   registerVersioningCommands(program, ctx);
+  registerBudgetCommands(program, ctx);
+  registerSkillsCommands(program, ctx);
+  registerLearnCommands(program, ctx);
   registerDoctorCommand(program, ctx);
 
   // Default action: setup wizard via --setup, otherwise the interactive UI.

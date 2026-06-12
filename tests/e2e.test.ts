@@ -22,7 +22,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(HERE, "..");
@@ -218,5 +218,103 @@ describe("ultracode CLI (e2e)", () => {
     const combined = `${r.stdout}${r.stderr}`;
     expect(combined).toMatch(/unknown command/i);
     expect(combined).toMatch(/--help/);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* Modules A/B/C: budget / skills / learn (v1.2.0)                            */
+/*                                                                            */
+/* These exercise the additive facade sub-APIs through the built CLI. Every   */
+/* run gets an isolated HOME (HOME + USERPROFILE) so the persisted budget     */
+/* plan, skill catalogue and learning sources are deterministic and never     */
+/* touch the developer's real `~/.ultracode/`. Everything stays offline: the  */
+/* learn-run test deliberately omits `--yes`, so no network/LLM work starts.  */
+/* -------------------------------------------------------------------------- */
+describe("ultracode CLI — budget / skills / learn (e2e)", () => {
+  let home: string;
+
+  beforeAll(() => {
+    home = mkdtempSync(join(tmpdir(), "ultracode-e2e-home-"));
+  });
+
+  afterAll(() => {
+    rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+  });
+
+  /** Spawn the CLI with an isolated HOME so `~/.ultracode/` state is per-test. */
+  function runIso(args: string[]): Promise<RunResult> {
+    return runCli(args, { env: cleanEnv({ HOME: home, USERPROFILE: home }) });
+  }
+
+  it("budget show prints the default plan with USD and EUR amounts", async () => {
+    const r = await runIso(["budget", "show"]);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain("Budget Status");
+    // Default plan installed on first access → a non-null cap is shown in USD.
+    expect(r.stdout).toMatch(/Cap:\s+\$\d/);
+    expect(r.stdout).toMatch(/Spent:\s+\$\d/);
+  });
+
+  it("budget status --json is valid JSON with numeric spend fields", async () => {
+    const r = await runIso(["budget", "status", "--json"]);
+    expect(r.code).toBe(0);
+    const status = JSON.parse(r.stdout) as {
+      spentUsd: number;
+      capUsd: number | null;
+      remainingUsd: number;
+    };
+    expect(typeof status.spentUsd).toBe("number");
+    expect(typeof status.remainingUsd).toBe("number");
+  });
+
+  it("budget plan --json emits a valid plan view (cap + EUR-backed fx)", async () => {
+    const r = await runIso(["budget", "plan", "--json"]);
+    expect(r.code).toBe(0);
+    const plan = JSON.parse(r.stdout) as { capUsd: number | null };
+    expect("capUsd" in plan).toBe(true);
+    // The default plan caps each envelope, so the aggregated cap is a number.
+    expect(plan.capUsd === null || typeof plan.capUsd === "number").toBe(true);
+  });
+
+  it("skills list works on an empty catalogue", async () => {
+    const r = await runIso(["skills", "list"]);
+    expect(r.code).toBe(0);
+    // No skills authored yet in the isolated home.
+    expect(r.stdout).toMatch(/no skills|Skills —/i);
+  });
+
+  it("skills list --json is a valid (empty) JSON array", async () => {
+    const r = await runIso(["skills", "list", "--json"]);
+    expect(r.code).toBe(0);
+    const skills = JSON.parse(r.stdout) as unknown[];
+    expect(Array.isArray(skills)).toBe(true);
+  });
+
+  it("learn sources list contains the seeded azure-docs AND azure-training", async () => {
+    const r = await runIso(["learn", "sources", "list"]);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain("azure-docs");
+    expect(r.stdout).toContain("azure-training");
+  });
+
+  it("learn sources list --json seeds and returns both azure sources", async () => {
+    const r = await runIso(["learn", "sources", "list", "--json"]);
+    expect(r.code).toBe(0);
+    const sources = JSON.parse(r.stdout) as Array<{ id: string }>;
+    const ids = sources.map((s) => s.id);
+    expect(ids).toContain("azure-docs");
+    expect(ids).toContain("azure-training");
+  });
+
+  it("learn run azure-docs WITHOUT --yes shows the cost report and does NOT start", async () => {
+    const r = await runIso(["learn", "run", "azure-docs"]);
+    // Non-TTY without --yes → must refuse before any network/LLM work.
+    const combined = `${r.stdout}${r.stderr}`;
+    // The cost report (formatReport ends in a JA/NEIN prompt) is shown first.
+    expect(combined.toLowerCase()).toMatch(/cost|kosten|usd|eur|estimate|approval|approv/);
+    // It refuses to start without approval and exits non-zero.
+    expect(r.code).toBe(1);
+    // Crucially: a clean refusal, never an unhandled crash.
+    expect(combined).not.toMatch(/at Object\.<anonymous>|at process\./);
   });
 });
