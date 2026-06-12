@@ -250,7 +250,10 @@ export class JsonSessionStore implements ISessionStore {
         return;
       } catch (err) {
         if (hasFsCode(err, "EEXIST")) {
-          firstWinTransientAt = null; // normal contention: a peer holds the lock
+          // Normal contention: a peer holds the lock. Do NOT reset the transient
+          // budget here — only a *successful* stat below proves the lock is
+          // healthy. Resetting on EEXIST would let a persistent Windows stat
+          // failure (EACCES) spin forever, since every loop re-hits EEXIST first.
         } else if (isWindowsTransient(err)) {
           noteWinTransient(err, "acquire");
           await delay(backoff);
