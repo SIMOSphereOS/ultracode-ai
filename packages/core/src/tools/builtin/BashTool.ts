@@ -116,7 +116,12 @@ export class BashTool extends BaseTool<typeof schema, BashToolOutput> {
     // hands a non-sanitised `ctx.env` (or the engine defaults to `process.env`).
     const childEnv = sanitizeEnv(ctx.env, this.secretEnvKeys);
     const child = isWin
-      ? spawn("cmd.exe", ["/d", "/s", "/c", args.command], {
+      ? // `cmd.exe /s /c` strips exactly one outer pair of quotes and runs the
+        // rest verbatim. Wrapping the whole command line in that outer pair is
+        // the only way embedded quotes (e.g. `"C:\…\node.exe" -e "…"`) survive;
+        // without it cmd mangles the first/last quote. Pairs with
+        // windowsVerbatimArguments so Node does not re-quote the argv.
+        spawn("cmd.exe", ["/d", "/s", "/c", `"${args.command}"`], {
           cwd,
           env: childEnv,
           windowsVerbatimArguments: true,

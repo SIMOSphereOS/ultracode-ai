@@ -15,7 +15,7 @@ Diese Anleitung hilft dir, **nahtlos von Mistral Vibe zu UltraCode zu migrieren*
 | **Feature** | **Mistral Vibe** | **UltraCode** | **Hinweise** |
 |-------------|------------------|---------------|--------------|
 | **Sprache** | Python | TypeScript (+ Python) | ✅ Multi-Language in UltraCode |
-| **Runtime** | Python 3.12+ | Node.js 20+ (+ Bun) | ⚠️ Runtime-Wechsel |
+| **Runtime** | Python 3.12+ | Node.js 22.13+ (+ Bun) | ⚠️ Runtime-Wechsel |
 | **UI** | React + Rich | React + Ink | ⚠️ Unterschiedliche UI-Bibliothek |
 | **Agenten** | ❌ (begrenzt) | ✅++ (10+ Agenten) | ✅ Volles Agenten-System |
 | **Tools** | ~25 | **80+** | ✅ Alle Vibe-Tools + viele mehr |

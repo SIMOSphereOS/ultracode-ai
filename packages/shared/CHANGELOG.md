@@ -4,6 +4,11 @@ All notable changes to the `@ultracode/shared` package. Format: [Keep a Changelo
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-06-12
+
+### Changed
+- Declared `engines.node >= 22.13.0` to match the real supported runtime.
+
 ## [1.0.0] - 2026-06-11
 
 ### Changed

@@ -5,7 +5,7 @@
 [![CI](https://github.com/AndreasSchwan-SIMO/UltraCode/actions/workflows/ci.yml/badge.svg)](https://github.com/AndreasSchwan-SIMO/UltraCode/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen.svg)](#teststatus)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D20-339933.svg)](#installation)
+[![Node](https://img.shields.io/badge/node-%3E%3D22.13-339933.svg)](#installation)
 [![pnpm](https://img.shields.io/badge/pnpm-11.5.2-f69220.svg)](#installation)
 
 UltraCode kombiniert einen agentischen Coding-Assistenten (mehrere LLM-Provider, eine
@@ -14,11 +14,12 @@ Coding-Tools nicht haben: einem **KI-gestützten Versionierungs- und Release-Sys
 aus Git-Diffs und Commits einen SemVer-Bump vorschlägt, einen Changelog-Entwurf erstellt und
 Quality-Gates für ein Release prüft.
 
-> **Reifegrad — ehrlich:** UltraCode ist in aktiver Entwicklung (Monorepo `0.1.0`;
-> `@ultracode/shared` 0.2.1, `@ultracode/core` 0.2.4, `ultracode` CLI 0.2.1). Das CLI-,
-> Core- und Versionierungs-Fundament ist implementiert und getestet (969 Tests, ~94 %
-> Coverage). Desktop-App und IDE-Plugins aus der Architektur-Vision sind **noch nicht**
-> Teil dieses Repos. Was hier dokumentiert ist, spiegelt den tatsächlichen Code wider.
+> **Reifegrad — ehrlich:** UltraCode hat sein erstes stabiles Release (`1.0.x`;
+> `@ultracode/shared`, `@ultracode/core`, `ultracode` CLI alle 1.0.x, eigenständig
+> versioniert). CLI-, Core- und Versionierungs-Fundament sind implementiert und getestet
+> (969 Tests, ~94 % Coverage) und laufen in CI auf Linux, macOS und Windows (Node 22/24).
+> Desktop-App und IDE-Plugins aus der Architektur-Vision sind **noch nicht** Teil dieses
+> Repos. Was hier dokumentiert ist, spiegelt den tatsächlichen Code wider.
 
 ---
 
@@ -79,9 +80,9 @@ UltraCode ist ein **TypeScript-ESM-Monorepo** (pnpm-Workspaces) aus drei Paketen
 
 | Paket | Version | Rolle |
 |---|---|---|
-| [`@ultracode/shared`](./packages/shared) | 0.2.1 | Bindender **Kontrakt-Layer**: Typen, Interfaces, Fehlerklassen, `EventBus`, `logger`, Utils. Siehe [`CONTRACTS.md`](./packages/shared/CONTRACTS.md). |
-| [`@ultracode/core`](./packages/core) | 0.2.4 | **Business-Logik**: Config, Provider, Tools, Memory, Context, Execution-Engine, Agenten und das AI-Versioning-System. Fassade: `UltraCode`. |
-| [`ultracode`](./packages/cli) | 0.2.1 | **CLI** (Commander + React/Ink): Kommandos, interaktive UI, Themes. |
+| [`@ultracode/shared`](./packages/shared) | 1.0.1 | Bindender **Kontrakt-Layer**: Typen, Interfaces, Fehlerklassen, `EventBus`, `logger`, Utils. Siehe [`CONTRACTS.md`](./packages/shared/CONTRACTS.md). |
+| [`@ultracode/core`](./packages/core) | 1.0.1 | **Business-Logik**: Config, Provider, Tools, Memory, Context, Execution-Engine, Agenten und das AI-Versioning-System. Fassade: `UltraCode`. |
+| [`ultracode`](./packages/cli) | 1.0.1 | **CLI** (Commander + React/Ink): Kommandos, interaktive UI, Themes. |
 
 Abhängigkeitsrichtung: `cli → core → shared`. `core` und `cli` implementieren gegen die
 Interfaces aus `shared`; Implementierungsdetails lecken nie nach oben.
@@ -92,7 +93,7 @@ Tiefer einsteigen: [`docs/DEVELOPMENT/architecture.md`](./docs/DEVELOPMENT/archi
 
 ## Installation
 
-**Voraussetzungen:** Node.js **>= 20**, [pnpm](https://pnpm.io) (Projekt nutzt
+**Voraussetzungen:** Node.js **>= 22.13**, [pnpm](https://pnpm.io) (Projekt nutzt
 `pnpm@11.5.2`). Cross-Platform — **Linux, macOS und Windows** werden unterstützt; es gibt
 keine Unix-only-Annahmen (Pfade über `node:path`, Git ohne Shell, `cmd.exe`-Auflösung für
 npm/pnpm-Shims unter Windows).

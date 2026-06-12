@@ -1,6 +1,6 @@
 {
   "name": "@ultracode/shared",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "license": "MIT",
   "description": "Shared types, contracts, errors and utilities for UltraCode",
@@ -18,5 +18,8 @@
   "scripts": {
     "build": "tsc -b",
     "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   }
 }

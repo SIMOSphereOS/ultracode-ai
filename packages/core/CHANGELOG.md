@@ -4,6 +4,15 @@ All notable changes to the `@ultracode/core` package. Format: [Keep a Changelog]
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-06-12
+
+### Fixed
+- BashTool (Windows): wrap the command line in an outer quote pair for `cmd.exe /s /c` so embedded quotes (e.g. `"C:\\…\\node.exe" -e "…"`) survive instead of being mangled — fixes all bash execution on Windows.
+- JsonSessionStore (Windows): treat transient `EPERM`/`EACCES`/`EBUSY` from the exclusive lock open/stat as contention (delete-pending state) and retry, instead of failing hard — fixes lost-update failures under concurrent appends on Windows. The POSIX fail-fast on durable `EACCES` is preserved.
+
+### Changed
+- Declared the real minimum runtime `node >= 22.13.0` (required by `pnpm@11.5.2` and `node:sqlite`); CI matrix runs Node 22 and 24 across Linux/macOS/Windows.
+
 ## [1.0.0] - 2026-06-11
 
 ### Changed

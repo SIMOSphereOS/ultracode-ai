@@ -9,7 +9,7 @@
 | **Komponente** | **Anforderung** | **Prüfen** |
 |---------------|----------------|------------|
 | **Betriebssystem** | Windows 10+, macOS 12+, Linux (x64/ARM64) | `uname -a` |
-| **Node.js** | 20.0+ (LTS empfohlen) | `node --version` |
+| **Node.js** | 22.13+ (LTS empfohlen) | `node --version` |
 | **npm/pnpm/yarn** | 8.0+ | `npm --version` |
 | **Python** | 3.12+ (optional, für Python-Integration) | `python --version` |
 | **Git** | 2.30+ | `git --version` |
@@ -238,7 +238,7 @@ ultracode doctor
 
 **Erwartete Ausgabe:**
 ```
-✅ Node.js: 20.12.0
+✅ Node.js: 22.13.0
 ✅ npm: 10.5.0
 ✅ Git: 2.45.0
 ✅ Terminal: wezterm (kompatibel)

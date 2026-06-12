@@ -50,6 +50,25 @@ function hasFsCode(err: unknown, code: string): boolean {
 }
 
 /**
+ * `true` when an exclusive-create / stat error means "the lock is contended
+ * right now, retry" rather than a durable failure.
+ *
+ * `EEXIST` is the portable case (the lockfile exists). On Windows, a file that
+ * another process is deleting enters a transient "delete pending" state in
+ * which `open(..,"wx")`/`stat` briefly return `EPERM`/`EACCES`/`EBUSY`; those
+ * are contention, not permission failures, and must be retried — otherwise
+ * concurrent appends spuriously fail. On POSIX a durable `EACCES` is a real
+ * error and is *not* swallowed here (so the fail-fast guarantee holds).
+ */
+function isLockContentionError(err: unknown): boolean {
+  if (hasFsCode(err, "EEXIST")) return true;
+  if (process.platform === "win32") {
+    return hasFsCode(err, "EPERM") || hasFsCode(err, "EACCES") || hasFsCode(err, "EBUSY");
+  }
+  return false;
+}
+
+/**
  * File-per-session JSON store. Usable standalone and as the fallback chosen
  * by `createSessionStore` when `node:sqlite` is unavailable.
  */
@@ -215,7 +234,7 @@ export class JsonSessionStore implements ISessionStore {
         await handle.close();
         return;
       } catch (err) {
-        if (!hasFsCode(err, "EEXIST")) {
+        if (!isLockContentionError(err)) {
           throw new SessionError(`Failed to acquire session lock for "${id}"`, {
             cause: err,
             details: { id, lockPath },
@@ -231,8 +250,15 @@ export class JsonSessionStore implements ISessionStore {
         }
       } catch (err) {
         if (hasFsCode(err, "ENOENT")) continue; // released between calls — retry now
-        // Any other stat failure (e.g. EACCES on the lock directory) is durable:
-        // stale-reclaim is unreachable, so retrying would spin forever. Fail hard.
+        // Transient Windows delete-pending contention (EPERM/EACCES/EBUSY) is
+        // retried; the stale-reclaim (STALE_LOCK_MS) still bounds the wait.
+        if (isLockContentionError(err)) {
+          await delay(backoff);
+          backoff = Math.min(backoff * 2, 50);
+          continue;
+        }
+        // Any other stat failure (e.g. durable EACCES on POSIX) is fatal:
+        // stale-reclaim is unreachable, so retrying would spin forever.
         throw new SessionError(`Failed to inspect session lock for "${id}"`, {
           cause: err,
           details: { id, lockPath },
