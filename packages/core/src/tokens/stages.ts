@@ -28,13 +28,30 @@ import {
   splitCodeFences,
   truncateAtWord,
 } from "./internal.js";
+import {
+  DEDUP_PLACEHOLDER,
+  DEFAULT_IMMUTABLE_CLOSE,
+  DEFAULT_IMMUTABLE_OPEN,
+  DEFAULT_KEEP_HEAD,
+  DEFAULT_KEEP_TAIL,
+  DEFAULT_TOOL_DESC_MAX,
+  KEEP_HEAD_FLOOR,
+  KEEP_TAIL_FLOOR,
+  SUMMARIZER_MAX_TOKENS,
+  SUMMARIZER_SYSTEM_PROMPT,
+  SUMMARIZER_TRANSCRIPT_MAX_CHARS,
+} from "./defaults.js";
+
+export {
+  DEDUP_PLACEHOLDER,
+  DEFAULT_IMMUTABLE_OPEN,
+  DEFAULT_IMMUTABLE_CLOSE,
+  DEFAULT_TOOL_DESC_MAX,
+};
 
 /* ========================================================================== *
  * a) DedupContextStage
  * ========================================================================== */
-
-/** Reference inserted in place of a repeated context block. */
-export const DEDUP_PLACEHOLDER = "[identical to block above]";
 
 /**
  * Removes exact-duplicate blocks from {@link PromptPayload.context}.
@@ -126,11 +143,6 @@ function normalizeOutsideCode(text: string): string {
 /* ========================================================================== *
  * c) SystemPromptMinifyStage
  * ========================================================================== */
-
-/** Default markers delimiting an immutable (never-edited) system-prompt span. */
-export const DEFAULT_IMMUTABLE_OPEN = "<!--immutable-->";
-/** Default closing marker for an immutable span. */
-export const DEFAULT_IMMUTABLE_CLOSE = "<!--/immutable-->";
 
 /** Options for {@link SystemPromptMinifyStage}. */
 export interface SystemPromptMinifyOptions {
@@ -308,9 +320,6 @@ function minifyMutable(text: string): string {
  * d) ToolSchemaSlimStage
  * ========================================================================== */
 
-/** Default maximum length (chars) for a tool description after slimming. */
-export const DEFAULT_TOOL_DESC_MAX = 200;
-
 /** Options for {@link ToolSchemaSlimStage}. */
 export interface ToolSchemaSlimOptions {
   /** Maximum description length in characters. Default {@link DEFAULT_TOOL_DESC_MAX}. */
@@ -385,9 +394,9 @@ export function omittedNote(count: number): string {
 
 /** Options for {@link ConversationCompactionStage}. */
 export interface ConversationCompactionOptions {
-  /** Number of leading messages always kept. Default 2. */
+  /** Number of leading messages always kept. Default {@link DEFAULT_KEEP_HEAD}. */
   keepHead?: number;
-  /** Number of trailing messages always kept. Default 6. */
+  /** Number of trailing messages always kept. Default {@link DEFAULT_KEEP_TAIL}. */
   keepTail?: number;
   /**
    * Optional provider used to *summarize* the omitted middle instead of
@@ -428,8 +437,8 @@ export class ConversationCompactionStage implements OptimizerStage {
   private readonly summarizerModel: string;
 
   constructor(options: ConversationCompactionOptions = {}) {
-    this.keepHead = clampInt(options.keepHead, 2, 0);
-    this.keepTail = clampInt(options.keepTail, 6, 1);
+    this.keepHead = clampInt(options.keepHead, DEFAULT_KEEP_HEAD, KEEP_HEAD_FLOOR);
+    this.keepTail = clampInt(options.keepTail, DEFAULT_KEEP_TAIL, KEEP_TAIL_FLOOR);
     if (options.summarizer !== undefined) this.summarizer = options.summarizer;
     this.summarizerModel = options.summarizerModel ?? "";
   }
@@ -457,15 +466,14 @@ export class ConversationCompactionStage implements OptimizerStage {
       const transcript = plan.omitted
         .map((m) => `${m.role}: ${m.content}`)
         .join("\n")
-        .slice(0, 8_000);
+        .slice(0, SUMMARIZER_TRANSCRIPT_MAX_CHARS);
       const result = await this.summarizer.complete({
         model: this.summarizerModel,
-        maxTokens: 512,
+        maxTokens: SUMMARIZER_MAX_TOKENS,
         messages: [
           {
             role: "system",
-            content:
-              "Summarize the following conversation excerpt in at most 5 bullet points. Preserve decisions, facts and open questions. Do not invent content.",
+            content: SUMMARIZER_SYSTEM_PROMPT,
           },
           { role: "user", content: transcript },
         ],

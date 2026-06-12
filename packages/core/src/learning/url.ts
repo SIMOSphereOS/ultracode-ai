@@ -11,17 +11,7 @@
  * - fragment removed, host lower-cased.
  */
 
-/** Query parameters that never change the documentation content. */
-const NOISE_PARAMS = new Set([
-  "view",
-  "toc",
-  "tabs",
-  "pivots",
-  "branch",
-  "preserve-view",
-  "wt.mc_id",
-  "tabs",
-]);
+import { NOISE_PARAMS } from "./defaults.js";
 
 /** Locale path segments we rewrite to `localeDefault` (BCP-47-ish `ll-cc`). */
 const LOCALE_SEG = /^[a-z]{2}-[a-z]{2}$/;

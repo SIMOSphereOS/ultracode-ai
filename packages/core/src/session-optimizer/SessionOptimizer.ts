@@ -45,6 +45,20 @@ import type { IBudgetGate } from "../budget/types.js";
 import { emitSessionOptimizedEvent } from "./events.js";
 import { extractPinnedFacts } from "./pinned.js";
 import {
+  BUDGET_CATEGORY,
+  CHEAP_MODEL_ROUTES,
+  DEDUP_BACKREF_TEMPLATE,
+  DEDUP_MIN_CONTENT_CHARS,
+  FIRST_SENTENCE_MAX_CHARS,
+  LLM_SUMMARY_BUDGET_NOTE,
+  LLM_SUMMARY_MAX_TOKENS,
+  LLM_SUMMARY_SYSTEM_PROMPT,
+  LLM_SUMMARY_TEMPERATURE,
+  SENTENCE_BOUNDARY_RE,
+  SIDECAR_FILENAME_UNSAFE_RE,
+  SIDECAR_ROOT,
+} from "./defaults.js";
+import {
   DEFAULT_THRESHOLDS,
   type SessionOptimizationResult,
   type SessionOptimizer,
@@ -52,12 +66,6 @@ import {
   type Thresholds,
   type WorkingSet,
 } from "./types.js";
-
-/** Root directory for the optimizer sidecars (before `~` expansion). */
-const SIDECAR_ROOT = "~/.ultracode/sessions-opt";
-
-/** Budget category charged for optional LLM summarisation. */
-const BUDGET_CATEGORY = "operations";
 
 /** Construction options for {@link createSessionOptimizer}. */
 export interface SessionOptimizerOptions {
@@ -322,14 +330,12 @@ class SessionOptimizerImpl implements SessionOptimizer {
         messages: [
           {
             role: "system",
-            content:
-              "Summarise the following conversation turns into a terse, factual " +
-              "running summary. Preserve decisions, file paths, identifiers and open tasks.",
+            content: LLM_SUMMARY_SYSTEM_PROMPT,
           },
           { role: "user", content: joined },
         ],
-        maxTokens: 512,
-        temperature: 0,
+        maxTokens: LLM_SUMMARY_MAX_TOKENS,
+        temperature: LLM_SUMMARY_TEMPERATURE,
       });
       await this.budget.record({
         ts: new Date(this.now()).toISOString(),
@@ -337,7 +343,7 @@ class SessionOptimizerImpl implements SessionOptimizer {
         model: completion ? pickCheapModel(this.provider) : undefined,
         estimatedUsd: estimate.usdHigh,
         actualUsd: estimate.usdHigh,
-        note: "session-optimizer rolling summary",
+        note: LLM_SUMMARY_BUDGET_NOTE,
       });
       const text = (completion?.text ?? "").trim();
       return text.length > 0 ? text : extractive;
@@ -351,7 +357,7 @@ class SessionOptimizerImpl implements SessionOptimizer {
 
   /** Absolute sidecar path for a session id. */
   private sidecarFile(sessionId: string): string {
-    const safe = sessionId.replace(/[^A-Za-z0-9._-]/g, "_");
+    const safe = sessionId.replace(SIDECAR_FILENAME_UNSAFE_RE, "_");
     return path.join(this.sidecarRoot, `${safe}.json`);
   }
 
@@ -453,7 +459,8 @@ export function dedupMessages(messages: ChatMessage[]): ChatMessage[] {
     // Only dedup substantial tool/assistant payloads; never collapse short or
     // user turns (they carry intent).
     const dedupable =
-      (msg.role === "tool" || msg.role === "assistant") && content.length >= 80;
+      (msg.role === "tool" || msg.role === "assistant") &&
+      content.length >= DEDUP_MIN_CONTENT_CHARS;
     if (!dedupable) {
       out.push(msg);
       continue;
@@ -466,7 +473,7 @@ export function dedupMessages(messages: ChatMessage[]): ChatMessage[] {
     } else {
       const ref: ChatMessage = {
         role: msg.role,
-        content: `[duplicate of an earlier ${msg.role} message — content elided]`,
+        content: DEDUP_BACKREF_TEMPLATE.replace("{role}", msg.role),
       };
       if (msg.toolCallId !== undefined) ref.toolCallId = msg.toolCallId;
       if (msg.name !== undefined) ref.name = msg.name;
@@ -509,12 +516,14 @@ export function extractiveSummary(messages: ChatMessage[], maxChars: number): st
   return joined.length > maxChars ? joined.slice(0, maxChars) : joined;
 }
 
-/** The first sentence (or a 160-char prefix) of a single-line string. */
+/** The first sentence (or a {@link FIRST_SENTENCE_MAX_CHARS}-char prefix) of a single-line string. */
 function firstSentence(text: string): string {
-  const match = /[.!?](?:\s|$)/.exec(text);
+  const match = SENTENCE_BOUNDARY_RE.exec(text);
   const end = match ? match.index + 1 : text.length;
   const sentence = text.slice(0, end).trim();
-  return sentence.length > 160 ? sentence.slice(0, 160) : sentence;
+  return sentence.length > FIRST_SENTENCE_MAX_CHARS
+    ? sentence.slice(0, FIRST_SENTENCE_MAX_CHARS)
+    : sentence;
 }
 
 /**
@@ -538,8 +547,8 @@ export function mergeSummary(existing: string, chunk: string, maxChars: number):
 /** Pick a cheap model id from a provider's name (best-effort, deterministic). */
 function pickCheapModel(provider: ILLMProvider): string {
   const name = String(provider.name);
-  if (name.includes("anthropic")) return "claude-3-5-haiku-latest";
-  if (name.includes("openai")) return "gpt-4o-mini";
-  if (name.includes("mistral")) return "mistral-small-latest";
+  for (const route of CHEAP_MODEL_ROUTES) {
+    if (name.includes(route.nameSubstring)) return route.model;
+  }
   return name;
 }

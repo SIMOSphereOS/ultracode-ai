@@ -9,6 +9,7 @@ import { extractText, decodeEntities } from "./html.js";
 import { parseSitemap, extractTocHrefs, decodeXml } from "./sitemap.js";
 import { normalizeUrl, normalizeAndDedup, sameHost } from "./url.js";
 import { parseRobots, isAllowed, urlAllowed } from "./robots.js";
+import { DEFAULT_USER_AGENT } from "./defaults.js";
 
 describe("sitemap parser", () => {
   it("parses a sitemapindex into shard URLs", () => {
@@ -115,7 +116,7 @@ describe("robots.txt", () => {
   `;
 
   it("selects the agent-specific group and surfaces sitemaps", () => {
-    const r = parseRobots(txt, "ultracode-learn/1.0");
+    const r = parseRobots(txt, DEFAULT_USER_AGENT);
     expect(r.matchedAgent).toBe(true);
     expect(r.sitemaps).toContain("https://e.com/sitemap.xml");
     expect(isAllowed(r, "/anything")).toBe(false); // Disallow: /

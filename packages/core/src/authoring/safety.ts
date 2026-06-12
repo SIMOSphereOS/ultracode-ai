@@ -12,30 +12,9 @@
 
 import type { AgentDefinition } from "@ultracode/shared";
 
-/**
- * Phrases that flag an instruction block as harmful/forbidden. Lower-cased;
- * matched as substrings against the normalised text.
- */
-export const FORBIDDEN_PHRASES: readonly string[] = [
-  "ignore previous instructions",
-  "ignore all previous instructions",
-  "disregard the system prompt",
-  "disregard previous instructions",
-  "exfiltrate",
-  "rm -rf /",
-  "delete all files",
-  "leak the api key",
-  "leak credentials",
-  "reveal the system prompt",
-  "bypass safety",
-  "disable safety",
-  "jailbreak",
-  "developer mode",
-  "do anything now",
-  "curl http",
-  "wget http",
-  "base64 -d",
-];
+import { FORBIDDEN_PHRASES } from "./defaults.js";
+
+export { FORBIDDEN_PHRASES };
 
 /** Normalise text for phrase matching (lower-case, collapse whitespace). */
 function normalize(text: string): string {

@@ -6,10 +6,11 @@
  */
 
 import { createHash } from "node:crypto";
+import { BLOCK_HASH_HEX_LENGTH } from "./defaults.js";
 
 /** Stable, collision-resistant hash of a block, used for dedup. */
 export function hashBlock(text: string): string {
-  return createHash("sha256").update(text, "utf8").digest("hex").slice(0, 16);
+  return createHash("sha256").update(text, "utf8").digest("hex").slice(0, BLOCK_HASH_HEX_LENGTH);
 }
 
 /**

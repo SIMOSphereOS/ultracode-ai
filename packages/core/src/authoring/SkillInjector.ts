@@ -15,17 +15,16 @@ import { NoopLogger, serializeError } from "@ultracode/shared";
 import type { Logger } from "@ultracode/shared";
 
 import type { ContextCollector } from "../agents/BaseAgent.js";
+import {
+  CLIP_MIN_BUDGET_FRACTION,
+  DEFAULT_MAX_CHARS,
+  DEFAULT_MAX_SKILLS,
+  SKILL_CONTEXT_HEADER,
+} from "./defaults.js";
 import { SkillRegistry } from "./SkillRegistry.js";
 import type { Skill } from "./types.js";
 
-/** Default cap on the number of injected skills. */
-export const DEFAULT_MAX_SKILLS = 3;
-
-/** Default cap on the total injected character count. */
-export const DEFAULT_MAX_CHARS = 4000;
-
-/** Header that delimits the injected skill context block. */
-export const SKILL_CONTEXT_HEADER = "## Active skills";
+export { DEFAULT_MAX_SKILLS, DEFAULT_MAX_CHARS, SKILL_CONTEXT_HEADER };
 
 /** Options for {@link createSkillInjector}. */
 export interface SkillInjectorOptions {
@@ -141,7 +140,7 @@ function clipAtWordBoundary(text: string, max: number): string {
   const slice = text.slice(0, max);
   const lastSpace = slice.search(/\s\S*$/);
   // Keep at least ~60% of the budget even if there is no late whitespace.
-  if (lastSpace > max * 0.6) return slice.slice(0, lastSpace).trimEnd();
+  if (lastSpace > max * CLIP_MIN_BUDGET_FRACTION) return slice.slice(0, lastSpace).trimEnd();
   return slice.trimEnd();
 }
 

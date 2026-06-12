@@ -26,6 +26,20 @@ import { Semaphore } from "./concurrency.js";
 import { NativeCrawlerProvider } from "./NativeCrawlerProvider.js";
 import { SourceLibrary } from "./SourceLibrary.js";
 import { DEFAULT_ROUTING } from "./extract.js";
+import {
+  CHECKPOINT_INTERVAL,
+  DEFAULT_CONCURRENCY,
+  DEFAULT_TOPIC,
+  PER_PAGE_TOKENS_IN,
+  PER_PAGE_TOKENS_OUT,
+  ROUND_USD_SCALE,
+} from "./defaults.js";
+
+export {
+  CHECKPOINT_INTERVAL,
+  PER_PAGE_TOKENS_IN,
+  PER_PAGE_TOKENS_OUT,
+} from "./defaults.js";
 import type {
   CostEstimate,
   DocIngestionProvider,
@@ -42,13 +56,6 @@ import type {
   NowFn,
   PageValidators,
 } from "./types.js";
-
-/** Checkpoint cadence: persist state every N processed pages. */
-export const CHECKPOINT_INTERVAL = 100;
-/** Estimated input tokens per page, used when planning. */
-export const PER_PAGE_TOKENS_IN = 1200;
-/** Estimated output tokens per page, used when planning. */
-export const PER_PAGE_TOKENS_OUT = 300;
 
 /** Construction options for {@link LearnAgent}. */
 export interface LearnAgentOptions {
@@ -222,7 +229,7 @@ export class LearnAgent {
     const pending = candidatePages.filter((u) => !processedSet.has(u));
     const sharedCache = new Map<string, string>();
     const deadline = opts.maxRuntimeMs && opts.maxRuntimeMs > 0 ? this.now() + opts.maxRuntimeMs : Infinity;
-    const sem = new Semaphore(Math.max(1, opts.concurrency ?? 4));
+    const sem = new Semaphore(Math.max(1, opts.concurrency ?? DEFAULT_CONCURRENCY));
     const llmAllowed = !!this.provider && !!this.budget; // budget already approved above
 
     let stopped = false;
@@ -449,7 +456,7 @@ function midpoint(e: CostEstimate): number {
 
 /** Round to 4 decimals. */
 function round4(n: number): number {
-  return Math.round(n * 1e4) / 1e4;
+  return Math.round(n * ROUND_USD_SCALE) / ROUND_USD_SCALE;
 }
 
 /** A zero-cost estimate (used when no budget gate is injected). */
@@ -479,10 +486,10 @@ function mergeValidators(prev: PageValidators | undefined, page: DocPage): PageV
 function deriveTopic(url: string): string {
   try {
     const segs = new URL(url).pathname.split("/").filter(Boolean);
-    const last = segs[segs.length - 1] ?? "doc";
-    return last.replace(/[-_]+/g, " ").replace(/\.\w+$/, "").trim() || "doc";
+    const last = segs[segs.length - 1] ?? DEFAULT_TOPIC;
+    return last.replace(/[-_]+/g, " ").replace(/\.\w+$/, "").trim() || DEFAULT_TOPIC;
   } catch {
-    return "doc";
+    return DEFAULT_TOPIC;
   }
 }
 

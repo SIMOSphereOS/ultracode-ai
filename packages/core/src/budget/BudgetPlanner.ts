@@ -37,14 +37,33 @@ import { HeuristicTokenCounter } from "../tokens/index.js";
 import type { TokenCounter } from "../tokens/index.js";
 import { atomicWriteFile } from "../config/paths.js";
 import { BudgetError } from "./errors.js";
+import { priceFor } from "./pricing.js";
 import {
+  ALERT_BANDS,
+  BATCH_FACTOR,
+  DAY_KEY_LENGTH,
   DEFAULT_FX_RATE,
   DEFAULT_MODEL,
+  DEFAULT_PLAN_ENVELOPES,
+  DEFAULT_PLAN_POLICY,
   DEFAULT_PRICE_TABLE,
+  DEFAULT_SAFETY_FACTOR,
+  MONTH_KEY_LENGTH,
+  OVERHEAD_FACTOR,
+  RETRY_FACTOR,
+  ROUND_SCALE,
+  TOKENS_PER_MILLION,
   USD_HIGH_FACTOR,
   USD_LOW_FACTOR,
-  priceFor,
-} from "./pricing.js";
+  WIZARD_DAILY_FROM_MONTHLY_DIVISOR,
+  WIZARD_DEFAULT_ASK_THRESHOLD_USD,
+  WIZARD_DEVELOPMENT_MONTHLY_USD,
+  WIZARD_DEVELOPMENT_PER_RUN_USD,
+  WIZARD_LEARNING_MONTHLY_USD,
+  WIZARD_LEARNING_PER_RUN_USD,
+  WIZARD_OPERATIONS_MONTHLY_USD,
+  WIZARD_OPERATIONS_PER_RUN_USD,
+} from "./defaults.js";
 import {
   BUDGET_CHECKED_EVENT,
   BUDGET_EXCEEDED_EVENT,
@@ -73,18 +92,6 @@ import type {
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 import fs from "node:fs/promises";
 
-/** System-prompt/context overhead multiplier (`O_sys`). */
-const OVERHEAD_FACTOR = 1.2;
-/** Retry/variance multiplier (`R`). */
-const RETRY_FACTOR = 1.1;
-/** Batch discount multiplier. */
-const BATCH_FACTOR = 0.5;
-/** Default safety multiplier on the final cost. */
-const DEFAULT_SAFETY_FACTOR = 2.0;
-
-/** Alert thresholds (percent of a limit) that fire at most once per crossing. */
-const ALERT_BANDS: ReadonlyArray<50 | 80 | 100> = [50, 80, 100];
-
 /** Construction options for {@link createBudgetPlanner}. */
 export interface BudgetPlannerOptions {
   /** Logger for warnings and one-line event summaries. */
@@ -110,7 +117,7 @@ export interface BudgetPlannerOptions {
  */
 function round4(n: number): number {
   if (!Number.isFinite(n)) return 0;
-  return Math.round(n * 1e6) / 1e6;
+  return Math.round(n * ROUND_SCALE) / ROUND_SCALE;
 }
 
 /** Clamp to a non-negative finite number. */
@@ -126,8 +133,8 @@ function nonNeg(n: number | undefined): number {
 function periodKeys(iso: string): { day: string; month: string } {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return { day: "", month: "" };
-  const day = d.toISOString().slice(0, 10);
-  const month = day.slice(0, 7);
+  const day = d.toISOString().slice(0, DAY_KEY_LENGTH);
+  const month = day.slice(0, MONTH_KEY_LENGTH);
   return { day, month };
 }
 
@@ -178,7 +185,7 @@ export class BudgetPlanner implements IBudgetGate {
   /** A plan with no envelopes (uncapped: every spend auto-approves). */
   private emptyPlan(): BudgetPlan {
     return {
-      policy: "ask-threshold",
+      policy: DEFAULT_PLAN_POLICY,
       fxRate: this.fxRate,
       envelopes: [],
       updatedAt: this.now().toISOString(),
@@ -242,7 +249,8 @@ export class BudgetPlanner implements IBudgetGate {
       const mIn = totalIn * leg.share;
       const mOut = totalOut * leg.share;
       const mUsd =
-        ((mIn / 1e6) * price.inputPerMTok + (mOut / 1e6) * price.outputPerMTok) *
+        ((mIn / TOKENS_PER_MILLION) * price.inputPerMTok +
+          (mOut / TOKENS_PER_MILLION) * price.outputPerMTok) *
         BATCH_FACTOR *
         safety;
       const spend: ModelSpend = {
@@ -502,8 +510,8 @@ export class BudgetPlanner implements IBudgetGate {
   /** Fold a single entry into the per-category spend cache. */
   private applyToCache(entry: LedgerEntry): void {
     const now = this.now();
-    const today = now.toISOString().slice(0, 10);
-    const month = today.slice(0, 7);
+    const today = now.toISOString().slice(0, DAY_KEY_LENGTH);
+    const month = today.slice(0, MONTH_KEY_LENGTH);
     const keys = periodKeys(entry.ts);
     const cur = this.spendCache.get(entry.category) ?? { day: 0, month: 0, total: 0 };
     cur.total += entry.actualUsd;
@@ -597,7 +605,7 @@ export class BudgetPlanner implements IBudgetGate {
    */
   async setPlan(plan: BudgetPlan): Promise<void> {
     const next: BudgetPlan = {
-      policy: "ask-threshold",
+      policy: DEFAULT_PLAN_POLICY,
       fxRate: nonNeg(plan.fxRate) || this.fxRate,
       envelopes: (plan.envelopes ?? []).map((e) => this.normaliseEnvelope(e)),
       updatedAt: this.now().toISOString(),
@@ -627,35 +635,10 @@ export class BudgetPlanner implements IBudgetGate {
    */
   async installDefaultPlan(): Promise<void> {
     const plan: BudgetPlan = {
-      policy: "ask-threshold",
+      policy: DEFAULT_PLAN_POLICY,
       fxRate: this.fxRate,
       updatedAt: this.now().toISOString(),
-      envelopes: [
-        {
-          category: "development",
-          perRunUsd: 2,
-          dailyUsd: 10,
-          monthlyUsd: 100,
-          totalUsd: null,
-          askThresholdUsd: 0.5,
-        },
-        {
-          category: "learning",
-          perRunUsd: 5,
-          dailyUsd: 15,
-          monthlyUsd: 50,
-          totalUsd: 200,
-          askThresholdUsd: 1,
-        },
-        {
-          category: "operations",
-          perRunUsd: 1,
-          dailyUsd: 5,
-          monthlyUsd: 30,
-          totalUsd: null,
-          askThresholdUsd: 0.25,
-        },
-      ],
+      envelopes: DEFAULT_PLAN_ENVELOPES.map((e) => ({ ...e })),
     };
     await this.persistPlan(plan);
     this.plan = plan;
@@ -672,7 +655,7 @@ export class BudgetPlanner implements IBudgetGate {
     const threshold =
       answers.askThresholdUsd === null
         ? null
-        : nonNeg(answers.askThresholdUsd) || 0.5;
+        : nonNeg(answers.askThresholdUsd) || WIZARD_DEFAULT_ASK_THRESHOLD_USD;
     const monthly = (v: number | null | undefined, fallback: number): number | null =>
       v === null ? null : nonNeg(v) || fallback;
     const env = (
@@ -682,19 +665,31 @@ export class BudgetPlanner implements IBudgetGate {
     ): BudgetEnvelope => ({
       category,
       perRunUsd: perRun,
-      dailyUsd: monthlyUsd === null ? null : round4(monthlyUsd / 10),
+      dailyUsd: monthlyUsd === null ? null : round4(monthlyUsd / WIZARD_DAILY_FROM_MONTHLY_DIVISOR),
       monthlyUsd,
       totalUsd: null,
       askThresholdUsd: threshold,
     });
     return {
-      policy: "ask-threshold",
+      policy: DEFAULT_PLAN_POLICY,
       fxRate,
       updatedAt: this.now().toISOString(),
       envelopes: [
-        env("development", monthly(answers.developmentMonthlyUsd, 100), 2),
-        env("learning", monthly(answers.learningMonthlyUsd, 50), 5),
-        env("operations", monthly(answers.operationsMonthlyUsd, 30), 1),
+        env(
+          "development",
+          monthly(answers.developmentMonthlyUsd, WIZARD_DEVELOPMENT_MONTHLY_USD),
+          WIZARD_DEVELOPMENT_PER_RUN_USD,
+        ),
+        env(
+          "learning",
+          monthly(answers.learningMonthlyUsd, WIZARD_LEARNING_MONTHLY_USD),
+          WIZARD_LEARNING_PER_RUN_USD,
+        ),
+        env(
+          "operations",
+          monthly(answers.operationsMonthlyUsd, WIZARD_OPERATIONS_MONTHLY_USD),
+          WIZARD_OPERATIONS_PER_RUN_USD,
+        ),
       ],
     };
   }
@@ -905,7 +900,7 @@ function planFromToml(doc: Record<string, unknown>, fallbackFx: number, ts: stri
     });
   }
   return {
-    policy: "ask-threshold",
+    policy: DEFAULT_PLAN_POLICY,
     fxRate: fx,
     envelopes,
     updatedAt: typeof doc.updatedAt === "string" ? doc.updatedAt : ts,

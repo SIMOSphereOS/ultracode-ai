@@ -18,6 +18,23 @@ import { createHash } from "node:crypto";
 
 import type { ILLMProvider } from "@ultracode/shared";
 import type { KnowledgeMaterial, RoutingShare } from "./types.js";
+import {
+  CHARS_PER_TOKEN,
+  DEFAULT_CHUNK_TOKENS,
+  DEFAULT_OVERLAP,
+  DEFAULT_ROUTE_MODEL,
+  DEFAULT_ROUTING,
+  DETERMINISTIC_SUMMARY_MAX_CHARS,
+  DETERMINISTIC_SUMMARY_SENTENCES,
+  MAX_CODE_SNIPPETS,
+  MAX_FACTS,
+  MAX_OVERLAP,
+  ROUTING_WINDOW,
+  SUMMARY_CHUNK_COUNT,
+  SUMMARY_MAX_CHARS,
+} from "./defaults.js";
+
+export { DEFAULT_CHUNK_TOKENS, DEFAULT_OVERLAP, DEFAULT_ROUTING } from "./defaults.js";
 
 /** A single chunk of page text. */
 export interface Chunk {
@@ -31,21 +48,10 @@ export interface Chunk {
   tokens: number;
 }
 
-/** Default target tokens per chunk. */
-export const DEFAULT_CHUNK_TOKENS = 512;
-/** Default fractional overlap between consecutive chunks. */
-export const DEFAULT_OVERLAP = 0.1;
-/** Cheap/standard/premium routing distribution for map-reduce. */
-export const DEFAULT_ROUTING: RoutingShare[] = [
-  { model: "cheap", share: 0.8 },
-  { model: "standard", share: 0.15 },
-  { model: "premium", share: 0.05 },
-];
-
 /** Heuristic token estimate: ~4 chars/token, never below 1 for non-empty. */
 export function estimateTokens(text: string): number {
   if (!text) return 0;
-  return Math.max(1, Math.ceil(text.length / 4));
+  return Math.max(1, Math.ceil(text.length / CHARS_PER_TOKEN));
 }
 
 /** SHA-256 hex digest of `text`. */
@@ -69,8 +75,8 @@ export function chunkText(
   overlap: number = DEFAULT_OVERLAP,
 ): Chunk[] {
   if (typeof text !== "string" || text.trim().length === 0) return [];
-  const targetChars = Math.max(1, chunkTokens) * 4;
-  const ov = Math.min(0.9, Math.max(0, overlap));
+  const targetChars = Math.max(1, chunkTokens) * CHARS_PER_TOKEN;
+  const ov = Math.min(MAX_OVERLAP, Math.max(0, overlap));
   const overlapChars = Math.floor(targetChars * ov);
 
   const chunks: Chunk[] = [];
@@ -98,7 +104,7 @@ export function chunkText(
 
 /** Round-robin a model name for chunk `i` per the routing distribution. */
 export function routeModel(i: number, routing: RoutingShare[] = DEFAULT_ROUTING): string {
-  if (routing.length === 0) return "cheap";
+  if (routing.length === 0) return DEFAULT_ROUTE_MODEL;
   // Build a cumulative ladder once per call (small arrays).
   let acc = 0;
   const ladder = routing.map((r) => {
@@ -106,9 +112,9 @@ export function routeModel(i: number, routing: RoutingShare[] = DEFAULT_ROUTING)
     return { model: r.model, upto: acc };
   });
   const total = acc > 0 ? acc : 1;
-  const pos = ((i % 100) / 100) * total;
+  const pos = ((i % ROUTING_WINDOW) / ROUTING_WINDOW) * total;
   for (const step of ladder) if (pos < step.upto) return step.model;
-  return ladder[ladder.length - 1]?.model ?? "cheap";
+  return ladder[ladder.length - 1]?.model ?? DEFAULT_ROUTE_MODEL;
 }
 
 /** Options for {@link distillPage}. */
@@ -198,12 +204,14 @@ export async function distillPage(
   }
 
   // Reduce: in deterministic mode, derive facts/snippets directly.
-  const facts = dedupe(summaries.flatMap(splitSentences)).slice(0, 50);
-  const codeSnippets = extractCodeLike(text).slice(0, 20);
+  const facts = dedupe(summaries.flatMap(splitSentences)).slice(0, MAX_FACTS);
+  const codeSnippets = extractCodeLike(text).slice(0, MAX_CODE_SNIPPETS);
   const material: KnowledgeMaterial = {
     catalog: opts.catalog,
     topic: opts.topic,
-    summary: summaries.slice(0, 3).join(" ").slice(0, 1000) || deterministicSummary(text),
+    summary:
+      summaries.slice(0, SUMMARY_CHUNK_COUNT).join(" ").slice(0, SUMMARY_MAX_CHARS) ||
+      deterministicSummary(text),
     facts,
     codeSnippets,
     sources: opts.sources,
@@ -214,7 +222,10 @@ export async function distillPage(
 /** A cheap, deterministic 1-2 sentence summary of a text. */
 function deterministicSummary(text: string): string {
   const sentences = splitSentences(text);
-  return sentences.slice(0, 2).join(" ").slice(0, 400);
+  return sentences
+    .slice(0, DETERMINISTIC_SUMMARY_SENTENCES)
+    .join(" ")
+    .slice(0, DETERMINISTIC_SUMMARY_MAX_CHARS);
 }
 
 /** Split text into trimmed sentences. */

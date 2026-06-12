@@ -10,11 +10,14 @@ import * as os from "node:os";
 import * as path from "node:path";
 
 import { resolveHome } from "../config/paths.js";
+import {
+  BUDGET_DIR_NAME,
+  BUDGET_DIR_ROOT,
+  LEDGER_FILENAME,
+  PLAN_FILENAME,
+} from "./defaults.js";
 
-/** File name of the persisted budget plan (TOML). */
-export const PLAN_FILENAME = "plan.toml";
-/** File name of the append-only spend ledger (JSON Lines). */
-export const LEDGER_FILENAME = "ledger.jsonl";
+export { PLAN_FILENAME, LEDGER_FILENAME };
 
 /**
  * Absolute path of the budget directory (`~/.ultracode/budget`).
@@ -22,7 +25,7 @@ export const LEDGER_FILENAME = "ledger.jsonl";
  * @param homeDir - Home directory override (defaults to `os.homedir()`).
  */
 export function budgetDir(homeDir: string = os.homedir()): string {
-  return path.join(homeDir, ".ultracode", "budget");
+  return path.join(homeDir, BUDGET_DIR_ROOT, BUDGET_DIR_NAME);
 }
 
 /**

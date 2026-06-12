@@ -18,7 +18,16 @@ import type { Logger } from "@ultracode/shared";
 import { createBudgetPlanner, BudgetPlanner } from "./BudgetPlanner.js";
 import { BudgetError } from "./errors.js";
 import { ledgerFile, planFile } from "./paths.js";
+import {
+  DEFAULT_FX_RATE,
+  DEFAULT_PLAN_ENVELOPES,
+  USD_HIGH_FACTOR,
+  USD_LOW_FACTOR,
+} from "./defaults.js";
 import type { BudgetPlan, EstimateInput } from "./types.js";
+
+/** Lifetime cap seeded for the `learning` envelope by `installDefaultPlan`. */
+const LEARNING_TOTAL_USD = DEFAULT_PLAN_ENVELOPES.find((e) => e.category === "learning")!.totalUsd;
 
 const RM = { recursive: true, force: true, maxRetries: 10, retryDelay: 50 } as const;
 
@@ -65,10 +74,10 @@ describe("estimate — cost formula", () => {
     //     = (0.00066 + 0.00099) * 1 = 0.00165
     expect(est.byModel).toHaveLength(1);
     expect(est.byModel[0]!.usd).toBeCloseTo(0.00165, 6);
-    expect(est.usdLow).toBeCloseTo(0.00165 * 0.85, 5);
-    expect(est.usdHigh).toBeCloseTo(0.00165 * 1.25, 5);
-    expect(est.eur).toBeCloseTo(0.00165 * 0.92, 5);
-    expect(est.fxRate).toBe(0.92);
+    expect(est.usdLow).toBeCloseTo(0.00165 * USD_LOW_FACTOR, 5);
+    expect(est.usdHigh).toBeCloseTo(0.00165 * USD_HIGH_FACTOR, 5);
+    expect(est.eur).toBeCloseTo(0.00165 * DEFAULT_FX_RATE, 5);
+    expect(est.fxRate).toBe(DEFAULT_FX_RATE);
   });
 
   it("splits cost across a routing mix and normalises shares", () => {
@@ -406,14 +415,14 @@ describe("plan management", () => {
     const plan = planner.getPlan();
     expect(plan.envelopes.map((e) => e.category)).toEqual(["development", "learning", "operations"]);
     const learning = plan.envelopes.find((e) => e.category === "learning")!;
-    expect(learning.totalUsd).toBe(200);
+    expect(learning.totalUsd).toBe(LEARNING_TOTAL_USD);
 
     const raw = await fs.readFile(planFile(homeDir), "utf8");
     expect(raw).toContain("learning");
 
     const reloaded = makePlanner();
     const loaded = await reloaded.loadPlan();
-    expect(loaded.envelopes.find((e) => e.category === "learning")!.totalUsd).toBe(200);
+    expect(loaded.envelopes.find((e) => e.category === "learning")!.totalUsd).toBe(LEARNING_TOTAL_USD);
   });
 
   it("setPlan round-trips through TOML persistence", async () => {

@@ -11,9 +11,9 @@
 
 import type { IEventBus, Logger } from "@ultracode/shared";
 import type { OptimizeResult } from "./TokenOptimizer.js";
+import { TOKENS_OPTIMIZED_EVENT } from "./defaults.js";
 
-/** Discriminator for the core-local token-optimization event. */
-export const TOKENS_OPTIMIZED_EVENT = "tokens.optimized" as const;
+export { TOKENS_OPTIMIZED_EVENT };
 
 /** Payload published after a {@link TokenOptimizer.optimize} pass. */
 export interface TokensOptimizedEvent {

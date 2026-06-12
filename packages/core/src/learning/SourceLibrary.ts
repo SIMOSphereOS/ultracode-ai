@@ -16,63 +16,46 @@ import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 import { NoopLogger } from "@ultracode/shared";
 import type { Logger } from "@ultracode/shared";
 
+import { DEFAULT_CATALOG, DEFAULT_LOCALE, DEFAULT_SCHEDULE, SEED_SOURCES } from "./defaults.js";
 import { LearnError } from "./errors.js";
 import { learningDir, sourcesFile } from "./paths.js";
 import type { LearnSource } from "./types.js";
 
-/** The sources every fresh library is seeded with (on-demand only). */
-export const SEED_SOURCES: LearnSource[] = [
-  {
-    id: "azure-docs",
-    url: "https://learn.microsoft.com/de-de/azure/?product=popular",
-    type: "web-docs",
-    catalog: "azure",
-    schedule: "on-demand",
-    scope: "core-services",
-    localeDefault: "de-de",
-  },
-  {
-    id: "azure-training",
-    url: "https://learn.microsoft.com/de-de/training/azure/",
-    type: "web-docs",
-    catalog: "azure-training",
-    schedule: "on-demand",
-    scope: "training-learning-paths",
-    localeDefault: "de-de",
-  },
-  {
-    id: "pytest-docs",
-    url: "https://docs.pytest.org/en/stable/",
-    type: "web-docs",
-    catalog: "pytest",
-    schedule: "on-demand",
-    scope: "how-to-and-reference",
-    localeDefault: "en",
-  },
-];
+export { SEED_SOURCES } from "./defaults.js";
 
 /** Persisted, in-order list of doc sources. */
 export class SourceLibrary {
   private readonly file: string;
   private readonly dir: string;
   private readonly logger: Logger;
+  private readonly seeds: readonly LearnSource[];
 
   /**
    * @param homeDir - Home directory override (defaults to `os.homedir()`).
    * @param logger - Logger for diagnostics (defaults to {@link NoopLogger}).
+   * @param seeds - Optional override for the seed sources written on first
+   *   access (defaults to {@link SEED_SOURCES} from `defaults.ts`). Supplying a
+   *   custom list makes the seeded catalogue dynamically extensible without
+   *   touching the default seeds.
    */
-  constructor(homeDir: string = os.homedir(), logger: Logger = new NoopLogger()) {
+  constructor(
+    homeDir: string = os.homedir(),
+    logger: Logger = new NoopLogger(),
+    seeds: readonly LearnSource[] = SEED_SOURCES,
+  ) {
     this.file = sourcesFile(homeDir);
     this.dir = learningDir(homeDir);
     this.logger = logger;
+    this.seeds = seeds;
   }
 
   /** List all sources (seeding the file on first access). Most-recent order preserved. */
   async list(): Promise<LearnSource[]> {
     const existing = await this.read();
     if (existing === null) {
-      await this.writeAll(SEED_SOURCES);
-      return SEED_SOURCES.map(clone);
+      const seeds = this.seeds.map(clone);
+      await this.writeAll(seeds);
+      return seeds.map(clone);
     }
     return existing.map(clone);
   }
@@ -182,9 +165,9 @@ function coerceSource(entry: unknown, index: number): LearnSource {
     id,
     url: typeof e.url === "string" ? e.url : "",
     type: "web-docs",
-    catalog: typeof e.catalog === "string" ? e.catalog : "default",
-    schedule: typeof e.schedule === "string" ? e.schedule : "on-demand",
-    localeDefault: typeof e.localeDefault === "string" ? e.localeDefault : "de-de",
+    catalog: typeof e.catalog === "string" ? e.catalog : DEFAULT_CATALOG,
+    schedule: typeof e.schedule === "string" ? e.schedule : DEFAULT_SCHEDULE,
+    localeDefault: typeof e.localeDefault === "string" ? e.localeDefault : DEFAULT_LOCALE,
   };
   if (typeof e.scope === "string") src.scope = e.scope;
   if (typeof e.lastProcessed === "string") src.lastProcessed = e.lastProcessed;

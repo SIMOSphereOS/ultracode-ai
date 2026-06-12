@@ -10,22 +10,28 @@ import os from "node:os";
 import path from "node:path";
 
 import { resolveHome } from "../config/paths.js";
+import {
+  HOME_STATE_DIRNAME,
+  LEARNING_DIRNAME,
+  SOURCES_FILENAME,
+  STATE_DIRNAME,
+} from "./defaults.js";
 
 export { resolveHome } from "../config/paths.js";
 
 /** Root learning directory (`~/.ultracode/learning`). */
 export function learningDir(homeDir: string = os.homedir()): string {
-  return path.join(resolveHome("~", homeDir), ".ultracode", "learning");
+  return path.join(resolveHome("~", homeDir), HOME_STATE_DIRNAME, LEARNING_DIRNAME);
 }
 
 /** Absolute path of the TOML source library (`learning/sources.toml`). */
 export function sourcesFile(homeDir: string = os.homedir()): string {
-  return path.join(learningDir(homeDir), "sources.toml");
+  return path.join(learningDir(homeDir), SOURCES_FILENAME);
 }
 
 /** Directory holding per-source crawl state/checkpoints (`learning/state`). */
 export function stateDir(homeDir: string = os.homedir()): string {
-  return path.join(learningDir(homeDir), "state");
+  return path.join(learningDir(homeDir), STATE_DIRNAME);
 }
 
 /**

@@ -18,6 +18,15 @@ import type { RobotsTxt } from "./robots.js";
 import { extractTocHrefs, parseSitemap } from "./sitemap.js";
 import { normalizeAndDedup, normalizeUrl, sameHost } from "./url.js";
 import { sha256 } from "./extract.js";
+import {
+  BACKOFF_FACTOR,
+  DEFAULT_BACKOFF_BASE_MS,
+  DEFAULT_LOCALE,
+  DEFAULT_MAX_CANDIDATES,
+  DEFAULT_MAX_RETRIES,
+  DEFAULT_MAX_SHARDS,
+  DEFAULT_USER_AGENT,
+} from "./defaults.js";
 import type {
   DocIngestionProvider,
   DocPage,
@@ -43,8 +52,6 @@ export interface NativeCrawlerOptions {
   maxShards?: number;
 }
 
-const DEFAULT_UA = "ultracode-learn/1.0";
-
 /** Native, dependency-free documentation crawler. */
 export class NativeCrawlerProvider implements DocIngestionProvider {
   private readonly userAgent: string;
@@ -58,17 +65,17 @@ export class NativeCrawlerProvider implements DocIngestionProvider {
 
   /** @param opts - Crawler tuning options. */
   constructor(opts: NativeCrawlerOptions = {}) {
-    this.userAgent = opts.userAgent ?? DEFAULT_UA;
-    this.maxRetries = opts.maxRetries ?? 3;
-    this.backoffBaseMs = opts.backoffBaseMs ?? 200;
+    this.userAgent = opts.userAgent ?? DEFAULT_USER_AGENT;
+    this.maxRetries = opts.maxRetries ?? DEFAULT_MAX_RETRIES;
+    this.backoffBaseMs = opts.backoffBaseMs ?? DEFAULT_BACKOFF_BASE_MS;
     this.sleep = opts.sleep ?? defaultSleep;
-    this.maxCandidates = opts.maxCandidates ?? 6000;
-    this.maxShards = opts.maxShards ?? 64;
+    this.maxCandidates = opts.maxCandidates ?? DEFAULT_MAX_CANDIDATES;
+    this.maxShards = opts.maxShards ?? DEFAULT_MAX_SHARDS;
   }
 
   /** {@inheritDoc DocIngestionProvider.discover} */
   async discover(source: LearnSource, ctx: IngestionContext): Promise<string[]> {
-    const locale = source.localeDefault || "de-de";
+    const locale = source.localeDefault || DEFAULT_LOCALE;
     const robots = await this.loadRobots(source.url, ctx);
 
     const candidates: string[] = [];
@@ -262,7 +269,7 @@ export class NativeCrawlerProvider implements DocIngestionProvider {
 
   /** Exponential backoff sleep: base × 2^attempt. */
   private async backoff(attempt: number, signal?: AbortSignal): Promise<void> {
-    await this.sleep(this.backoffBaseMs * Math.pow(2, attempt), signal);
+    await this.sleep(this.backoffBaseMs * Math.pow(BACKOFF_FACTOR, attempt), signal);
   }
 }
 

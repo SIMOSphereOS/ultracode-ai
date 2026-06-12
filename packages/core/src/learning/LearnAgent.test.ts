@@ -12,7 +12,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { createLearnAgent } from "./index.js";
+import { createLearnAgent, SEED_SOURCES } from "./index.js";
 import { LearnError } from "./errors.js";
 import { createCheckpointStore, defaultSqliteLoader } from "./checkpoint.js";
 import type {
@@ -313,11 +313,10 @@ describe("module wiring", () => {
   it("createLearnAgent exposes the seeded library", async () => {
     const agent = createLearnAgent({ homeDir: home });
     const sources = await agent.library.list();
-    expect(sources.map((s: LearnSource) => s.id).sort()).toEqual([
-      "azure-docs",
-      "azure-training",
-      "pytest-docs",
-    ]);
+    // Assert against SEED_SOURCES so a new default seed does NOT break this test.
+    const seedIds = SEED_SOURCES.map((s) => s.id);
+    expect(sources.map((s: LearnSource) => s.id)).toEqual(expect.arrayContaining(seedIds));
+    expect(sources).toHaveLength(SEED_SOURCES.length);
   });
 
   it("defaultSqliteLoader is exported and is a function", () => {

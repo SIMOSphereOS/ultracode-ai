@@ -17,6 +17,13 @@
 
 import type { ChatMessage } from "@ultracode/shared";
 
+import {
+  DEFAULT_ENABLE_LLM_SUMMARY,
+  DEFAULT_MIN_MESSAGES,
+  DEFAULT_RECENT_KEEP,
+  DEFAULT_SUMMARY_MAX_CHARS,
+} from "./defaults.js";
+
 /** Outcome of a single {@link SessionOptimizer.processIncremental} pass. */
 export interface SessionOptimizationResult {
   /** Identifier of the session that was processed. */
@@ -65,10 +72,10 @@ export interface Thresholds {
 
 /** The default {@link Thresholds} applied when none are supplied. */
 export const DEFAULT_THRESHOLDS: Thresholds = {
-  minMessages: 12,
-  recentKeep: 8,
-  summaryMaxChars: 4000,
-  enableLlmSummary: false,
+  minMessages: DEFAULT_MIN_MESSAGES,
+  recentKeep: DEFAULT_RECENT_KEEP,
+  summaryMaxChars: DEFAULT_SUMMARY_MAX_CHARS,
+  enableLlmSummary: DEFAULT_ENABLE_LLM_SUMMARY,
 };
 
 /**

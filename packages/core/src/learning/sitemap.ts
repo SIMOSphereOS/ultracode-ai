@@ -9,6 +9,8 @@
  * - `<urlset>` → page URLs (with optional `lastmod`).
  */
 
+import { TOC_WALK_GUARD } from "./defaults.js";
+
 /** A `<url>` entry from a `<urlset>` sitemap. */
 export interface SitemapUrl {
   /** Page location. */
@@ -111,7 +113,7 @@ export function extractTocHrefs(json: unknown): string[] {
   const out: string[] = [];
   const stack: unknown[] = [json];
   let guard = 0;
-  while (stack.length > 0 && guard < 1_000_000) {
+  while (stack.length > 0 && guard < TOC_WALK_GUARD) {
     guard++;
     const node = stack.pop();
     if (node == null || typeof node !== "object") continue;

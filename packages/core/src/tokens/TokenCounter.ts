@@ -25,6 +25,16 @@
  */
 
 import type { ChatMessage } from "@ultracode/shared";
+import {
+  CHARS_PER_TOKEN,
+  CJK_OR_ASTRAL_PENALTY,
+  MIN_TOKENS_NON_EMPTY,
+  PER_MESSAGE_OVERHEAD,
+  PER_TOOL_CALL_OVERHEAD,
+  PUNCTUATION_PENALTY,
+  WORD_TO_TOKEN,
+  WORD_WEIGHT,
+} from "./defaults.js";
 
 /**
  * Counts tokens for a piece of text or a conversation.
@@ -56,21 +66,6 @@ export interface ProviderTokenCounter {
   /** Exact token count for `text`, as reported by the backend. */
   countExact(text: string): Promise<number>;
 }
-
-/** Per-message structural overhead added by {@link HeuristicTokenCounter.countMessages}. */
-const PER_MESSAGE_OVERHEAD = 4;
-
-/** Extra tokens charged for each tool-call envelope on an assistant message. */
-const PER_TOOL_CALL_OVERHEAD = 8;
-
-/** Weight applied to the word-based estimate when blending the two models. */
-const WORD_WEIGHT = 0.5;
-
-/** Average characters per token assumed by the chars/N model (English-ish). */
-const CHARS_PER_TOKEN = 4;
-
-/** Multiplier turning a word count into a rough token count (sub-word splits). */
-const WORD_TO_TOKEN = 1.3;
 
 /**
  * Offline, calibrated token estimator.
@@ -153,15 +148,15 @@ export class HeuristicTokenCounter implements TokenCounter {
 
     // Penalties: punctuation/symbols are frequently their own token; CJK and
     // astral codepoints (emoji) routinely cost 1–3 tokens *each*.
-    estimate += punctuation * 0.3;
-    estimate += cjkOrAstral * 1.2;
+    estimate += punctuation * PUNCTUATION_PENALTY;
+    estimate += cjkOrAstral * CJK_OR_ASTRAL_PENALTY;
 
     // Guard against degenerate all-whitespace input collapsing below the
     // char model (which already counts whitespace) — never below 1 for
     // non-empty text.
     void wordChars;
     const tokens = Math.ceil(estimate);
-    return tokens < 1 ? 1 : tokens;
+    return tokens < MIN_TOKENS_NON_EMPTY ? MIN_TOKENS_NON_EMPTY : tokens;
   }
 
   /** {@inheritDoc TokenCounter.countMessages} */

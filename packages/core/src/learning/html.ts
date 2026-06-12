@@ -8,6 +8,8 @@
  * estimation and LLM distillation, not perfect rendering.
  */
 
+import { NAMED_ENTITIES } from "./defaults.js";
+
 /** Result of {@link extractText}: title plus cleaned body text. */
 export interface ExtractedDoc {
   /** Document title from `<title>` or the first `<h1>`, when found. */
@@ -78,27 +80,6 @@ function collapse(s: string): string {
     .trim();
 }
 
-const NAMED: Record<string, string> = {
-  amp: "&",
-  lt: "<",
-  gt: ">",
-  quot: '"',
-  apos: "'",
-  nbsp: " ",
-  copy: "©",
-  reg: "®",
-  hellip: "…",
-  mdash: "—",
-  ndash: "–",
-  rsquo: "’",
-  lsquo: "‘",
-  ldquo: "“",
-  rdquo: "”",
-  euro: "€",
-  trade: "™",
-  deg: "°",
-};
-
 /**
  * Decode the common named entities and numeric (`&#NN;` / `&#xHH;`) references.
  * Unknown entities are left verbatim. Never throws; out-of-range code points
@@ -117,7 +98,7 @@ export function decodeEntities(s: string): string {
         return whole;
       }
     }
-    const named = NAMED[body];
+    const named = NAMED_ENTITIES[body];
     return named !== undefined ? named : whole;
   });
 }

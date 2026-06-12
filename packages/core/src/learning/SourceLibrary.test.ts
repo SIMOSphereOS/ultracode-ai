@@ -26,14 +26,18 @@ describe("SourceLibrary", () => {
   it("seeds the on-demand sources on first access", async () => {
     const lib = new SourceLibrary(home);
     const list = await lib.list();
-    expect(list.map((s) => s.id).sort()).toEqual(["azure-docs", "azure-training", "pytest-docs"]);
+    // Assert against SEED_SOURCES (not a hard-coded id list) so that adding a
+    // new default seed does NOT force a test change.
+    const seedIds = SEED_SOURCES.map((s) => s.id);
+    expect(list.map((s) => s.id)).toEqual(expect.arrayContaining(seedIds));
+    expect(list).toHaveLength(SEED_SOURCES.length);
     for (const s of list) {
       expect(s.schedule).toBe("on-demand");
     }
     // Seeds are persisted to disk.
     const onDisk = sourcesFile(home);
     const lib2 = new SourceLibrary(home);
-    expect((await lib2.list()).length).toBe(3);
+    expect((await lib2.list()).length).toBe(SEED_SOURCES.length);
     expect(onDisk).toContain("sources.toml");
   });
 

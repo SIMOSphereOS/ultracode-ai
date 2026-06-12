@@ -39,6 +39,35 @@ import type {
 import { resolveHome } from "../config/paths.js";
 import { stringify as stringifyToml } from "smol-toml";
 
+import {
+  AGENTS_DIR,
+  AUDIT_FILENAME,
+  AUTHORING_CATEGORY,
+  AUTHORING_DIR,
+  DEFAULT_ALLOWED_TOOLS,
+  DEFAULT_MODEL,
+  FALLBACK_SKILL_VERSION,
+  HEURISTIC_DESCRIPTION_MAX_LENGTH,
+  INFER_TOOLS_BASE,
+  INITIAL_SKILL_VERSION,
+  SCORE_BODY_MAX,
+  SCORE_BODY_TARGET_LENGTH,
+  SCORE_DESCRIPTION_MAX,
+  SCORE_DESCRIPTION_TARGET_LENGTH,
+  SCORE_MAX,
+  SCORE_MIN,
+  SCORE_SOURCES_MAX,
+  SCORE_SOURCES_TARGET,
+  SCORE_STATUS_ACTIVE,
+  SCORE_STATUS_DEPRECATED,
+  SCORE_STATUS_DRAFT,
+  SCORE_TRIGGERS_MAX,
+  SCORE_TRIGGERS_TARGET,
+  SKILL_UPGRADE_RELEASE,
+  SLUG_MAX_LENGTH,
+  STOPWORDS as STOPWORD_LIST,
+  UNKNOWN_FROM_VERSION,
+} from "./defaults.js";
 import { AuthoringError } from "./errors.js";
 import {
   emitAuthoringEvent,
@@ -63,21 +92,7 @@ import type {
 /** A clock, injectable for deterministic tests. */
 export type Clock = () => Date;
 
-/** The default universe of tools an authored agent may be granted. */
-export const DEFAULT_ALLOWED_TOOLS: readonly string[] = [
-  "read",
-  "grep",
-  "glob",
-  "write",
-  "edit",
-  "bash",
-  "git_status",
-  "git_diff",
-  "git_log",
-];
-
-/** Budget category authored work is charged to. */
-const AUTHORING_CATEGORY = "development";
+export { DEFAULT_ALLOWED_TOOLS };
 
 /** Options for {@link createAuthoring}. */
 export interface AuthoringOptions {
@@ -127,7 +142,7 @@ export class Authoring implements ISkillAuthor {
     this.budget = opts.budget;
     this.homeDir = opts.homeDir ?? os.homedir();
     this.now = opts.now ?? (() => new Date());
-    this.model = opts.model ?? "local";
+    this.model = opts.model ?? DEFAULT_MODEL;
     this.allowedTools = opts.allowedTools ?? DEFAULT_ALLOWED_TOOLS;
     this.registry = new SkillRegistry(this.homeDir, this.logger);
   }
@@ -152,7 +167,7 @@ export class Authoring implements ISkillAuthor {
     const body = buildSkillBody(material);
 
     if (existing) {
-      const version = bumpVersion(existing.version, "minor");
+      const version = bumpVersion(existing.version, SKILL_UPGRADE_RELEASE as ReleaseType);
       const skill: Skill = {
         name: existing.name,
         description: refined.description,
@@ -178,7 +193,7 @@ export class Authoring implements ISkillAuthor {
     const skill: Skill = {
       name,
       description: refined.description,
-      version: "1.0.0",
+      version: INITIAL_SKILL_VERSION,
       catalog: material.catalog,
       triggers: refined.triggers,
       sources: dedupe(material.sources),
@@ -426,20 +441,29 @@ export class Authoring implements ISkillAuthor {
     let score = 0;
     // Description quality (up to 25): length-gated, capped.
     const descLen = (skill.description ?? "").trim().length;
-    score += clampScore((descLen / 80) * 25, 0, 25);
+    score += clampScore(
+      (descLen / SCORE_DESCRIPTION_TARGET_LENGTH) * SCORE_DESCRIPTION_MAX,
+      0,
+      SCORE_DESCRIPTION_MAX,
+    );
     // Triggers (up to 25): 0 → 0, ≥4 → full.
     const triggers = Array.isArray(skill.triggers) ? skill.triggers.length : 0;
-    score += clampScore((triggers / 4) * 25, 0, 25);
+    score += clampScore((triggers / SCORE_TRIGGERS_TARGET) * SCORE_TRIGGERS_MAX, 0, SCORE_TRIGGERS_MAX);
     // Sources (up to 20): ≥3 → full.
     const sources = Array.isArray(skill.sources) ? skill.sources.length : 0;
-    score += clampScore((sources / 3) * 20, 0, 20);
+    score += clampScore((sources / SCORE_SOURCES_TARGET) * SCORE_SOURCES_MAX, 0, SCORE_SOURCES_MAX);
     // Body substance (up to 20): ≥600 chars → full.
     const bodyLen = (skill.body ?? "").trim().length;
-    score += clampScore((bodyLen / 600) * 20, 0, 20);
+    score += clampScore((bodyLen / SCORE_BODY_TARGET_LENGTH) * SCORE_BODY_MAX, 0, SCORE_BODY_MAX);
     // Status (up to 10): active=10, draft=5, deprecated=0.
-    score += skill.status === "active" ? 10 : skill.status === "draft" ? 5 : 0;
+    score +=
+      skill.status === "active"
+        ? SCORE_STATUS_ACTIVE
+        : skill.status === "draft"
+          ? SCORE_STATUS_DRAFT
+          : SCORE_STATUS_DEPRECATED;
 
-    return Math.max(0, Math.min(100, Math.round(score)));
+    return Math.max(SCORE_MIN, Math.min(SCORE_MAX, Math.round(score)));
   }
 
   /* --------------------------------------------------------------------- *
@@ -532,7 +556,7 @@ export class Authoring implements ISkillAuthor {
 
   /** Write an agent definition to `~/.ultracode/agents/<name>.toml`. */
   private async saveAgent(agent: AgentDefinition): Promise<void> {
-    const dir = resolveHome("~/.ultracode/agents", this.homeDir);
+    const dir = resolveHome(AGENTS_DIR, this.homeDir);
     const file = path.join(dir, `${safeFile(agent.name)}.toml`);
     const data = stringifyToml(pruneUndefined(agent) as Record<string, unknown>);
     await atomicWrite(file, data);
@@ -540,8 +564,8 @@ export class Authoring implements ISkillAuthor {
 
   /** Append a JSONL audit line to `~/.ultracode/authoring/audit.jsonl`. */
   private async appendAudit(entry: Record<string, unknown>): Promise<void> {
-    const dir = resolveHome("~/.ultracode/authoring", this.homeDir);
-    const file = path.join(dir, "audit.jsonl");
+    const dir = resolveHome(AUTHORING_DIR, this.homeDir);
+    const file = path.join(dir, AUDIT_FILENAME);
     try {
       await fs.mkdir(dir, { recursive: true });
       await fs.appendFile(file, `${JSON.stringify(entry)}\n`, "utf8");
@@ -577,7 +601,7 @@ function heuristicRefine(material: KnowledgeMaterial): {
   const summary = (material.summary ?? "").trim();
   const description =
     summary.length > 0
-      ? truncateSentence(summary, 160)
+      ? truncateSentence(summary, HEURISTIC_DESCRIPTION_MAX_LENGTH)
       : `Knowledge skill covering ${material.topic}.`;
 
   const triggers = dedupe([
@@ -618,7 +642,7 @@ function buildSkillBody(material: KnowledgeMaterial): string {
 /** Infer a (pre-clamp) tool wishlist from code snippets. */
 function inferTools(material: KnowledgeMaterial): string[] {
   const text = material.codeSnippets.join("\n").toLowerCase();
-  const tools = new Set<string>(["read", "grep"]);
+  const tools = new Set<string>(INFER_TOOLS_BASE);
   if (/\bgit\b/.test(text)) tools.add("git_status");
   if (/write|create file|fs\.write/.test(text)) tools.add("write");
   if (/edit|replace|patch/.test(text)) tools.add("edit");
@@ -629,7 +653,7 @@ function inferTools(material: KnowledgeMaterial): string[] {
 /** Bump a SemVer string; falls back to a sane default on invalid input. */
 function bumpVersion(version: string, release: ReleaseType): string {
   const cleaned = clean(version) ?? (valid(version) ? version : null);
-  if (cleaned === null) return "1.0.0";
+  if (cleaned === null) return FALLBACK_SKILL_VERSION;
   const next = inc(cleaned, release);
   return next ?? cleaned;
 }
@@ -667,7 +691,7 @@ function diffAgents(prev: AgentDefinition, next: AgentDefinition): string {
 /** Best-effort recovery of the previous version for an upgrade event. */
 function extractFromVersion(proposal: AuthoringProposal): string {
   const m = /version:\s*([0-9][^\s]*)\s*→/.exec(proposal.diffFromExisting ?? "");
-  return m?.[1] ?? "0.0.0";
+  return m?.[1] ?? UNKNOWN_FROM_VERSION;
 }
 
 /** Try to parse a `{description, triggers}` JSON object from LLM text. */
@@ -703,7 +727,7 @@ function slugify(input: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 64);
+    .slice(0, SLUG_MAX_LENGTH);
   return slug.length > 0 ? slug : "skill";
 }
 
@@ -715,25 +739,7 @@ function keywordsFrom(text: string): string[] {
 }
 
 /** A small stopword set so triggers are not noise. */
-const STOPWORDS = new Set([
-  "this",
-  "that",
-  "with",
-  "from",
-  "into",
-  "your",
-  "they",
-  "them",
-  "have",
-  "will",
-  "shall",
-  "about",
-  "which",
-  "when",
-  "what",
-  "skill",
-  "knowledge",
-]);
+const STOPWORDS = new Set<string>(STOPWORD_LIST);
 
 /** De-duplicate a string array, preserving first-seen order. */
 function dedupe(items: string[]): string[] {

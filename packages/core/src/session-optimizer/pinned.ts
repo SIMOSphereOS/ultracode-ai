@@ -11,38 +11,21 @@
 
 import type { ChatMessage } from "@ultracode/shared";
 
-/** Upper bound on a single pinned fact's length (characters). */
-const MAX_FACT_CHARS = 200;
-
-/** Hard cap on the number of pinned facts returned (most recent kept). */
-const MAX_FACTS = 64;
-
-/** File paths: POSIX or Windows, with a recognised file extension (unicode-aware). */
-const FILE_PATH_RE =
-  /(?:[A-Za-z]:\\|\.{0,2}[/\\])?(?:[\p{L}\p{N}.@_-]+[/\\])+[\p{L}\p{N}.@_-]+\.[A-Za-z][A-Za-z0-9]{0,9}/gu;
-
-/** Bare dotted/extensioned filenames (e.g. `config.toml`, `café.md`). */
-const BARE_FILE_RE = /[\p{L}\p{N}_-]+\.(?:[A-Za-z][A-Za-z0-9]{0,9})\b/gu;
-
-/** Semantic-ish version numbers (e.g. `1.2.0`, `v3.4`, `2.0.0-rc.1`). */
-const VERSION_RE = /\bv?\d+\.\d+(?:\.\d+)?(?:[-+][\w.]+)?\b/g;
-
-/**
- * Identifiers / code symbols: CamelCase, snake_case, or `a.b.c()` member chains,
- * optionally ending in a `()` call. No trailing `\b` so the `()` is captured.
- */
-const IDENTIFIER_RE = /(?:[A-Za-z_$][\w$]*\.)*[A-Za-z_$][\w$]*(?:\(\))?/g;
-
-/** Lines that look like a decision ("we decided to use X", "chosen: Y"). */
-const DECISION_RE =
-  /(?:^|[\s.;])((?:decided|decide|chosen|choose|chose|use|using|adopt(?:ed)?|pick(?:ed)?|go with|selected|prefer(?:red)?)\b[^.!?\n]{0,180})/gi;
-
-/** Lines that look like an open task ("TODO: …", "FIXME …", "next step …"). */
-const TODO_RE = /\b(?:TODO|FIXME|XXX|HACK|next step|open task|action item)\b[^.\n]{0,180}/gi;
+import {
+  BARE_FILE_RE,
+  CODE_SYMBOL_MIN_CHARS,
+  DECISION_RE,
+  FILE_PATH_RE,
+  IDENTIFIER_RE,
+  MAX_FACT_CHARS,
+  MAX_FACTS,
+  TODO_RE,
+  VERSION_RE,
+} from "./defaults.js";
 
 /** True when a token looks like a meaningful code symbol (not a stop-word). */
 function isCodeSymbol(token: string): boolean {
-  if (token.length < 3) return false;
+  if (token.length < CODE_SYMBOL_MIN_CHARS) return false;
   // CamelCase, contains underscore/$/digit, or a member chain / call — these
   // are strong signals of an identifier rather than prose.
   return (

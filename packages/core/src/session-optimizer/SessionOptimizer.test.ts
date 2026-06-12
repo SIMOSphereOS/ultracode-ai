@@ -15,6 +15,7 @@ import { HeuristicTokenCounter } from "../tokens/TokenCounter.js";
 import type { IBudgetGate } from "../budget/types.js";
 import { createSessionOptimizer } from "./SessionOptimizer.js";
 import { dedupMessages, extractiveSummary, mergeSummary } from "./SessionOptimizer.js";
+import { DEDUP_MIN_CONTENT_CHARS } from "./defaults.js";
 
 let home: string;
 
@@ -226,7 +227,7 @@ describe("buildWorkingSet", () => {
 
 describe("dedup", () => {
   it("collapses repeated identical tool outputs to a back-reference", () => {
-    const dup = "X".repeat(120);
+    const dup = "X".repeat(DEDUP_MIN_CONTENT_CHARS + 40);
     const msgs: ChatMessage[] = [
       { role: "user", content: "go" },
       { role: "tool", content: dup, toolCallId: "a" },

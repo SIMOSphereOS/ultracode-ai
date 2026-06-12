@@ -11,6 +11,7 @@ import type {
   ILLMProvider,
 } from "@ultracode/shared";
 import { Authoring, createAuthoring } from "./Authoring.js";
+import { INITIAL_SKILL_VERSION } from "./defaults.js";
 import { AuthoringError } from "./errors.js";
 import type {
   BudgetDecision,
@@ -106,7 +107,7 @@ describe("createOrUpgradeSkill (deterministic)", () => {
     const proposal = await author.createOrUpgradeSkill(material());
     expect(proposal.kind).toBe("skill");
     expect(proposal.name).toBe("dora-operational-resilience");
-    expect(proposal.skill?.version).toBe("1.0.0");
+    expect(proposal.skill?.version).toBe(INITIAL_SKILL_VERSION);
     expect(proposal.skill?.status).toBe("draft");
     expect(proposal.skill?.triggers.length).toBeGreaterThan(0);
     expect(proposal.skill?.createdAt).toBe(FIXED.toISOString());

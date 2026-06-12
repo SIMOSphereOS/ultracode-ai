@@ -16,15 +16,10 @@ import { NoopLogger, serializeError } from "@ultracode/shared";
 import type { Logger } from "@ultracode/shared";
 
 import { resolveHome } from "../config/paths.js";
+import { SAFE_SEGMENT, SKILLS_ROOT } from "./defaults.js";
 import { AuthoringError } from "./errors.js";
 import { parseFrontmatter, serializeFrontmatter } from "./frontmatter.js";
 import type { Skill, SkillFrontmatter } from "./types.js";
-
-/** Skill/catalog names are used as path segments — restrict to a safe charset. */
-const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/;
-
-/** Root directory for the skill store (before `~` expansion). */
-const SKILLS_ROOT = "~/.ultracode/skills";
 
 /**
  * Loads, lists and persists {@link Skill}s as markdown files. The single source
