@@ -1,0 +1,280 @@
+/**
+ * Integration: the {@link UltraCode} facade wires the {@link SessionOptimizer}
+ * so that (a) continuing a session replays a compacted working set and (b) a
+ * background compaction pass runs after a successful turn without ever breaking
+ * the run.
+ */
+import os from "node:os";
+import path from "node:path";
+import { promises as fs } from "node:fs";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  DEFAULT_CONFIG,
+  EventBus,
+  NoopLogger,
+} from "@ultracode/shared";
+import type {
+  ChatMessage,
+  CompletionRequest,
+  CompletionResult,
+  ILLMProvider,
+  ISessionStore,
+  SessionMeta,
+  SessionRecord,
+  UltraCodeConfig,
+} from "@ultracode/shared";
+import { UltraCode } from "../UltraCode.js";
+import type { UltraCodeParts, VersioningFacade } from "../UltraCode.js";
+import { createAgentManager } from "../agents/AgentManager.js";
+import { createSessionOptimizer } from "./SessionOptimizer.js";
+
+let home: string;
+beforeEach(async () => {
+  home = await fs.mkdtemp(path.join(os.tmpdir(), "uc-sopt-int-"));
+});
+afterEach(async () => {
+  await fs.rm(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+});
+
+class StubProvider implements ILLMProvider {
+  readonly name = "anthropic";
+  public lastRequest?: CompletionRequest;
+  async listModels(): Promise<string[]> {
+    return ["m"];
+  }
+  async complete(req: CompletionRequest): Promise<CompletionResult> {
+    this.lastRequest = req;
+    return {
+      text: "ok",
+      toolCalls: [],
+      usage: { inputTokens: 1, outputTokens: 1 },
+      finishReason: "stop",
+    };
+  }
+  async *stream() {
+    yield { type: "done" as const, usage: { inputTokens: 0, outputTokens: 0 } };
+  }
+  async healthCheck(): Promise<boolean> {
+    return true;
+  }
+}
+
+class MapStore implements ISessionStore {
+  readonly sessions = new Map<string, SessionRecord>();
+  async create(agentName: string, title?: string): Promise<SessionMeta> {
+    const id = `sess-1`;
+    const now = new Date().toISOString();
+    const r: SessionRecord = {
+      id,
+      title: title ?? "t",
+      createdAt: now,
+      updatedAt: now,
+      agentName,
+      messageCount: 0,
+      messages: [],
+    };
+    this.sessions.set(id, r);
+    const { messages: _m, ...meta } = r;
+    return meta;
+  }
+  async get(id: string): Promise<SessionRecord | null> {
+    const r = this.sessions.get(id);
+    return r ? { ...r, messages: [...r.messages] } : null;
+  }
+  async appendMessages(id: string, msgs: ChatMessage[]): Promise<void> {
+    const r = this.sessions.get(id);
+    if (!r) return;
+    r.messages.push(...msgs);
+    r.messageCount = r.messages.length;
+  }
+  async list(): Promise<SessionMeta[]> {
+    return [];
+  }
+  async delete(): Promise<boolean> {
+    return false;
+  }
+  async prune(): Promise<number> {
+    return 0;
+  }
+}
+
+const versioningStub: VersioningFacade = {
+  analyze: async () => ({}) as never,
+  suggest: async () => ({}) as never,
+  plan: async () => ({}) as never,
+  quality: async () => ({}) as never,
+};
+
+function build(
+  store: ISessionStore,
+  provider: ILLMProvider,
+  optimizer: UltraCodeParts["sessionOptimizer"],
+  mutate?: (c: UltraCodeConfig) => void,
+): UltraCode {
+  const config = structuredClone(DEFAULT_CONFIG);
+  if (mutate) mutate(config);
+  const logger = new NoopLogger();
+  const events = new EventBus();
+  const tools = { execute: async () => ({ ok: true, output: null, durationMs: 0 }), list: () => [] };
+  const agents = createAgentManager({ config, logger, tools, provider, events });
+  const parts: UltraCodeParts = {
+    config,
+    logger,
+    events,
+    sessions: store,
+    tools,
+    agents,
+    versioning: versioningStub,
+    budget: {} as never,
+    authoring: {} as never,
+    learning: {} as never,
+  };
+  if (optimizer) parts.sessionOptimizer = optimizer;
+  return new UltraCode(parts);
+}
+
+describe("UltraCode + SessionOptimizer integration", () => {
+  it("replays a compacted working set when continuing a long session", async () => {
+    const store = new MapStore();
+    const provider = new StubProvider();
+    const optimizer = createSessionOptimizer({
+      sessionStore: store,
+      logger: new NoopLogger(),
+      homeDir: home,
+      thresholds: { recentKeep: 4 },
+    });
+
+    // Seed a long session.
+    await store.create("default", "t");
+    const long: ChatMessage[] = [{ role: "system", content: "sys" }];
+    for (let i = 0; i < 12; i++) {
+      long.push({ role: "user", content: `decided to use plan_${i} in file_${i}.ts` });
+      long.push({ role: "assistant", content: `done ${i}` });
+    }
+    await store.appendMessages("sess-1", long);
+
+    const ultra = build(store, provider, optimizer);
+    await ultra.run("next prompt", { sessionId: "sess-1" });
+
+    // The history replayed to the provider is compacted: a leading "Compacted
+    // session context" system message replaces the full transcript.
+    const history = provider.lastRequest?.messages ?? [];
+    const joined = history.map((m) => m.content).join("\n");
+    expect(joined).toContain("Compacted session context");
+    expect(joined).toContain("Pinned facts");
+    // Far fewer messages than the 25 raw + new prompt.
+    expect(history.length).toBeLessThan(long.length);
+  });
+
+  it("starts a background compaction pass after a successful turn (fire-and-forget)", async () => {
+    const store = new MapStore();
+    const provider = new StubProvider();
+    const optimizer = createSessionOptimizer({
+      sessionStore: store,
+      logger: new NoopLogger(),
+      homeDir: home,
+      thresholds: { recentKeep: 2, minMessages: 2 },
+    });
+    const spy = vi.spyOn(optimizer, "processIncremental");
+
+    const ultra = build(store, provider, optimizer, (c) => {
+      c.sessions.enablePersistence = true;
+    });
+    await ultra.run("hello");
+    // Allow the fire-and-forget microtask to run.
+    await new Promise((r) => setTimeout(r, 10));
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("a throwing background optimizer never breaks the run", async () => {
+    const store = new MapStore();
+    const provider = new StubProvider();
+    const optimizer = {
+      buildWorkingSet: () => {
+        throw new Error("boom");
+      },
+      processIncremental: vi.fn(async () => {
+        throw new Error("background boom");
+      }),
+    };
+
+    const ultra = build(store, provider, optimizer, (c) => {
+      c.sessions.enablePersistence = true;
+    });
+    // buildWorkingSet only runs on a continued session; here a fresh run still
+    // triggers the background pass which rejects — the run must still succeed.
+    const result = await ultra.run("hello");
+    expect(result.text).toBe("ok");
+    await new Promise((r) => setTimeout(r, 10));
+    expect(optimizer.processIncremental).toHaveBeenCalled();
+  });
+
+  it("falls back to raw history when buildWorkingSet throws on a continued session", async () => {
+    const store = new MapStore();
+    const provider = new StubProvider();
+    await store.create("default", "t");
+    await store.appendMessages("sess-1", [
+      { role: "system", content: "sys" },
+      { role: "user", content: "earlier" },
+      { role: "assistant", content: "reply" },
+    ]);
+    const optimizer = {
+      buildWorkingSet: () => {
+        throw new Error("ws boom");
+      },
+      processIncremental: vi.fn(async () => ({
+        sessionId: "sess-1",
+        beforeTokens: 0,
+        afterTokens: 0,
+        savedTokens: 0,
+        summarizedTurns: 0,
+        durableSummaryUpdated: false,
+      })),
+    };
+    const ultra = build(store, provider, optimizer);
+    const result = await ultra.run("again", { sessionId: "sess-1" });
+    expect(result.text).toBe("ok");
+    // Raw history was replayed (contains the earlier user turn).
+    const joined = (provider.lastRequest?.messages ?? []).map((m) => m.content).join("\n");
+    expect(joined).toContain("earlier");
+  });
+
+  it("enableSessionOptimization:false disables both paths", async () => {
+    const store = new MapStore();
+    const provider = new StubProvider();
+    const optimizer = {
+      buildWorkingSet: vi.fn(() => ({ messages: [], durableSummary: "", pinnedFacts: [] })),
+      processIncremental: vi.fn(async () => ({
+        sessionId: "s",
+        beforeTokens: 0,
+        afterTokens: 0,
+        savedTokens: 0,
+        summarizedTurns: 0,
+        durableSummaryUpdated: false,
+      })),
+    };
+    const config = structuredClone(DEFAULT_CONFIG);
+    config.sessions.enablePersistence = true;
+    const events = new EventBus();
+    const tools = { execute: async () => ({ ok: true, output: null, durationMs: 0 }), list: () => [] };
+    const agents = createAgentManager({ config, logger: new NoopLogger(), tools, provider, events });
+    const ultra = new UltraCode({
+      config,
+      logger: new NoopLogger(),
+      events,
+      sessions: store,
+      tools,
+      agents,
+      versioning: versioningStub,
+      budget: {} as never,
+      authoring: {} as never,
+      learning: {} as never,
+      sessionOptimizer: optimizer,
+      enableSessionOptimization: false,
+    });
+    await ultra.run("hello");
+    await new Promise((r) => setTimeout(r, 10));
+    expect(optimizer.buildWorkingSet).not.toHaveBeenCalled();
+    expect(optimizer.processIncremental).not.toHaveBeenCalled();
+  });
+});

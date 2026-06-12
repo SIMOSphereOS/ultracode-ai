@@ -355,6 +355,10 @@ export {
   createAuthoring,
   DEFAULT_ALLOWED_TOOLS,
   SkillRegistry,
+  createSkillInjector,
+  DEFAULT_MAX_SKILLS,
+  SKILL_INJECTOR_DEFAULT_MAX_CHARS,
+  SKILL_CONTEXT_HEADER,
   parseFrontmatter,
   serializeFrontmatter,
   splitDocument,
@@ -387,7 +391,30 @@ export type {
   TestResult as AuthoringTestResult,
   TestCheck as AuthoringTestCheck,
   ISkillAuthor,
+  SkillInjectorOptions,
 } from "./authoring/index.js";
+
+/* -------------------------- Session optimizer --------------------------- */
+export {
+  createSessionOptimizer,
+  dedupMessages,
+  extractiveSummary,
+  mergeSummary,
+  extractPinnedFacts,
+  extractPinnedFromText,
+  SESSION_OPTIMIZED_EVENT,
+  emitSessionOptimizedEvent,
+  DEFAULT_THRESHOLDS,
+} from "./session-optimizer/index.js";
+export type {
+  SessionOptimizer,
+  SessionOptimizerOptions,
+  SessionOptimizationResult,
+  SessionOptState,
+  Thresholds,
+  WorkingSet,
+  SessionOptimizedEvent,
+} from "./session-optimizer/index.js";
 
 /* ------------------------------ Learning -------------------------------- */
 export {

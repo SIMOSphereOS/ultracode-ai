@@ -1,0 +1,160 @@
+/**
+ * {@link createSkillInjector} — make `status: "active"` skills take effect at
+ * runtime by injecting their bodies into an agent's prompt context.
+ *
+ * The injector is a {@link ContextCollector}: given the user's prompt it loads
+ * the skill registry, keeps only active skills, scores each by how many of its
+ * triggers appear (case-insensitively) as tokens in the prompt, and concatenates
+ * the highest-scoring skills' bodies (up to `maxSkills` / `maxChars`) into a
+ * clearly-marked context block. Skills contribute **context only** — they never
+ * alter tool permissions. With no matching active skill it returns `""` and any
+ * failure is swallowed to `""`, so the agent's behaviour is exactly unchanged.
+ */
+
+import { NoopLogger, serializeError } from "@ultracode/shared";
+import type { Logger } from "@ultracode/shared";
+
+import type { ContextCollector } from "../agents/BaseAgent.js";
+import { SkillRegistry } from "./SkillRegistry.js";
+import type { Skill } from "./types.js";
+
+/** Default cap on the number of injected skills. */
+export const DEFAULT_MAX_SKILLS = 3;
+
+/** Default cap on the total injected character count. */
+export const DEFAULT_MAX_CHARS = 4000;
+
+/** Header that delimits the injected skill context block. */
+export const SKILL_CONTEXT_HEADER = "## Active skills";
+
+/** Options for {@link createSkillInjector}. */
+export interface SkillInjectorOptions {
+  /** Maximum number of skills to inject (default {@link DEFAULT_MAX_SKILLS}). */
+  maxSkills?: number;
+  /** Maximum total characters of skill body to inject (default {@link DEFAULT_MAX_CHARS}). */
+  maxChars?: number;
+  /** Logger for non-fatal warnings (defaults to a no-op). */
+  logger?: Logger;
+}
+
+/** A scored, active skill candidate. */
+interface ScoredSkill {
+  skill: Skill;
+  score: number;
+}
+
+/**
+ * Build a {@link ContextCollector} that injects matching active skills.
+ *
+ * @param registry - The authoring {@link SkillRegistry} to read skills from.
+ * @param opts - Optional caps and logger.
+ * @returns A `(prompt) => Promise<string>` collector. Returns `""` when no
+ *   active skill matches, on a corrupt registry, or on any failure.
+ */
+export function createSkillInjector(
+  registry: SkillRegistry,
+  opts: SkillInjectorOptions = {},
+): ContextCollector {
+  const maxSkills =
+    Number.isInteger(opts.maxSkills) && (opts.maxSkills as number) > 0
+      ? (opts.maxSkills as number)
+      : DEFAULT_MAX_SKILLS;
+  const maxChars =
+    Number.isInteger(opts.maxChars) && (opts.maxChars as number) > 0
+      ? (opts.maxChars as number)
+      : DEFAULT_MAX_CHARS;
+  const logger = opts.logger ?? new NoopLogger();
+
+  return async (prompt: string): Promise<string> => {
+    try {
+      const all = await registry.load();
+      const active = all.filter((s) => s.status === "active");
+      if (active.length === 0) return "";
+
+      const promptTokens = tokenize(prompt);
+      if (promptTokens.size === 0) return "";
+
+      const scored: ScoredSkill[] = [];
+      for (const skill of active) {
+        const score = triggerScore(skill, promptTokens);
+        if (score > 0) scored.push({ skill, score });
+      }
+      if (scored.length === 0) return "";
+
+      // Rank by score desc, then by name asc for a stable, deterministic tie-break.
+      scored.sort((a, b) =>
+        b.score !== a.score ? b.score - a.score : a.skill.name.localeCompare(b.skill.name),
+      );
+
+      const top = scored.slice(0, maxSkills);
+      return assembleBlock(top, maxChars);
+    } catch (err) {
+      logger.warn("skill-injector.failed", { error: serializeError(err) });
+      return "";
+    }
+  };
+}
+
+/**
+ * Score a skill by the number of its triggers that appear as case-insensitive
+ * tokens in the prompt. Multi-word triggers match only when *every* word is
+ * present in the prompt token set.
+ */
+function triggerScore(skill: Skill, promptTokens: ReadonlySet<string>): number {
+  let score = 0;
+  for (const trigger of skill.triggers ?? []) {
+    const words = tokenizeArray(trigger);
+    if (words.length === 0) continue;
+    if (words.every((w) => promptTokens.has(w))) score++;
+  }
+  return score;
+}
+
+/** Concatenate the top skills' bodies into a marked context block under `maxChars`. */
+function assembleBlock(top: ScoredSkill[], maxChars: number): string {
+  const parts: string[] = [SKILL_CONTEXT_HEADER];
+  let used = SKILL_CONTEXT_HEADER.length;
+
+  for (const { skill } of top) {
+    const heading = `\n\n### ${skill.name}\n`;
+    const body = (skill.body ?? "").trim();
+    if (body.length === 0) continue;
+
+    const remaining = maxChars - used - heading.length;
+    if (remaining <= 0) break;
+
+    const clipped = body.length > remaining ? clipAtWordBoundary(body, remaining) : body;
+    if (clipped.length === 0) break;
+
+    parts.push(`${heading}${clipped}`);
+    used += heading.length + clipped.length;
+    if (used >= maxChars) break;
+  }
+
+  // Only a header and nothing else → nothing useful to inject.
+  return parts.length > 1 ? parts.join("") : "";
+}
+
+/** Clip text to at most `max` chars, preferring the last whitespace boundary. */
+function clipAtWordBoundary(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const slice = text.slice(0, max);
+  const lastSpace = slice.search(/\s\S*$/);
+  // Keep at least ~60% of the budget even if there is no late whitespace.
+  if (lastSpace > max * 0.6) return slice.slice(0, lastSpace).trimEnd();
+  return slice.trimEnd();
+}
+
+/** Tokenize a string into a lower-cased set of word tokens (Unicode-aware). */
+function tokenize(text: string): Set<string> {
+  return new Set(tokenizeArray(text));
+}
+
+/** Tokenize into a lower-cased array of word tokens (Unicode letters/digits). */
+function tokenizeArray(text: string): string[] {
+  if (typeof text !== "string" || text.length === 0) return [];
+  const lowered = text.toLowerCase();
+  // Split on anything that is not a Unicode letter, number or underscore.
+  const matches = lowered.match(/[\p{L}\p{N}_]+/gu);
+  return matches ?? [];
+}

@@ -21,6 +21,14 @@ export type { AuthoringOptions, Clock } from "./Authoring.js";
 export { SkillRegistry } from "./SkillRegistry.js";
 
 export {
+  createSkillInjector,
+  DEFAULT_MAX_SKILLS,
+  DEFAULT_MAX_CHARS as SKILL_INJECTOR_DEFAULT_MAX_CHARS,
+  SKILL_CONTEXT_HEADER,
+} from "./SkillInjector.js";
+export type { SkillInjectorOptions } from "./SkillInjector.js";
+
+export {
   parseFrontmatter,
   serializeFrontmatter,
   splitDocument,

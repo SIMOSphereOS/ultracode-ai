@@ -46,7 +46,10 @@ import type {
 } from "@ultracode/shared";
 import os from "node:os";
 import { AgentManager, createAgentManager } from "./agents/AgentManager.js";
-import type { BaseAgentRunInput } from "./agents/BaseAgent.js";
+import type { BaseAgentRunInput, ContextCollector } from "./agents/BaseAgent.js";
+import { createSkillInjector } from "./authoring/SkillInjector.js";
+import { createSessionOptimizer } from "./session-optimizer/index.js";
+import type { SessionOptimizer } from "./session-optimizer/index.js";
 import type { IToolRunner } from "./execution/types.js";
 import type { ConfigManager } from "./config/ConfigManager.js";
 import type { BudgetFacade, AuthoringFacade, LearningFacade } from "./facade/ext-types.js";
@@ -124,6 +127,13 @@ export interface UltraCodeCreateOptions {
    * want strict isolation should pass a minimal explicit `env`.
    */
   env?: Readonly<Record<string, string | undefined>>;
+  /**
+   * Master switch for the running, incremental {@link SessionOptimizer}
+   * (v1.2.0). Default `true`. When enabled, persisted runs replay a compacted
+   * working set instead of the full history and a fire-and-forget compaction
+   * pass runs after each successful turn. A no-op when no optimizer is wired.
+   */
+  enableSessionOptimization?: boolean;
 }
 
 /** Options for {@link UltraCode.run}. */
@@ -176,6 +186,41 @@ export interface UltraCodeParts {
   disposables?: Array<() => void | Promise<void>>;
   /** Working directory of this instance. Defaults to `process.cwd()`. */
   cwd?: string;
+  /**
+   * Optional running session optimizer (v1.2.0). When present and
+   * {@link UltraCodeParts.enableSessionOptimization} is not `false`, persisted
+   * runs replay a compacted working set and a background compaction pass runs
+   * after each successful turn.
+   */
+  sessionOptimizer?: SessionOptimizer;
+  /** Whether the {@link UltraCodeParts.sessionOptimizer} is active. Default `true`. */
+  enableSessionOptimization?: boolean;
+}
+
+/**
+ * Compose multiple {@link ContextCollector}s into one: each is invoked with the
+ * prompt and their non-empty outputs are joined with blank lines. A collector
+ * that throws is isolated (logged via the engine's own warn path is not
+ * available here, so failures are swallowed) — the rest still contribute.
+ */
+function composeCollectors(
+  collectors: ReadonlyArray<ContextCollector | undefined>,
+): ContextCollector | undefined {
+  const active = collectors.filter((c): c is ContextCollector => typeof c === "function");
+  if (active.length === 0) return undefined;
+  if (active.length === 1) return active[0];
+  return async (prompt: string): Promise<string> => {
+    const parts: string[] = [];
+    for (const collect of active) {
+      try {
+        const out = await collect(prompt);
+        if (typeof out === "string" && out.trim().length > 0) parts.push(out);
+      } catch {
+        /* a failing collector must not break context collection */
+      }
+    }
+    return parts.join("\n\n");
+  };
 }
 
 /** Environment variable name that holds the API key for a provider. */
@@ -201,6 +246,32 @@ function resolveApiKey(
   const fromConfig = (config.providers as ProvidersWithKeys).apiKeys?.[provider];
   if (typeof fromConfig === "string" && fromConfig.trim() !== "") return fromConfig;
   return resolveApiKeyFromEnv(provider, env);
+}
+
+/**
+ * Flatten a compacted {@link import("./session-optimizer/index.js").WorkingSet}
+ * into a replayable `ChatMessage[]`: the durable summary and pinned facts (when
+ * any) are folded into a single leading `system` message, followed by the
+ * working set's own messages. The result is what the agent replays as history.
+ */
+function workingSetToHistory(ws: {
+  messages: ChatMessage[];
+  durableSummary: string;
+  pinnedFacts: string[];
+}): ChatMessage[] {
+  const out: ChatMessage[] = [];
+  const summary = ws.durableSummary.trim();
+  const facts = ws.pinnedFacts.filter((f) => f.trim().length > 0);
+  if (summary.length > 0 || facts.length > 0) {
+    const sections: string[] = ["[Compacted session context]"];
+    if (summary.length > 0) sections.push(`Summary of earlier turns:\n${summary}`);
+    if (facts.length > 0) {
+      sections.push(`Pinned facts:\n${facts.map((f) => `- ${f}`).join("\n")}`);
+    }
+    out.push({ role: "system", content: sections.join("\n\n") });
+  }
+  out.push(...ws.messages);
+  return out;
 }
 
 /** Derive a single-line session title from a prompt. */
@@ -377,6 +448,8 @@ export class UltraCode {
   private readonly agentManager: AgentManager;
   private readonly ensureProviderReady?: () => void;
   private readonly disposables: Array<() => void | Promise<void>>;
+  private readonly sessionOptimizer?: SessionOptimizer;
+  private readonly enableSessionOptimization: boolean;
   private disposed = false;
 
   constructor(parts: UltraCodeParts) {
@@ -393,6 +466,8 @@ export class UltraCode {
     if (parts.configManager !== undefined) this.configManager = parts.configManager;
     this.ensureProviderReady = parts.ensureProviderReady;
     this.disposables = [...(parts.disposables ?? [])];
+    if (parts.sessionOptimizer !== undefined) this.sessionOptimizer = parts.sessionOptimizer;
+    this.enableSessionOptimization = parts.enableSessionOptimization ?? true;
   }
 
   /**
@@ -507,6 +582,15 @@ export class UltraCode {
     });
     const learning = buildLearningFacade(learnAgent, logger);
 
+    // Active skills take effect at runtime by injecting their bodies into the
+    // agent context (an additional ContextCollector beside the project context
+    // engine). Skills contribute context only — never tool permissions.
+    const skillInjector = createSkillInjector(authoringInstance.registry, { logger });
+    const contextCollector = composeCollectors([
+      (prompt) => contextEngine.collect({ cwd, prompt, maxTokens: config.core.maxTokens }),
+      skillInjector,
+    ]);
+
     const agents = createAgentManager({
       config,
       logger,
@@ -521,8 +605,7 @@ export class UltraCode {
       events,
       cwd,
       env: options.env ?? (process.env as Readonly<Record<string, string | undefined>>),
-      contextCollector: (prompt) =>
-        contextEngine.collect({ cwd, prompt, maxTokens: config.core.maxTokens }),
+      ...(contextCollector !== undefined ? { contextCollector } : {}),
     });
 
     // Register the `task` tool, backed by bounded subagent delegation. Skipped
@@ -530,6 +613,17 @@ export class UltraCode {
     if (!registry.has("task")) {
       registry.register(createTaskTool(agents));
     }
+
+    // Running, incremental session optimizer (v1.2.0). Wired with the session
+    // store, the shared budget gate and — only when a key is configured — the
+    // provider for optional cheap-model summaries (extractive by default).
+    const sessionOptimizer = createSessionOptimizer({
+      sessionStore: sessions,
+      budget: planner,
+      logger,
+      events,
+      ...(extProvider !== undefined ? { provider: extProvider } : {}),
+    });
 
     const ensureProviderReady = (): void => {
       const name = String(config.core.activeProvider);
@@ -558,6 +652,7 @@ export class UltraCode {
       configManager,
       ensureProviderReady,
       cwd,
+      sessionOptimizer,
     });
   }
 
@@ -602,7 +697,24 @@ export class UltraCode {
           details: { sessionId },
         });
       }
-      history = record.messages;
+      // Replay a compacted working set (durable summary + pinned facts + recent
+      // window) instead of the full raw history when the optimizer is wired, so
+      // long sessions do not drag the entire transcript forward. Non-fatal: any
+      // failure falls back to the raw history.
+      if (this.sessionOptimizer && this.enableSessionOptimization) {
+        try {
+          const ws = this.sessionOptimizer.buildWorkingSet(record);
+          history = workingSetToHistory(ws);
+        } catch (err) {
+          this.logger.warn("session working-set build failed; using raw history", {
+            sessionId,
+            error: err instanceof Error ? err.message : String(err),
+          });
+          history = record.messages;
+        }
+      } else {
+        history = record.messages;
+      }
     } else if (this.config.sessions.enablePersistence) {
       const meta = await this.sessions.create(agent.definition.name, titleFromPrompt(prompt));
       sessionId = meta.id;
@@ -628,6 +740,22 @@ export class UltraCode {
           sessionId,
           error: err instanceof Error ? err.message : String(err),
         });
+      }
+
+      // Fire-and-forget incremental compaction. Deliberately not awaited and
+      // fully error-isolated — it must be "barely noticeable" and can never
+      // affect the run's result.
+      if (this.sessionOptimizer && this.enableSessionOptimization) {
+        const optimizer = this.sessionOptimizer;
+        const sid = sessionId;
+        void Promise.resolve()
+          .then(() => optimizer.processIncremental(sid))
+          .catch((err: unknown) => {
+            this.logger.warn("background session optimization failed", {
+              sessionId: sid,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          });
       }
     }
     return result;
