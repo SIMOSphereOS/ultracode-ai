@@ -91,7 +91,7 @@ describe("GitClient (default runner, real git)", () => {
   });
 
   afterAll(async () => {
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   });
 
   it("runs git --version", async () => {

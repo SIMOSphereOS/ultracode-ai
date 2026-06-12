@@ -89,7 +89,7 @@ function scriptedIO(answers: string[]): SetupIO & { output: () => string; masked
 
 let tmp: string | undefined;
 afterEach(async () => {
-  if (tmp !== undefined) await fs.rm(tmp, { recursive: true, force: true });
+  if (tmp !== undefined) await fs.rm(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   tmp = undefined;
 });
 

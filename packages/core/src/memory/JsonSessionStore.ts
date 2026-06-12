@@ -50,23 +50,24 @@ function hasFsCode(err: unknown, code: string): boolean {
 }
 
 /**
- * `true` when an exclusive-create / stat error means "the lock is contended
- * right now, retry" rather than a durable failure.
- *
- * `EEXIST` is the portable case (the lockfile exists). On Windows, a file that
- * another process is deleting enters a transient "delete pending" state in
- * which `open(..,"wx")`/`stat` briefly return `EPERM`/`EACCES`/`EBUSY`; those
- * are contention, not permission failures, and must be retried — otherwise
- * concurrent appends spuriously fail. On POSIX a durable `EACCES` is a real
- * error and is *not* swallowed here (so the fail-fast guarantee holds).
+ * Windows-only transient lock errors. A file another process is deleting enters
+ * a "delete pending" state in which `open(..,"wx")`/`stat` briefly return
+ * `EPERM`/`EACCES`/`EBUSY`. These clear within milliseconds and must be retried,
+ * otherwise concurrent appends spuriously fail. They are indistinguishable by
+ * errno from a *durable* permission error, so retries are bounded by
+ * {@link WIN_CONTENTION_BUDGET_MS}: a real durable failure surfaces as a
+ * `SessionError` once the budget elapses. On POSIX a durable `EACCES` is a real
+ * error and fails fast immediately (the fail-fast guarantee holds there).
  */
-function isLockContentionError(err: unknown): boolean {
-  if (hasFsCode(err, "EEXIST")) return true;
-  if (process.platform === "win32") {
-    return hasFsCode(err, "EPERM") || hasFsCode(err, "EACCES") || hasFsCode(err, "EBUSY");
-  }
-  return false;
+function isWindowsTransient(err: unknown): boolean {
+  return (
+    process.platform === "win32" &&
+    (hasFsCode(err, "EPERM") || hasFsCode(err, "EACCES") || hasFsCode(err, "EBUSY"))
+  );
 }
+
+/** Max time Windows delete-pending contention is retried before failing hard. */
+const WIN_CONTENTION_BUDGET_MS = 2000;
 
 /**
  * File-per-session JSON store. Usable standalone and as the fallback chosen
@@ -225,6 +226,20 @@ export class JsonSessionStore implements ISessionStore {
   /** Spin until the lock file can be created exclusively (reclaiming stale locks). */
   private async acquireLock(lockPath: string, id: string): Promise<void> {
     let backoff = 2;
+    // Tracks the first Windows delete-pending error in a contention streak so
+    // those retries can be bounded by WIN_CONTENTION_BUDGET_MS (a durable
+    // permission failure on Windows then surfaces as SessionError). Reset on any
+    // non-transient outcome (normal EEXIST contention or a successful stat).
+    let firstWinTransientAt: number | null = null;
+    const noteWinTransient = (err: unknown, verb: string): void => {
+      firstWinTransientAt ??= Date.now();
+      if (Date.now() - firstWinTransientAt > WIN_CONTENTION_BUDGET_MS) {
+        throw new SessionError(`Failed to ${verb} session lock for "${id}"`, {
+          cause: err,
+          details: { id, lockPath },
+        });
+      }
+    };
     // Generous budget rather than an artificial wall-clock timeout: with
     // backoff capped at ~50ms this tolerates very long legitimate critical
     // sections before declaring a peer dead.
@@ -234,7 +249,14 @@ export class JsonSessionStore implements ISessionStore {
         await handle.close();
         return;
       } catch (err) {
-        if (!isLockContentionError(err)) {
+        if (hasFsCode(err, "EEXIST")) {
+          firstWinTransientAt = null; // normal contention: a peer holds the lock
+        } else if (isWindowsTransient(err)) {
+          noteWinTransient(err, "acquire");
+          await delay(backoff);
+          backoff = Math.min(backoff * 2, 50);
+          continue;
+        } else {
           throw new SessionError(`Failed to acquire session lock for "${id}"`, {
             cause: err,
             details: { id, lockPath },
@@ -244,15 +266,16 @@ export class JsonSessionStore implements ISessionStore {
       // Lock exists — reclaim it if stale, otherwise wait and retry.
       try {
         const stat = await fs.stat(lockPath);
+        firstWinTransientAt = null;
         if (Date.now() - stat.mtimeMs > STALE_LOCK_MS) {
           await fs.rm(lockPath, { force: true }).catch(() => undefined);
           continue; // try to take it immediately
         }
       } catch (err) {
         if (hasFsCode(err, "ENOENT")) continue; // released between calls — retry now
-        // Transient Windows delete-pending contention (EPERM/EACCES/EBUSY) is
-        // retried; the stale-reclaim (STALE_LOCK_MS) still bounds the wait.
-        if (isLockContentionError(err)) {
+        // Transient Windows delete-pending contention is retried within budget.
+        if (isWindowsTransient(err)) {
+          noteWinTransient(err, "inspect");
           await delay(backoff);
           backoff = Math.min(backoff * 2, 50);
           continue;

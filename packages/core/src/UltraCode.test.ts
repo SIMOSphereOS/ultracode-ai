@@ -401,7 +401,7 @@ describe("UltraCode.create", () => {
       if (v === undefined) delete process.env[k];
       else process.env[k] = v;
     }
-    if (cwd !== undefined) await fs.rm(cwd, { recursive: true, force: true });
+    if (cwd !== undefined) await fs.rm(cwd, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   });
 
   function clearKey(name: string): void {

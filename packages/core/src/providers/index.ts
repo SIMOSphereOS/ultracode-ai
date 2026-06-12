@@ -24,7 +24,9 @@ export {
   toAnthropicMessages,
   toAnthropicTools,
   mapAnthropicStopReason,
+  readCacheHint,
 } from "./AnthropicProvider.js";
+export type { RequestCacheHint } from "./AnthropicProvider.js";
 export { LocalProvider, OLLAMA_BASE_URL } from "./LocalProvider.js";
 export {
   OpenAICompatProvider,
@@ -33,6 +35,7 @@ export {
   toOpenAITools,
   mapOpenAIFinishReason,
   safeParseArgs,
+  readOpenAICacheKey,
 } from "./openaiCompat.js";
 export { streamLines, parseSSEEvents, parseSSEJson, parseNDJSON } from "./sse.js";
 export type { SSEEvent, SSEJsonEvent } from "./sse.js";

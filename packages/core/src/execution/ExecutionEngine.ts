@@ -34,9 +34,25 @@ import type {
   ToolResult,
 } from "@ultracode/shared";
 import type { IToolRunner } from "./types.js";
+import type { OptimizeResult, PromptPayload } from "../tokens/index.js";
 
 /** Default maximum number of model turns per run. */
 export const DEFAULT_MAX_TURNS = 16;
+
+/**
+ * Narrow, locally-defined token-optimizer boundary.
+ *
+ * Mirrors `TokenOptimizer.optimize` from `core/tokens` without importing the
+ * concrete class, keeping the engine decoupled. Integrators inject a configured
+ * optimizer (e.g. `createDefaultOptimizer({ immutableMarkers })`).
+ */
+export interface ITokenOptimizer {
+  /** Apply the stage chain and report the measured reduction. */
+  optimize(
+    payload: PromptPayload,
+    ctx?: { prompt?: string; tokenBudget?: number },
+  ): Promise<OptimizeResult>;
+}
 
 /** Construction options for {@link ExecutionEngine}. */
 export interface ExecutionEngineOptions {
@@ -67,6 +83,24 @@ export interface ExecutionEngineOptions {
    * strict isolation should pass a minimal explicit `env` here.
    */
   env?: Readonly<Record<string, string | undefined>>;
+  /**
+   * Optional token optimizer applied to the prompt **before** the first
+   * provider call. Inject a configured {@link ITokenOptimizer} (e.g. from
+   * `createDefaultOptimizer`). When omitted, no optimization happens.
+   */
+  optimizer?: ITokenOptimizer;
+  /**
+   * Master switch for token optimization. Default `true`, but optimization only
+   * runs when an {@link ExecutionEngineOptions.optimizer} is also injected — so
+   * the effective default for an engine constructed without an optimizer is
+   * "no-op". Set `false` to disable even when an optimizer is present.
+   */
+  enableTokenOptimization?: boolean;
+  /**
+   * Token budget forwarded to the optimizer. Lossless stages run regardless;
+   * conversation compaction only triggers when this budget is exceeded.
+   */
+  tokenBudget?: number;
 }
 
 /** Input to a single {@link ExecutionEngine.run} invocation. */
@@ -164,6 +198,9 @@ export class ExecutionEngine {
   private readonly temperature?: number;
   private readonly cwd: string;
   private readonly env: Readonly<Record<string, string | undefined>>;
+  private readonly optimizer?: ITokenOptimizer;
+  private readonly tokenOptimizationEnabled: boolean;
+  private readonly tokenBudget?: number;
 
   constructor(options: ExecutionEngineOptions) {
     this.provider = options.provider;
@@ -180,6 +217,9 @@ export class ExecutionEngine {
     this.temperature = options.temperature;
     this.cwd = options.cwd ?? process.cwd();
     this.env = options.env ?? (process.env as Readonly<Record<string, string | undefined>>);
+    if (options.optimizer !== undefined) this.optimizer = options.optimizer;
+    this.tokenOptimizationEnabled = options.enableTokenOptimization !== false;
+    if (options.tokenBudget !== undefined) this.tokenBudget = options.tokenBudget;
   }
 
   /**
@@ -204,6 +244,8 @@ export class ExecutionEngine {
     }
     if (input.history) messages.push(...input.history);
     messages.push({ role: "user", content: input.prompt });
+
+    await this.maybeOptimize(messages, input.prompt);
 
     const usage: TokenUsage = { inputTokens: 0, outputTokens: 0 };
     let toolCallsExecuted = 0;
@@ -273,6 +315,73 @@ export class ExecutionEngine {
     );
     this.emitError(err);
     throw err;
+  }
+
+  /**
+   * Apply the injected token optimizer to the assembled prompt, in place.
+   *
+   * Splits the message array into a {@link PromptPayload} (system + history),
+   * runs the optimizer (lossless stages always; compaction only when over the
+   * configured budget), writes the optimized system/history back into
+   * `messages`, and publishes the reduction report. Never throws: any optimizer
+   * failure is logged and the original prompt is used unchanged.
+   *
+   * Tool definitions are taken from the runner and only *measured* here (the
+   * engine sends `this.tools.list()` per turn, so slimming them would not
+   * survive). System-prompt safety is the optimizer's responsibility via its
+   * immutable-marker-aware minify stage.
+   */
+  private async maybeOptimize(messages: ChatMessage[], prompt: string): Promise<void> {
+    if (this.optimizer === undefined || !this.tokenOptimizationEnabled) return;
+    try {
+      const first = messages[0];
+      const hasSystem = first !== undefined && first.role === "system";
+      const system = hasSystem ? (first as ChatMessage).content : "";
+      const history = hasSystem ? messages.slice(1) : messages.slice(0);
+
+      const payload: PromptPayload = {
+        system,
+        tools: this.tools.list(),
+        messages: history,
+      };
+      const ctx: { prompt?: string; tokenBudget?: number } = { prompt };
+      if (this.tokenBudget !== undefined) ctx.tokenBudget = this.tokenBudget;
+
+      const result = await this.optimizer.optimize(payload, ctx);
+
+      // Write back: replace system content and the history slice.
+      const next: ChatMessage[] = [];
+      if (hasSystem) next.push({ ...(first as ChatMessage), content: result.payload.system });
+      next.push(...result.payload.messages);
+      messages.length = 0;
+      messages.push(...next);
+
+      this.emitTokensOptimized(result);
+    } catch (err) {
+      this.logger.warn("token optimization skipped after error", {
+        error: serializeError(err),
+      });
+    }
+  }
+
+  /** Publish the core-local `tokens.optimized` event (structural) + a log line. */
+  private emitTokensOptimized(result: OptimizeResult): void {
+    try {
+      (this.events as { emit?: (e: unknown) => void } | undefined)?.emit?.({
+        type: "tokens.optimized",
+        before: result.before.total,
+        after: result.after.total,
+        reductionPct: result.reductionPct,
+        perStage: result.perStage,
+      });
+    } catch {
+      /* the bus isolates handler errors; belt-and-braces */
+    }
+    this.logger.info("tokens.optimized", {
+      before: result.before.total,
+      after: result.after.total,
+      reductionPct: result.reductionPct,
+    });
   }
 
   /** Consume the provider stream, forwarding chunks, and aggregate the turn. */

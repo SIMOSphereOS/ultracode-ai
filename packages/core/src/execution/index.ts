@@ -12,6 +12,7 @@ export type {
   ExecutionEngineOptions,
   ExecutionRunInput,
   ExecutionRunResult,
+  ITokenOptimizer,
 } from "./ExecutionEngine.js";
 export { QueryPipeline } from "./QueryPipeline.js";
 export type {

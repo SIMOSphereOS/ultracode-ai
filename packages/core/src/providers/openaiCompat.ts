@@ -50,6 +50,26 @@ export function asNumber(value: unknown): number | undefined {
 }
 
 /**
+ * Read an optional, core-local prompt-cache key off a {@link CompletionRequest}
+ * without widening the frozen shared contract.
+ *
+ * Recognises either `req.cacheHint.key` (the {@link CacheHint} shape from
+ * `core/tokens`) or a bare `req.promptCacheKey`. Returns `undefined` when no
+ * hint is present — in which case the request body is byte-identical to the
+ * pre-cache wire format, so existing tests stay green.
+ */
+export function readOpenAICacheKey(req: CompletionRequest): string | undefined {
+  const direct = (req as { promptCacheKey?: unknown }).promptCacheKey;
+  if (typeof direct === "string" && direct !== "") return direct;
+  const hint = (req as { cacheHint?: unknown }).cacheHint;
+  if (typeof hint === "object" && hint !== null) {
+    const key = (hint as { key?: unknown; cachePrefix?: unknown }).key;
+    if (typeof key === "string" && key !== "") return key;
+  }
+  return undefined;
+}
+
+/**
  * Parse a tool-call `arguments` JSON string defensively. Malformed payloads
  * are logged and replaced by `{}` so a single bad tool call never crashes a
  * completion.
@@ -243,6 +263,12 @@ export abstract class OpenAICompatProvider extends BaseProvider {
     if (req.maxTokens !== undefined) body.max_tokens = req.maxTokens;
     if (req.temperature !== undefined) body.temperature = req.temperature;
     if (req.tools !== undefined && req.tools.length > 0) body.tools = toOpenAITools(req.tools);
+    // Optional, core-local cache hint: OpenAI caches prefixes ≥1024 tokens
+    // automatically; a stable `prompt_cache_key` routes identical prefixes to
+    // the same cache. Absent a hint, the wire format is byte-identical to
+    // before. Rule: static (system + tools) first, variable history last.
+    const cacheKey = readOpenAICacheKey(req);
+    if (cacheKey !== undefined) body.prompt_cache_key = cacheKey;
     return JSON.stringify(body);
   }
 

@@ -509,7 +509,7 @@ describe("runCli — config", () => {
       expect(manager.set).toHaveBeenCalledWith("ui.theme", "dark");
       expect(manager.save).toHaveBeenCalledWith("user");
     } finally {
-      await fs.rm(tmp, { recursive: true, force: true });
+      await fs.rm(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
     }
   });
 
@@ -529,7 +529,7 @@ describe("runCli — config", () => {
       expect(code).toBe(1);
       expect(err()).toContain("Invalid JSON");
     } finally {
-      await fs.rm(tmp, { recursive: true, force: true });
+      await fs.rm(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
     }
   });
 
@@ -634,7 +634,7 @@ describe("runCli — doctor", () => {
       expect(out()).toContain("✓ api-keys:");
       expect(out()).not.toContain("sk-ant-very-secret");
     } finally {
-      await fs.rm(tmp, { recursive: true, force: true });
+      await fs.rm(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
     }
   });
 
@@ -651,7 +651,7 @@ describe("runCli — doctor", () => {
       expect(out()).toContain("✗ node:");
       expect(out()).toContain("✗ git:");
     } finally {
-      await fs.rm(tmp, { recursive: true, force: true });
+      await fs.rm(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
     }
   });
 
@@ -664,7 +664,7 @@ describe("runCli — doctor", () => {
       expect(parsed.ok).toBe(true);
       expect(parsed.checks.map((c) => c.name)).toContain("config");
     } finally {
-      await fs.rm(tmp, { recursive: true, force: true });
+      await fs.rm(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
     }
   });
 });

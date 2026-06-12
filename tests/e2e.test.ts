@@ -199,7 +199,7 @@ describe("ultracode CLI (e2e)", () => {
       expect(analyze.stdout).toContain("Commits");
       expect(analyze.stdout).toMatch(/feat 1/);
     } finally {
-      rmSync(repo, { recursive: true, force: true });
+      rmSync(repo, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
     }
   });
 

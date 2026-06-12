@@ -23,7 +23,9 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await fs.rm(root, { recursive: true, force: true });
+  // maxRetries handles Windows EBUSY: a just-killed bash process tree can still
+  // briefly hold the temp cwd open when teardown runs.
+  await fs.rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
 });
 
 describe("createToolSystem", () => {
@@ -141,7 +143,7 @@ describe("createToolSystem", () => {
       expect(read.ok).toBe(true);
       expect(read.output.content).toBe("extern");
     } finally {
-      await fs.rm(outside, { recursive: true, force: true });
+      await fs.rm(outside, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
     }
   });
 

@@ -4,6 +4,29 @@ All notable changes to the `@ultracode/core` package. Format: [Keep a Changelog]
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-06-12
+
+### Added
+
+#### tokens
+
+- Token-optimization module (`core/tokens`): deterministic, ML-free, offline reduction of prompt tokens that **measures actual before/after counts** and reports the honest reduction (per-stage and total) — never a claimed saving it did not make.
+- `HeuristicTokenCounter` (`TokenCounter` interface): calibrated offline estimate blending chars/4 and words×1.3 with punctuation and CJK/emoji surcharges; deterministic, monotonic and total (safe on empty, ≥1 MB, Unicode, emoji, surrogate and pure-whitespace inputs). Documented as a ±10–20 % provider-dependent estimate; pluggable `ProviderTokenCounter` hook for an exact count, offline by default.
+- `PromptPayload`/`TokenStats` model splitting a prompt into `system`/`tools`/`messages`/`context` so spend and savings are attributed per part.
+- Composable, pure, deterministic `OptimizerStage`s: `DedupContextStage` (folds byte-identical context blocks to `[identical to block above]`), `WhitespaceNormalizeStage` (collapses blank-line runs, **never inside fenced code**), `SystemPromptMinifyStage` (lossless blank-line + exact-duplicate-paragraph reduction that reproduces IMMUTABLE-marked compliance/AML/security spans **bit-for-bit**, with custom `immutableMarkers` regex support), `ToolSchemaSlimStage` (trims over-long tool **descriptions** at a word boundary and optional per-turn allow-list; tool name/parameters/required untouched), and `ConversationCompactionStage` (head/tail sliding window that folds the middle only when over `tokenBudget`, never splitting tool-call/result pairs, with optional injected-provider LLM summarization and deterministic fallback on error).
+- `TokenOptimizer` + `createDefaultOptimizer`: runs the stage chain, measuring tokens before and after each stage; reports `{ payload, before, after, reductionPct, perStage }` with honest (including negative) per-stage savings.
+- Provider prompt-caching hints (`CacheHint`, `cachePrefixHint`, `computePrefixKey`): mark the stable `system + tools` prefix as cacheable following the rule "static first, variable last; breakpoint on the last stable block". Minimal, **opt-in** provider changes — `AnthropicProvider` sets `cache_control: { type: "ephemeral" }` on the last stable block and OpenAI-compatible providers set a stable `prompt_cache_key` **only when a hint is present**; with no hint the wire format is byte-identical to before, so all existing provider tests remain green.
+- `ExecutionEngine` integration: optional injectable `optimizer` (`ITokenOptimizer`), `enableTokenOptimization` (default `true`, no-op without an injected optimizer) and `tokenBudget`; applies the safe stages before the provider call, writes the result back, and publishes a core-local `tokens.optimized` event (`{ before, after, reductionPct, perStage }`) — defined without touching the frozen shared `UltraCodeEvent` union — falling back to `logger.info`. Optimizer failures are caught and the original prompt is used unchanged.
+- 88 offline, deterministic Vitest tests covering the counter (extremes incl. ≥1 MB/emoji/surrogate/whitespace), each stage (idempotence, code-fence safety, the bit-for-bit IMMUTABLE compliance-block guarantee, tool-schema validity, tool-call/result-pair integrity, summarizer + throwing-summarizer fallback), the optimizer (honest reduction incl. negative savings, per-stage sums, no input mutation), provider cache hints (identical wire format without a hint; `cache_control` on the right block with one) and the execution-engine integration (event emission, disable switch, error fallback).
+
+### Fixed
+
+- JsonSessionStore (Windows): bound the retry of ambiguous delete-pending `EPERM`/`EACCES`/`EBUSY` errors by `WIN_CONTENTION_BUDGET_MS` (2 s) so a genuine durable Windows permission failure still surfaces as `SessionError` instead of spinning, while real millisecond-scale transients keep retrying. POSIX durable `EACCES` continues to fail fast immediately.
+
+### Changed
+
+- Test hardening: temp-dir teardowns that spawn child processes now use `fs.rm` with `maxRetries`/`retryDelay`, eliminating Windows `EBUSY` flakiness when a just-killed process tree briefly holds the directory.
+
 ## [1.0.1] - 2026-06-12
 
 ### Fixed

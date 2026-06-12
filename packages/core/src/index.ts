@@ -200,6 +200,47 @@ export type {
   ContextEngineDeps,
 } from "./context/index.js";
 
+/* ------------------------------ Tokens ---------------------------------- */
+export {
+  HeuristicTokenCounter,
+  DedupContextStage,
+  DEDUP_PLACEHOLDER,
+  WhitespaceNormalizeStage,
+  SystemPromptMinifyStage,
+  DEFAULT_IMMUTABLE_OPEN,
+  DEFAULT_IMMUTABLE_CLOSE,
+  ToolSchemaSlimStage,
+  DEFAULT_TOOL_DESC_MAX,
+  ConversationCompactionStage,
+  omittedNote,
+  TokenOptimizer,
+  createDefaultOptimizer,
+  computeStats,
+  computePrefixKey,
+  cachePrefixHint,
+  ANTHROPIC_MAX_CACHE_BREAKPOINTS,
+  reportOptimization,
+  toTokensOptimizedEvent,
+  TOKENS_OPTIMIZED_EVENT,
+} from "./tokens/index.js";
+export type {
+  TokenCounter,
+  ProviderTokenCounter,
+  PromptPayload,
+  TokenStats,
+  OptimizeContext,
+  OptimizerStage,
+  CacheHint,
+  SystemPromptMinifyOptions,
+  ToolSchemaSlimOptions,
+  ConversationCompactionOptions,
+  TokenOptimizerOptions,
+  CreateDefaultOptimizerOptions,
+  OptimizeResult,
+  StageSaving,
+  TokensOptimizedEvent,
+} from "./tokens/index.js";
+
 /* ---------------------------- Execution --------------------------------- */
 export {
   ExecutionEngine,
@@ -216,6 +257,7 @@ export type {
   QueryPipelineOptions,
   QueryPipelineResult,
   IToolRunner,
+  ITokenOptimizer,
 } from "./execution/index.js";
 
 /* ------------------------------ Agents ---------------------------------- */

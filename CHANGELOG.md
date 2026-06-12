@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-06-12
+
+### Added
+- Token-optimization module in `@ultracode/core` (see its changelog 1.1.0): deterministic, ML-free, offline prompt-token reduction (dedup, whitespace, system-prompt minify with bit-for-bit IMMUTABLE compliance protection, tool-schema slimming, conversation compaction) plus opt-in provider prompt-caching hints, with honest before/after measurement.
+
+### Fixed
+- Final Windows CI defects from the cross-platform matrix: bounded delete-pending lock contention and `EBUSY` temp-dir teardown flakiness.
+
 ## [1.0.1] - 2026-06-12
 
 ### Fixed

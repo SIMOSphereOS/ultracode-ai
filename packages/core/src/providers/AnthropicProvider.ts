@@ -42,6 +42,31 @@ export const ANTHROPIC_VERSION = "2023-06-01";
 /** `max_tokens` is mandatory for the Messages API; used when the request omits it. */
 const DEFAULT_MAX_TOKENS = 4_096;
 
+/**
+ * Optional, core-local prompt-cache hint readable structurally off a
+ * {@link CompletionRequest}.
+ *
+ * The shared `CompletionRequest` contract is frozen at 1.0 and does **not**
+ * declare this field; providers read it defensively. With no hint, the wire
+ * format is byte-identical to before (the default path).
+ *
+ * Caching rule: **"static first, variable last; put the breakpoint on the last
+ * stable block."** The stable prefix is `system + tools`. When `cachePrefix` is
+ * set, Anthropic marks the *last* stable block (the last tool if present, else
+ * the system block) with `cache_control: { type: "ephemeral" }`. Anthropic
+ * permits at most four breakpoints; we use exactly one.
+ */
+export interface RequestCacheHint {
+  /** Mark the stable `system + tools` prefix as cacheable. */
+  cachePrefix?: boolean;
+}
+
+/** Read the optional core-local cache hint off a request without widening the contract. */
+export function readCacheHint(req: CompletionRequest): RequestCacheHint | undefined {
+  const hint = (req as { cacheHint?: unknown }).cacheHint;
+  return typeof hint === "object" && hint !== null ? (hint as RequestCacheHint) : undefined;
+}
+
 type WireBlock = Record<string, unknown>;
 interface WireMessage {
   role: "user" | "assistant";
@@ -159,9 +184,27 @@ export class AnthropicProvider extends BaseProvider {
       messages,
       stream,
     };
-    if (system !== undefined) body.system = system;
     if (req.temperature !== undefined) body.temperature = req.temperature;
-    if (req.tools !== undefined && req.tools.length > 0) body.tools = toAnthropicTools(req.tools);
+    const tools =
+      req.tools !== undefined && req.tools.length > 0 ? toAnthropicTools(req.tools) : undefined;
+
+    // Default path: plain string `system` + untouched tools (byte-identical
+    // to the pre-cache wire format). Cache path: mark exactly one breakpoint on
+    // the LAST stable block — the last tool if any, else the system block.
+    const cache = readCacheHint(req);
+    if (cache?.cachePrefix === true && (system !== undefined || tools !== undefined)) {
+      if (tools !== undefined) {
+        const last = tools[tools.length - 1];
+        if (last !== undefined) last.cache_control = { type: "ephemeral" };
+        body.tools = tools;
+        if (system !== undefined) body.system = system; // breakpoint sits on the tool
+      } else if (system !== undefined) {
+        body.system = [{ type: "text", text: system, cache_control: { type: "ephemeral" } }];
+      }
+    } else {
+      if (system !== undefined) body.system = system;
+      if (tools !== undefined) body.tools = tools;
+    }
     return JSON.stringify(body);
   }
 

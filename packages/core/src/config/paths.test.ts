@@ -83,7 +83,7 @@ describe("atomicWriteFile", () => {
   let dir: string;
 
   afterEach(async () => {
-    if (dir !== undefined) await rm(dir, { recursive: true, force: true });
+    if (dir !== undefined) await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   });
 
   it("writes content and creates parent directories", async () => {

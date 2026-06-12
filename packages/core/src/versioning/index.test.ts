@@ -20,7 +20,7 @@ const cleanups: string[] = [];
 afterEach(async () => {
   while (cleanups.length > 0) {
     const dir = cleanups.pop();
-    if (dir !== undefined) await rm(dir, { recursive: true, force: true });
+    if (dir !== undefined) await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   }
 });
 
