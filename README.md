@@ -17,7 +17,7 @@ Quality-Gates für ein Release prüft.
 > **Reifegrad — ehrlich:** UltraCode hat sein erstes stabiles Release (Core `1.1.0`, übrige Pakete `1.0.1`;
 > `@ultracode/shared`, `@ultracode/core`, `ultracode` CLI eigenständig
 > versioniert). CLI-, Core- und Versionierungs-Fundament sind implementiert und getestet
-> (1056 Tests, ~94 % Coverage) und laufen in CI auf Linux, macOS und Windows (Node 22/24).
+> (1347 Tests, ~93 % Coverage) und laufen in CI auf Linux, macOS und Windows (Node 22/24).
 > Desktop-App und IDE-Plugins aus der Architektur-Vision sind **noch nicht** Teil dieses
 > Repos. Was hier dokumentiert ist, spiegelt den tatsächlichen Code wider.
 
@@ -81,8 +81,8 @@ UltraCode ist ein **TypeScript-ESM-Monorepo** (pnpm-Workspaces) aus drei Paketen
 | Paket | Version | Rolle |
 |---|---|---|
 | [`@ultracode/shared`](./packages/shared) | 1.0.1 | Bindender **Kontrakt-Layer**: Typen, Interfaces, Fehlerklassen, `EventBus`, `logger`, Utils. Siehe [`CONTRACTS.md`](./packages/shared/CONTRACTS.md). |
-| [`@ultracode/core`](./packages/core) | 1.1.0 | **Business-Logik**: Config, Provider, Tools, Memory, Context, Execution-Engine, Agenten und das AI-Versioning-System. Fassade: `UltraCode`. |
-| [`ultracode`](./packages/cli) | 1.0.1 | **CLI** (Commander + React/Ink): Kommandos, interaktive UI, Themes. |
+| [`@ultracode/core`](./packages/core) | 1.2.0 | **Business-Logik**: Config, Provider, Tools, Memory, Context, Execution-Engine, Agenten und das AI-Versioning-System. Fassade: `UltraCode`. |
+| [`ultracode`](./packages/cli) | 1.1.0 | **CLI** (Commander + React/Ink): Kommandos, interaktive UI, Themes. |
 
 Abhängigkeitsrichtung: `cli → core → shared`. `core` und `cli` implementieren gegen die
 Interfaces aus `shared`; Implementierungsdetails lecken nie nach oben.

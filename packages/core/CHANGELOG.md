@@ -4,6 +4,24 @@ All notable changes to the `@ultracode/core` package. Format: [Keep a Changelog]
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-06-12
+
+### Added
+- **core/budget — BudgetPlanner**: central cost governance. Deterministic offline cost estimation (EUR-first + USD band, configurable price table, HeuristicTokenCounter-backed), ask-threshold policy (auto-allow / approval / hard-cap with 50/80/100% alerts), atomic append-only JSONL ledger, per-category budget envelopes (development/learning/operations) under ~/.ultracode/budget/, interactive plan wizard. Exposes IBudgetGate + budget.* events.
+- **core/authoring — Skill-/Agent-Creator**: turns distilled knowledge into reviewable skill (Markdown+frontmatter under ~/.ultracode/skills/<catalog>/) and agent proposals; persists only after approval; deterministic scaffolding with optional budget-gated LLM refinement; offline safety/test gate (schema, forbidden phrases, no tool-permission escalation); audit trail; scoreSkill. `SkillInjector` makes active skills take effect at runtime via agent context.
+- **core/learning — LernAgent**: a growing source library (~/.ultracode/learning/sources.toml, seeded on-demand with azure-docs, azure-training, pytest-docs and dynamically extensible) plus an incremental native crawler (sitemap-first, conditional GET / 304, content-hash dedup, checkpoint/resume) and a map-reduce extraction pipeline with cheap-model routing. LearnRun is budget-gated: `plan` estimates cost with no spend; `run` performs no network/LLM work without explicit approval.
+- **core/session-optimizer**: running, incremental, non-blocking session compaction after each turn — dedup, rolling durable summary of aged-out turns (extractive by default, optional budget-gated LLM), pinned-fact extraction; compact working set replayed on continued sessions; raw history never mutated; session.optimized event.
+- Centralized all module tunables into per-module `defaults.ts` (147 named, categorized, overridable parameters); full catalog in docs/REFERENCE/parameters.md.
+
+### Security
+- learning: SSRF-harden the native crawler — every fetched URL (robots.txt, sitemap roots, index-shard <loc>s, pages, redirect targets) passes a central urlGuard: http(s)-only, same-host/allow-list scoping, private/loopback/link-local/cloud-metadata IP blocking (IPv4+IPv6 incl. ::ffff:-mapped and obfuscated decimal/hex/octal forms), opt-in DNS-rebinding resolution, manual redirect re-validation with a hop cap, response-body size cap.
+- authoring: prevent path traversal in the skill registry — '.'/'..' catalog/skill segments are rejected and the resolved file is asserted to stay within the skills root; KnowledgeMaterial.catalog validated up front.
+
+### Fixed
+- learning: write a final checkpoint when a learn run is aborted, so resume is idempotent and never re-processes completed URLs.
+- authoring: serializeFrontmatter renders a missing/undefined list field as an empty list instead of throwing.
+- budget: rename misleading `round4` helper to `roundUsd` (rounds to 6 decimals via ROUND_SCALE).
+
 ## [1.1.0] - 2026-06-12
 
 ### Added

@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-06-12
+
+### Added
+- Self-improvement & cost-governance layer (`@ultracode/core` 1.2.0, `ultracode` CLI 1.1.0): BudgetPlanner (cost governance, EUR+USD, ask-threshold+hard-cap), Skill-/Agent-Creator with runtime SkillInjector, LernAgent with a growing source library (Azure docs, Azure training, pytest seeded; budget-gated cost-report-before-run), and an incremental SessionOptimizer. All module parameters centralized into per-module defaults.ts (catalog in docs/REFERENCE/parameters.md).
+
+### Security
+- SSRF-hardened documentation crawler and path-traversal-hardened skill registry (see @ultracode/core 1.2.0).
+
 ### Fixed
 - Hardened `serializeFrontmatter`'s list rendering: a skill object missing an optional/required list field (e.g. `triggers` or `sources` absent or `undefined`) now serializes to an empty `[]` list instead of throwing a `TypeError` on `items.length`.
 

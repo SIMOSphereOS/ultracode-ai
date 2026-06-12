@@ -4,6 +4,11 @@ All notable changes to the `ultracode` CLI package. Format: [Keep a Changelog](h
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-06-12
+
+### Added
+- New command surfaces consuming the extended UltraCode facade: `budget` (plan/show/set/status/history), `skills` (list/show/create/test/upgrade), `agents` (create/evolve/test), `learn` (sources list/add/remove, run, schedule). `learn run` always prints the cost report first and starts only after explicit approval (--yes or interactive JA); without a TTY and without --yes it aborts with a hint. All read commands support --json.
+
 ## [1.0.1] - 2026-06-12
 
 ### Changed
