@@ -2,8 +2,7 @@
 
 > **Open-Source AI Code Assistant für das Terminal — mit KI-gestützter Versionierung und Release-Planung.**
 
-<!-- Badges-Platzhalter — nach erstem öffentlichen Release einsetzen -->
-[![CI](https://img.shields.io/badge/CI-pending-lightgrey.svg)](#)
+[![CI](https://github.com/AndreasSchwan-SIMO/UltraCode/actions/workflows/ci.yml/badge.svg)](https://github.com/AndreasSchwan-SIMO/UltraCode/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen.svg)](#teststatus)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20-339933.svg)](#installation)

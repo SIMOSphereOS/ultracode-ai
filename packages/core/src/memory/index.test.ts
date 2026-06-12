@@ -11,6 +11,19 @@ import { JsonSessionStore } from "./JsonSessionStore.js";
 import { SqliteSessionStore } from "./SqliteSessionStore.js";
 import { SESSION_DB_FILENAME, createSessionStore } from "./index.js";
 
+// node:sqlite exists only on Node >= 22.5; on older supported runtimes the
+// factory deliberately falls back to JSON. Detect which backend the *default*
+// path will pick so the assertions match the runtime instead of hard-failing
+// on Node 20.
+const SQLITE_AVAILABLE: boolean = await (async () => {
+  try {
+    const mod = (await import("node:sqlite")) as { DatabaseSync?: unknown };
+    return typeof mod.DatabaseSync === "function";
+  } catch {
+    return false;
+  }
+})();
+
 function configWith(saveDir: string, enablePersistence = true): UltraCodeConfig {
   const config = structuredClone(DEFAULT_CONFIG);
   config.sessions.saveDir = saveDir;
@@ -52,14 +65,16 @@ describe("createSessionStore", () => {
     expect(store).toBeInstanceOf(InMemorySessionStore);
   });
 
-  it("opens a sqlite store in the save dir by default (node:sqlite available)", async () => {
+  it("opens the persistent store in the save dir by default", async () => {
     const base = await tmp();
     const saveDir = path.join(base, "sessions");
     const store = await createSessionStore(configWith(saveDir), spyLogger().logger);
-    expect(store).toBeInstanceOf(SqliteSessionStore);
+    // SQLite when the runtime provides node:sqlite, JSON fallback otherwise —
+    // both are valid persistent backends and both must round-trip.
+    expect(store).toBeInstanceOf(SQLITE_AVAILABLE ? SqliteSessionStore : JsonSessionStore);
     const meta = await store.create("default", "via factory");
     expect((await store.get(meta.id))?.title).toBe("via factory");
-    (store as SqliteSessionStore).close();
+    if (store instanceof SqliteSessionStore) store.close();
   });
 
   it("falls back to the JSON store when node:sqlite cannot be loaded", async () => {
@@ -89,14 +104,17 @@ describe("createSessionStore", () => {
     expect(warns.some((w) => w.includes("in-memory"))).toBe(true);
   });
 
-  it("creates the database file inside the resolved save dir", async () => {
-    const base = await tmp();
-    const saveDir = path.join(base, "nested", "deeper");
-    const store = await createSessionStore(configWith(saveDir), spyLogger().logger);
-    expect(store).toBeInstanceOf(SqliteSessionStore);
-    const { stat } = await import("node:fs/promises");
-    const st = await stat(path.join(saveDir, SESSION_DB_FILENAME));
-    expect(st.isFile()).toBe(true);
-    (store as SqliteSessionStore).close();
-  });
+  it.skipIf(!SQLITE_AVAILABLE)(
+    "creates the database file inside the resolved save dir",
+    async () => {
+      const base = await tmp();
+      const saveDir = path.join(base, "nested", "deeper");
+      const store = await createSessionStore(configWith(saveDir), spyLogger().logger);
+      expect(store).toBeInstanceOf(SqliteSessionStore);
+      const { stat } = await import("node:fs/promises");
+      const st = await stat(path.join(saveDir, SESSION_DB_FILENAME));
+      expect(st.isFile()).toBe(true);
+      (store as SqliteSessionStore).close();
+    },
+  );
 });
