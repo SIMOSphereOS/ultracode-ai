@@ -42,6 +42,67 @@ export const DETERMINISTIC_SUMMARY_MAX_CHARS = 400;
 export const TOC_WALK_GUARD = 1_000_000;
 
 /* ------------------------------------------------------------------------- *
+ * --- SSRF / fetch guard ---                                                 *
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Maximum bytes read from any single response body before the crawler skips it
+ * (decompression / size-bomb defence). 10 MiB is generous for documentation
+ * HTML/sitemaps while bounding memory.
+ */
+export const DEFAULT_MAX_RESPONSE_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Maximum number of `3xx` redirects manually followed for one request. Each
+ * hop's `Location` is re-validated by the fetch guard; exceeding this count is
+ * treated as a failure (skip).
+ */
+export const DEFAULT_MAX_REDIRECTS = 5;
+
+/**
+ * Whether the fetch guard resolves non-IP-literal hostnames via DNS and checks
+ * the resolved addresses against the blocked ranges (DNS-rebinding defence).
+ * Off by default: the same-host / IP-literal checks already cover the crawler's
+ * threat model, and DNS lookups are network I/O that tests must not trigger.
+ * Enable by passing a resolver (`dnsLookup`) to {@link isFetchAllowed}.
+ */
+export const DEFAULT_RESOLVE_DNS = false;
+
+/**
+ * Whether private/loopback/link-local/metadata IP ranges are *allowed* as fetch
+ * targets. `false` blocks them (the SSRF guard). Set `true` only for tests or
+ * trusted on-host embedding scenarios.
+ */
+export const DEFAULT_ALLOW_PRIVATE = false;
+
+/**
+ * Blocked IPv4 CIDR ranges (SSRF guard): loopback, RFC-1918 private space,
+ * link-local (incl. the `169.254.169.254` cloud metadata endpoint) and the
+ * unspecified address. Each entry is `[network, prefixLength]`.
+ */
+export const BLOCKED_IPV4_RANGES: ReadonlyArray<readonly [string, number]> = [
+  ["127.0.0.0", 8], // loopback
+  ["10.0.0.0", 8], // private (RFC 1918)
+  ["172.16.0.0", 12], // private (RFC 1918)
+  ["192.168.0.0", 16], // private (RFC 1918)
+  ["169.254.0.0", 16], // link-local + cloud metadata (169.254.169.254)
+  ["0.0.0.0", 8], // "this" network / unspecified
+];
+
+/**
+ * Blocked IPv6 CIDR ranges (SSRF guard): loopback (`::1`), unique-local
+ * `fc00::/7`, link-local `fe80::/10` and the unspecified address. IPv4-mapped
+ * addresses (`::ffff:a.b.c.d`) are unwrapped and checked against
+ * {@link BLOCKED_IPV4_RANGES} before these. Each entry is `[network, prefixLength]`.
+ */
+export const BLOCKED_IPV6_RANGES: ReadonlyArray<readonly [string, number]> = [
+  ["::1", 128], // loopback
+  ["::", 128], // unspecified
+  ["fc00::", 7], // unique-local
+  ["fe80::", 10], // link-local
+];
+
+/* ------------------------------------------------------------------------- *
  * --- Timeouts / Retries ---                                                 *
  * ------------------------------------------------------------------------- */
 

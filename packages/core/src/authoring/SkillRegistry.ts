@@ -16,7 +16,7 @@ import { NoopLogger, serializeError } from "@ultracode/shared";
 import type { Logger } from "@ultracode/shared";
 
 import { resolveHome } from "../config/paths.js";
-import { SAFE_SEGMENT, SKILLS_ROOT } from "./defaults.js";
+import { RESERVED_SEGMENTS, SAFE_SEGMENT, SKILLS_ROOT } from "./defaults.js";
 import { AuthoringError } from "./errors.js";
 import { parseFrontmatter, serializeFrontmatter } from "./frontmatter.js";
 import type { Skill, SkillFrontmatter } from "./types.js";
@@ -40,13 +40,23 @@ export class SkillRegistry {
 
   /** Absolute path to the file backing `<catalog>/<name>`. */
   private fileFor(catalog: string, name: string): string {
-    if (!SAFE_SEGMENT.test(catalog) || !SAFE_SEGMENT.test(name)) {
+    if (!isSafeSegment(catalog) || !isSafeSegment(name)) {
       throw new AuthoringError(
         `Unsafe skill identifier: ${JSON.stringify({ catalog, name })}`,
         { details: { catalog, name } },
       );
     }
-    return path.join(this.root, catalog, `${name}.md`);
+    const file = path.join(this.root, catalog, `${name}.md`);
+    // Defence in depth: even with the charset/segment guards above, assert the
+    // resolved path stays inside the skills root (no traversal escape).
+    const rel = path.relative(this.root, file);
+    if (rel.startsWith("..") || path.isAbsolute(rel)) {
+      throw new AuthoringError(
+        `Skill path escapes the skills root: ${JSON.stringify({ catalog, name })}`,
+        { details: { catalog, name, root: this.root, file } },
+      );
+    }
+    return file;
   }
 
   /**
@@ -156,6 +166,16 @@ export class SkillRegistry {
     const entries = await fs.readdir(dir, { withFileTypes: true });
     return entries.filter((e) => e.isDirectory()).map((e) => e.name);
   }
+}
+
+/**
+ * Whether `segment` is a safe single path segment: it must match
+ * {@link SAFE_SEGMENT} **and** not be one of the reserved directory references
+ * `.`/`..` (which the charset alone admits and which enable path traversal).
+ */
+function isSafeSegment(segment: string): boolean {
+  if (!SAFE_SEGMENT.test(segment)) return false;
+  return !RESERVED_SEGMENTS.has(segment);
 }
 
 /** `true` for a Node `ENOENT` (file/dir not found) error. */

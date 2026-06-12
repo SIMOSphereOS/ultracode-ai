@@ -111,11 +111,16 @@ export interface BudgetPlannerOptions {
 }
 
 /**
- * Round a USD/EUR figure to 6 decimal places. Six places keep sub-cent
+ * Round a USD/EUR figure to 6 decimal places via {@link ROUND_SCALE}
+ * (`Math.round(n * ROUND_SCALE) / ROUND_SCALE`). Six places keep sub-cent
  * micro-estimates (fractions of a cent for cheap models) honest while still
  * collapsing floating-point noise.
+ *
+ * Note: this is the budget module's 6-dp USD rounding — distinct from the
+ * learning module's 4-dp `round4` (`ROUND_USD_SCALE = 1e4`); do not conflate
+ * the two scales.
  */
-function round4(n: number): number {
+function roundUsd(n: number): number {
   if (!Number.isFinite(n)) return 0;
   return Math.round(n * ROUND_SCALE) / ROUND_SCALE;
 }
@@ -257,7 +262,7 @@ export class BudgetPlanner implements IBudgetGate {
         model: leg.model,
         tokensIn: Math.round(mIn),
         tokensOut: Math.round(mOut),
-        usd: round4(mUsd),
+        usd: roundUsd(mUsd),
       };
       byModel.push(spend);
       usd += mUsd;
@@ -265,15 +270,15 @@ export class BudgetPlanner implements IBudgetGate {
       tokensOutSum += spend.tokensOut;
     }
 
-    const usdPoint = round4(usd);
+    const usdPoint = roundUsd(usd);
     return {
       pages,
       tokensIn: tokensInSum,
       tokensOut: tokensOutSum,
       byModel,
-      usdLow: round4(usdPoint * USD_LOW_FACTOR),
-      usdHigh: round4(usdPoint * USD_HIGH_FACTOR),
-      eur: round4(usdPoint * this.fxRate),
+      usdLow: roundUsd(usdPoint * USD_LOW_FACTOR),
+      usdHigh: roundUsd(usdPoint * USD_HIGH_FACTOR),
+      eur: roundUsd(usdPoint * this.fxRate),
       fxRate: this.fxRate,
       assumptions,
     };
@@ -372,9 +377,9 @@ export class BudgetPlanner implements IBudgetGate {
       const decision: BudgetDecision = {
         allowed: false,
         requiresApproval: false,
-        remainingUsd: round4(remaining),
+        remainingUsd: roundUsd(remaining),
         capUsd: cap,
-        reason: `hard cap exceeded (${first.scope}): ${round4(first.after)} > ${first.cap} USD`,
+        reason: `hard cap exceeded (${first.scope}): ${roundUsd(first.after)} > ${first.cap} USD`,
       };
       emitBudgetEvent(
         {
@@ -401,13 +406,13 @@ export class BudgetPlanner implements IBudgetGate {
     const decision: BudgetDecision = {
       allowed: true,
       requiresApproval,
-      remainingUsd: round4(remaining),
+      remainingUsd: roundUsd(remaining),
       capUsd: cap,
       reason: requiresApproval
         ? threshold === null
           ? "approval always required (no ask threshold)"
-          : `estimate ${round4(usd)} USD >= ask threshold ${threshold} USD — approval required`
-        : `estimate ${round4(usd)} USD < ask threshold ${threshold} USD — auto-allow`,
+          : `estimate ${roundUsd(usd)} USD >= ask threshold ${threshold} USD — approval required`
+        : `estimate ${roundUsd(usd)} USD < ask threshold ${threshold} USD — auto-allow`,
     };
     emitBudgetEvent(
       { type: BUDGET_CHECKED_EVENT, category, estimatedUsd: usd, decision },
@@ -478,7 +483,7 @@ export class BudgetPlanner implements IBudgetGate {
     this.applyToCache(normalised);
     const total = this.spendCache.get(normalised.category)?.total ?? 0;
     emitBudgetEvent(
-      { type: BUDGET_SPENT_EVENT, entry: normalised, categoryTotalUsd: round4(total) },
+      { type: BUDGET_SPENT_EVENT, entry: normalised, categoryTotalUsd: roundUsd(total) },
       this.events,
       this.logger,
     );
@@ -543,7 +548,7 @@ export class BudgetPlanner implements IBudgetGate {
             category,
             scope: s.scope,
             pct: band,
-            spentUsd: round4(s.spent),
+            spentUsd: roundUsd(s.spent),
             limitUsd: s.limit,
           };
           emitBudgetEvent(alert, this.events, this.logger);
@@ -570,15 +575,15 @@ export class BudgetPlanner implements IBudgetGate {
       totalSpent += spent.total;
       categories.push({
         category,
-        spentTodayUsd: round4(spent.day),
-        spentMonthUsd: round4(spent.month),
-        spentTotalUsd: round4(spent.total),
+        spentTodayUsd: roundUsd(spent.day),
+        spentMonthUsd: roundUsd(spent.month),
+        spentTotalUsd: roundUsd(spent.total),
         envelope: this.envelopeFor(category),
       });
     }
     return {
       categories,
-      totalSpentUsd: round4(totalSpent),
+      totalSpentUsd: roundUsd(totalSpent),
       entryCount: this.entryCount,
     };
   }
@@ -665,7 +670,7 @@ export class BudgetPlanner implements IBudgetGate {
     ): BudgetEnvelope => ({
       category,
       perRunUsd: perRun,
-      dailyUsd: monthlyUsd === null ? null : round4(monthlyUsd / WIZARD_DAILY_FROM_MONTHLY_DIVISOR),
+      dailyUsd: monthlyUsd === null ? null : roundUsd(monthlyUsd / WIZARD_DAILY_FROM_MONTHLY_DIVISOR),
       monthlyUsd,
       totalUsd: null,
       askThresholdUsd: threshold,

@@ -294,7 +294,19 @@ export class LearnAgent {
     };
 
     // Bounded-concurrency fan-out; abort surfaces via the thrown signal error.
-    await Promise.all(pending.map((url) => sem.run(() => handleOne(url))));
+    try {
+      await Promise.all(pending.map((url) => sem.run(() => handleOne(url))));
+    } catch (err) {
+      // On abort, persist a final checkpoint for everything already processed
+      // BEFORE unwinding, so a resume is idempotent (no double-processing) —
+      // mirroring the runtime-cap path's final checkpoint. Then re-throw so the
+      // run still rejects with the abort error per the contract.
+      if (isAbort(err)) {
+        usage.actualUsd = this.actualUsd(estimate, usage, counters.processed, candidatePages.length);
+        await this.checkpoint(store, source.id, processedSet, validators, usage);
+      }
+      throw err;
+    }
 
     // Final checkpoint + actual cost.
     usage.actualUsd = this.actualUsd(estimate, usage, counters.processed, candidatePages.length);

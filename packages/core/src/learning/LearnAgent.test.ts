@@ -292,6 +292,70 @@ describe("LearnAgent.run end-to-end", () => {
     ).rejects.toMatchObject({ name: "AbortError" });
   });
 
+  it("checkpoints already-processed pages on abort so resume is idempotent", async () => {
+    const controller = new AbortController();
+    const urls = ["https://e.com/a", "https://e.com/b", "https://e.com/c", "https://e.com/d"];
+    // Fail (abort) only when the 3rd distinct URL is fetched; the first two are
+    // processed successfully, concurrency 1 keeps the order deterministic.
+    const fetchedFirstRun: string[] = [];
+    const ingestion: DocIngestionProvider = {
+      discover: async () => urls,
+      fetchPage: async (url: string) => {
+        fetchedFirstRun.push(url);
+        if (fetchedFirstRun.length >= 3) {
+          controller.abort();
+          const err = new Error("aborted");
+          err.name = "AbortError";
+          throw err;
+        }
+        return { url, status: 200, changed: true, text: `t ${url}`, contentHash: url } as DocPage;
+      },
+    };
+    const agent = createLearnAgent({
+      homeDir: home,
+      budget: fakeBudget(),
+      author: fakeAuthor(),
+      ingestion,
+      now,
+      sqliteLoader: async () => { throw new Error("json"); },
+    });
+
+    await expect(
+      agent.run(SOURCE_ID, { approved: true, signal: controller.signal, concurrency: 1 }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+
+    // A checkpoint must now exist holding the two completed URLs.
+    const store = await createCheckpointStore(SOURCE_ID, home, undefined, async () => {
+      throw new Error("json");
+    });
+    const cp = await store.load();
+    store.close();
+    expect(cp).not.toBeNull();
+    expect(cp!.processed.sort()).toEqual(["https://e.com/a", "https://e.com/b"]);
+
+    // Resume: a fresh agent over the same home must skip the two done URLs and
+    // process only the remaining two — no double-processing.
+    const fetchedResume: string[] = [];
+    const resumeIngestion: DocIngestionProvider = {
+      discover: async () => urls,
+      fetchPage: async (url: string) => {
+        fetchedResume.push(url);
+        return { url, status: 200, changed: true, text: `t ${url}`, contentHash: url } as DocPage;
+      },
+    };
+    const agent2 = createLearnAgent({
+      homeDir: home,
+      budget: fakeBudget(),
+      author: fakeAuthor(),
+      ingestion: resumeIngestion,
+      now,
+      sqliteLoader: async () => { throw new Error("json"); },
+    });
+    const report = await agent2.run(SOURCE_ID, { approved: true, concurrency: 1 });
+    expect(fetchedResume.sort()).toEqual(["https://e.com/c", "https://e.com/d"]);
+    expect(report.processed).toBe(2);
+  });
+
   it("works without budget/author/provider (deterministic, zero-cost)", async () => {
     const ingestion = fakeIngestion(["https://e.com/a"], (url) => ({
       url,

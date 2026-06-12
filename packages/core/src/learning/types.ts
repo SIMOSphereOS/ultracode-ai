@@ -261,7 +261,16 @@ export interface PageValidators {
 /** A `fetch`-shaped function; injected so tests never touch the network. */
 export type FetchImpl = (
   input: string,
-  init?: { method?: string; headers?: Record<string, string>; signal?: AbortSignal },
+  init?: {
+    method?: string;
+    headers?: Record<string, string>;
+    signal?: AbortSignal;
+    /**
+     * Redirect handling. The crawler passes `"manual"` so it can re-validate a
+     * `3xx` `Location` through the SSRF guard before following it.
+     */
+    redirect?: "follow" | "error" | "manual";
+  },
 ) => Promise<FetchResponseLike>;
 
 /** Structural subset of the WHATWG `Response` the crawler relies on. */

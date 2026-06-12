@@ -138,6 +138,17 @@ describe("createOrUpgradeSkill (deterministic)", () => {
       AuthoringError,
     );
   });
+
+  it("rejects a catalog that is a path-traversal segment (early, before any write)", async () => {
+    const author = new Authoring({ homeDir: home, now: clock });
+    // PoC: catalog '..' is verbatim-copied to skill.catalog and would escape the
+    // skills root at persist time; validateMaterial must reject it up front.
+    for (const bad of ["..", ".", "a/b", "../etc"]) {
+      await expect(author.createOrUpgradeSkill(material({ catalog: bad }))).rejects.toBeInstanceOf(
+        AuthoringError,
+      );
+    }
+  });
 });
 
 /* --------------------------------------------------------------------------

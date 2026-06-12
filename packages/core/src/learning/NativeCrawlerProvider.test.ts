@@ -177,3 +177,124 @@ describe("NativeCrawlerProvider.fetchPage", () => {
     ).rejects.toMatchObject({ name: "AbortError" });
   });
 });
+
+describe("NativeCrawlerProvider SSRF guard", () => {
+  it("does NOT fetch a robots-advertised sitemap on the metadata host (169.254.169.254)", async () => {
+    const calls: string[] = [];
+    const fetchImpl: FetchImpl = vi.fn(async (url: string) => {
+      calls.push(url);
+      if (url.includes("/robots.txt")) {
+        // robots advertises an internal metadata sitemap + a legit same-host one.
+        return res(
+          200,
+          "User-agent: *\nSitemap: http://169.254.169.254/sitemap.xml\nSitemap: https://docs.example.com/map.xml",
+        );
+      }
+      if (url.includes("docs.example.com/map.xml")) {
+        return res(200, `<urlset><url><loc>https://docs.example.com/de-de/azure/a</loc></url></urlset>`);
+      }
+      return res(404, "");
+    });
+    const crawler = new NativeCrawlerProvider({ sleep: noSleep });
+    const pages = await crawler.discover(SOURCE, { fetchImpl });
+    // The page from the legit sitemap is discovered…
+    expect(pages).toContain("https://docs.example.com/de-de/azure/a");
+    // …and the metadata host was NEVER fetched (guard blocked before fetch).
+    expect(calls.some((u) => u.includes("169.254.169.254"))).toBe(false);
+  });
+
+  it("does NOT fetch a sitemap-index shard <loc> on a private host (10.0.0.5)", async () => {
+    const calls: string[] = [];
+    const fetchImpl: FetchImpl = vi.fn(async (url: string) => {
+      calls.push(url);
+      if (url.includes("/robots.txt")) return res(404, "");
+      if (url.includes("/sitemap.xml")) {
+        return res(
+          200,
+          `<sitemapindex>
+            <sitemap><loc>http://10.0.0.5/shard.xml</loc></sitemap>
+            <sitemap><loc>https://docs.example.com/shard-ok.xml</loc></sitemap>
+          </sitemapindex>`,
+        );
+      }
+      if (url.includes("docs.example.com/shard-ok.xml")) {
+        return res(200, `<urlset><url><loc>https://docs.example.com/de-de/azure/p</loc></url></urlset>`);
+      }
+      return res(404, "");
+    });
+    const crawler = new NativeCrawlerProvider({ sleep: noSleep });
+    const pages = await crawler.discover(SOURCE, { fetchImpl });
+    expect(pages).toEqual(["https://docs.example.com/de-de/azure/p"]);
+    expect(calls.some((u) => u.includes("10.0.0.5"))).toBe(false);
+  });
+
+  it("blocks a cross-host page in fetchPage (sameHost enforced)", async () => {
+    const fetchImpl = vi.fn(async () => res(200, "<main><p>secret</p></main>"));
+    const crawler = new NativeCrawlerProvider({ sleep: noSleep });
+    // fetchPage uses the page URL as its own source; a private-IP literal target
+    // is still blocked by the guard and maps to a status-0 page with no fetch.
+    const page = await crawler.fetchPage("http://169.254.169.254/latest/", {}, { fetchImpl });
+    expect(page.status).toBe(0);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("does NOT follow a redirect to an internal IP", async () => {
+    const calls: string[] = [];
+    const fetchImpl: FetchImpl = vi.fn(async (url: string) => {
+      calls.push(url);
+      // First hop: a 302 to an internal metadata host.
+      return res(302, "", { location: "http://169.254.169.254/latest/" });
+    });
+    const crawler = new NativeCrawlerProvider({ sleep: noSleep });
+    const page = await crawler.fetchPage("https://docs.example.com/p", {}, { fetchImpl });
+    // The redirect target was validated and rejected → status-0 page.
+    expect(page.status).toBe(0);
+    // The internal host was never requested.
+    expect(calls.some((u) => u.includes("169.254.169.254"))).toBe(false);
+  });
+
+  it("follows a same-host redirect and returns the final body", async () => {
+    const fetchImpl: FetchImpl = vi.fn(async (url: string) => {
+      if (url.endsWith("/p")) return res(301, "", { location: "https://docs.example.com/p2" });
+      return res(200, "<main><h1>Moved</h1><p>final.</p></main>");
+    });
+    const crawler = new NativeCrawlerProvider({ sleep: noSleep });
+    const page = await crawler.fetchPage("https://docs.example.com/p", {}, { fetchImpl });
+    expect(page.status).toBe(200);
+    expect(page.title).toBe("Moved");
+  });
+
+  it("skips a body exceeding maxResponseBytes (Content-Length)", async () => {
+    const fetchImpl = vi.fn(async () =>
+      res(200, "<main><p>ok</p></main>", { "content-length": String(50 * 1024 * 1024) }),
+    );
+    const crawler = new NativeCrawlerProvider({ sleep: noSleep, maxResponseBytes: 1024 });
+    const page = await crawler.fetchPage("https://docs.example.com/p", {}, { fetchImpl });
+    // Oversize declared → body not used, page reported as unchanged (no text).
+    expect(page.text).toBeUndefined();
+    expect(page.changed).toBe(false);
+  });
+
+  it("skips a body exceeding maxResponseBytes (decoded length, no Content-Length)", async () => {
+    const big = "x".repeat(5000);
+    const fetchImpl = vi.fn(async () => res(200, `<main><p>${big}</p></main>`));
+    const crawler = new NativeCrawlerProvider({ sleep: noSleep, maxResponseBytes: 1024 });
+    const page = await crawler.fetchPage("https://docs.example.com/p", {}, { fetchImpl });
+    expect(page.text).toBeUndefined();
+    expect(page.changed).toBe(false);
+  });
+
+  it("blocks a public host that resolves to a private IP when a DNS resolver is wired", async () => {
+    const calls: string[] = [];
+    const fetchImpl: FetchImpl = vi.fn(async (url: string) => {
+      calls.push(url);
+      return res(200, "<main><p>x</p></main>");
+    });
+    const dnsLookup = vi.fn(async () => [{ address: "10.0.0.5", family: 4 }]);
+    const crawler = new NativeCrawlerProvider({ sleep: noSleep, dnsLookup });
+    const page = await crawler.fetchPage("https://docs.example.com/p", {}, { fetchImpl });
+    expect(page.status).toBe(0);
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(dnsLookup).toHaveBeenCalledWith("docs.example.com");
+  });
+});

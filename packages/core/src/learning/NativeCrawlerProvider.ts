@@ -18,11 +18,16 @@ import type { RobotsTxt } from "./robots.js";
 import { extractTocHrefs, parseSitemap } from "./sitemap.js";
 import { normalizeAndDedup, normalizeUrl, sameHost } from "./url.js";
 import { sha256 } from "./extract.js";
+import { LearnError } from "./errors.js";
+import { assertFetchAllowed } from "./urlGuard.js";
+import type { DnsLookupAll } from "./urlGuard.js";
 import {
   BACKOFF_FACTOR,
   DEFAULT_BACKOFF_BASE_MS,
   DEFAULT_LOCALE,
   DEFAULT_MAX_CANDIDATES,
+  DEFAULT_MAX_REDIRECTS,
+  DEFAULT_MAX_RESPONSE_BYTES,
   DEFAULT_MAX_RETRIES,
   DEFAULT_MAX_SHARDS,
   DEFAULT_USER_AGENT,
@@ -31,6 +36,7 @@ import type {
   DocIngestionProvider,
   DocPage,
   FetchImpl,
+  FetchResponseLike,
   IngestionContext,
   LearnSource,
   PageValidators,
@@ -50,6 +56,27 @@ export interface NativeCrawlerOptions {
   maxCandidates?: number;
   /** Cap on sitemap shards fetched during discovery (default 64). */
   maxShards?: number;
+  /**
+   * Extra hosts the SSRF guard permits beyond the source host (e.g. a CDN that
+   * serves the same docs). Defaults to none.
+   */
+  allowHosts?: string[];
+  /**
+   * Allow private/loopback/link-local/metadata IP targets. Defaults to `false`
+   * (the SSRF guard). Set `true` only for tests / trusted on-host embedding.
+   */
+  allowPrivate?: boolean;
+  /**
+   * Hard cap on bytes read from any response body before the page is skipped
+   * (size-bomb defence). Defaults to {@link DEFAULT_MAX_RESPONSE_BYTES}.
+   */
+  maxResponseBytes?: number;
+  /**
+   * Optional DNS resolver enabling the rebinding-protection layer for
+   * non-IP-literal hosts. When omitted, the guard relies on host-scoping and
+   * IP-literal checks only (no network I/O at guard time).
+   */
+  dnsLookup?: DnsLookupAll;
 }
 
 /** Native, dependency-free documentation crawler. */
@@ -60,6 +87,10 @@ export class NativeCrawlerProvider implements DocIngestionProvider {
   private readonly sleep: (ms: number, signal?: AbortSignal) => Promise<void>;
   private readonly maxCandidates: number;
   private readonly maxShards: number;
+  private readonly allowHosts: string[];
+  private readonly allowPrivate: boolean;
+  private readonly maxResponseBytes: number;
+  private readonly dnsLookup?: DnsLookupAll;
   /** robots.txt cache keyed by origin. */
   private readonly robotsCache = new Map<string, RobotsTxt>();
 
@@ -71,6 +102,25 @@ export class NativeCrawlerProvider implements DocIngestionProvider {
     this.sleep = opts.sleep ?? defaultSleep;
     this.maxCandidates = opts.maxCandidates ?? DEFAULT_MAX_CANDIDATES;
     this.maxShards = opts.maxShards ?? DEFAULT_MAX_SHARDS;
+    this.allowHosts = opts.allowHosts ?? [];
+    this.allowPrivate = opts.allowPrivate ?? false;
+    this.maxResponseBytes = opts.maxResponseBytes ?? DEFAULT_MAX_RESPONSE_BYTES;
+    this.dnsLookup = opts.dnsLookup;
+  }
+
+  /** Build the SSRF-guard options scoped to a given source URL. */
+  private guardOpts(sourceUrl: string): {
+    sourceUrl: string;
+    allowHosts: string[];
+    allowPrivate: boolean;
+    dnsLookup?: DnsLookupAll;
+  } {
+    return {
+      sourceUrl,
+      allowHosts: this.allowHosts,
+      allowPrivate: this.allowPrivate,
+      ...(this.dnsLookup ? { dnsLookup: this.dnsLookup } : {}),
+    };
   }
 
   /** {@inheritDoc DocIngestionProvider.discover} */
@@ -121,10 +171,12 @@ export class NativeCrawlerProvider implements DocIngestionProvider {
 
     let res: Awaited<ReturnType<FetchImpl>>;
     try {
-      res = await this.fetchWithRetry(url, { method: "GET", headers }, ctx);
+      // A discovered candidate is host-scoped already; the guard still enforces
+      // the IP-literal / redirect / DNS-rebinding layers (sourceUrl = url).
+      res = await this.fetchWithRetry(url, { method: "GET", headers }, url, ctx);
     } catch (err) {
       if (isAbort(err)) throw err;
-      return { url, status: 0, changed: false };
+      return { url, status: 0, changed: false }; // guard block also maps to status 0
     }
 
     if (res.status === 304) {
@@ -136,7 +188,9 @@ export class NativeCrawlerProvider implements DocIngestionProvider {
 
     let html = "";
     try {
-      html = await res.text();
+      const body = await this.readBodyCapped(res, url);
+      if (body === null) return { url, status: res.status, changed: false }; // oversize → skip
+      html = body;
     } catch {
       return { url, status: res.status, changed: false };
     }
@@ -162,18 +216,19 @@ export class NativeCrawlerProvider implements DocIngestionProvider {
     locale: string,
     ctx: IngestionContext,
   ): Promise<string[]> {
-    const xml = await this.getText(sitemapUrl, ctx);
+    const xml = await this.getText(sitemapUrl, base, ctx);
     if (xml === null) return [];
     const parsed = parseSitemap(xml);
     if (parsed.kind === "urlset") {
       return normalizeAndDedup(parsed.urls.map((u) => u.loc), base, locale);
     }
-    // Index: fetch up to `maxShards` child sitemaps.
+    // Index: fetch up to `maxShards` child sitemaps. Each shard <loc> is itself
+    // a fetch target and is SSRF-guarded inside getText (sourceUrl = base).
     const out: string[] = [];
     const shards = parsed.sitemaps.slice(0, this.maxShards);
     for (const shard of shards) {
       if (out.length >= this.maxCandidates) break;
-      const childXml = await this.getText(shard, ctx);
+      const childXml = await this.getText(shard, base, ctx);
       if (childXml === null) continue;
       const child = parseSitemap(childXml);
       if (child.kind === "urlset") {
@@ -190,7 +245,7 @@ export class NativeCrawlerProvider implements DocIngestionProvider {
     locale: string,
     ctx: IngestionContext,
   ): Promise<string[]> {
-    const body = await this.getText(tocUrl, ctx);
+    const body = await this.getText(tocUrl, base, ctx);
     if (body === null) return [];
     let json: unknown;
     try {
@@ -212,41 +267,91 @@ export class NativeCrawlerProvider implements DocIngestionProvider {
     }
     const cached = this.robotsCache.get(origin);
     if (cached) return cached;
-    const body = await this.getText(`${origin}/robots.txt`, ctx);
+    // robots.txt is same-origin; guard it for uniformity (sourceUrl = url).
+    const body = await this.getText(`${origin}/robots.txt`, url, ctx);
     const robots = parseRobots(body ?? "", this.userAgent);
     this.robotsCache.set(origin, robots);
     return robots;
   }
 
-  /** GET a URL's body text, returning `null` on any non-2xx / error. */
-  private async getText(url: string, ctx: IngestionContext): Promise<string | null> {
+  /**
+   * GET a URL's body text, returning `null` on any non-2xx / guard block /
+   * size-cap breach / error. `sourceUrl` scopes the SSRF guard.
+   */
+  private async getText(url: string, sourceUrl: string, ctx: IngestionContext): Promise<string | null> {
     try {
       const res = await this.fetchWithRetry(
         url,
         { method: "GET", headers: { "User-Agent": this.userAgent } },
+        sourceUrl,
         ctx,
       );
       if (!res.ok) return null;
-      return await res.text();
+      return await this.readBodyCapped(res, url);
     } catch (err) {
       if (isAbort(err)) throw err;
+      if (err instanceof LearnError) return null; // guard block / oversize → skip
       return null;
     }
   }
 
-  /** Fetch with exponential backoff on `429`/`5xx` (network errors retried too). */
+  /**
+   * SSRF-guarded fetch with exponential backoff on `429`/`5xx`. Every URL — the
+   * initial target and every `3xx` `Location` hop — is validated by the fetch
+   * guard before the request. Redirects are handled manually (`redirect:
+   * "manual"`) and bounded by {@link DEFAULT_MAX_REDIRECTS}; an over-limit chain
+   * or an unresolvable/blocked `Location` throws {@link LearnError}.
+   *
+   * @throws {LearnError} when the guard blocks a target or a redirect chain is
+   *   too long / its `Location` is missing or blocked.
+   */
   private async fetchWithRetry(
+    url: string,
+    init: { method?: string; headers?: Record<string, string> },
+    sourceUrl: string,
+    ctx: IngestionContext,
+  ): Promise<Awaited<ReturnType<FetchImpl>>> {
+    let target = url;
+    for (let hop = 0; ; hop++) {
+      if (hop > DEFAULT_MAX_REDIRECTS) {
+        throw new LearnError("Too many redirects", { details: { url, sourceUrl, hop } });
+      }
+      // Guard BEFORE every fetch (initial target and each redirect Location).
+      await assertFetchAllowed(target, this.guardOpts(sourceUrl));
+
+      const res = await this.fetchOnce(target, init, ctx);
+      if (!isRedirect(res.status)) return res;
+
+      // Manual redirect: re-validate the Location through the guard, then follow.
+      const location = res.headers.get("location");
+      if (!location) {
+        throw new LearnError("Redirect without Location header", {
+          details: { url: target, status: res.status },
+        });
+      }
+      const next = resolveLocation(target, location);
+      if (next === null) {
+        throw new LearnError("Redirect Location is not resolvable", {
+          details: { url: target, location },
+        });
+      }
+      target = next;
+    }
+  }
+
+  /** A single fetch with 429/5xx backoff + retry (no redirect handling). */
+  private async fetchOnce(
     url: string,
     init: { method?: string; headers?: Record<string, string> },
     ctx: IngestionContext,
   ): Promise<Awaited<ReturnType<FetchImpl>>> {
     let attempt = 0;
-    let lastErr: unknown;
     for (;;) {
       if (ctx.signal?.aborted) throw abortError(ctx.signal);
       try {
         const res = await ctx.fetchImpl(url, {
           ...init,
+          redirect: "manual",
           ...(ctx.signal ? { signal: ctx.signal } : {}),
         });
         if (res.status === 429 || (res.status >= 500 && res.status <= 599)) {
@@ -258,13 +363,30 @@ export class NativeCrawlerProvider implements DocIngestionProvider {
         return res;
       } catch (err) {
         if (isAbort(err)) throw err;
-        lastErr = err;
         if (attempt >= this.maxRetries) throw err;
         await this.backoff(attempt, ctx.signal);
         attempt++;
       }
     }
-    void lastErr;
+  }
+
+  /**
+   * Read a response body, enforcing the {@link maxResponseBytes} cap. Returns
+   * `null` (skip) when `Content-Length` advertises an oversize body or the
+   * decoded text exceeds the byte cap (decompression / size-bomb defence).
+   */
+  private async readBodyCapped(res: FetchResponseLike, url: string): Promise<string | null> {
+    const declared = Number(res.headers.get("content-length"));
+    if (Number.isFinite(declared) && declared > this.maxResponseBytes) {
+      return null;
+    }
+    const text = await res.text();
+    // UTF-8 byte length is >= char count; cap on the decoded byte size.
+    if (Buffer.byteLength(text, "utf8") > this.maxResponseBytes) {
+      void url;
+      return null;
+    }
+    return text;
   }
 
   /** Exponential backoff sleep: base × 2^attempt. */
@@ -306,6 +428,20 @@ function abortError(signal: AbortSignal): Error {
 /** Whether an unknown error is an abort. */
 function isAbort(err: unknown): boolean {
   return err instanceof Error && err.name === "AbortError";
+}
+
+/** Whether an HTTP status is a redirect that carries a `Location`. */
+function isRedirect(status: number): boolean {
+  return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
+}
+
+/** Resolve a (possibly relative) redirect `Location` against the current URL. */
+function resolveLocation(currentUrl: string, location: string): string | null {
+  try {
+    return new URL(location, currentUrl).toString();
+  } catch {
+    return null;
+  }
 }
 
 /** Compose `origin + path` from a URL, ignoring its existing path. */

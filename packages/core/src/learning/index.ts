@@ -64,6 +64,15 @@ export { parseRobots, isAllowed, urlAllowed } from "./robots.js";
 export type { RobotsTxt } from "./robots.js";
 
 export {
+  isFetchAllowed,
+  isFetchAllowedAsync,
+  assertFetchAllowed,
+  isBlockedIp,
+  nodeDnsLookupAll,
+} from "./urlGuard.js";
+export type { FetchAllowDecision, FetchGuardOptions, DnsLookupAll } from "./urlGuard.js";
+
+export {
   learningDir,
   sourcesFile,
   stateDir,

@@ -283,6 +283,16 @@ export const SKILL_CONTEXT_HEADER = "## Active skills";
  */
 export const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/;
 
+/**
+ * Reserved directory-reference segments that {@link SAFE_SEGMENT} admits as a
+ * charset but which must never be accepted as a catalog/skill identifier: `.`
+ * (current dir) and `..` (parent dir) enable path traversal above the skills
+ * root. Checked in addition to {@link SAFE_SEGMENT}.
+ *
+ * @internal
+ */
+export const RESERVED_SEGMENTS: ReadonlySet<string> = new Set([".", ".."]);
+
 /* ------------------------------------------------------------------------- *
  * --- Seeds ---
  * ------------------------------------------------------------------------- */

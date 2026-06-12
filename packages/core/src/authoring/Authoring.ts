@@ -50,6 +50,7 @@ import {
   HEURISTIC_DESCRIPTION_MAX_LENGTH,
   INFER_TOOLS_BASE,
   INITIAL_SKILL_VERSION,
+  RESERVED_SEGMENTS,
   SCORE_BODY_MAX,
   SCORE_BODY_TARGET_LENGTH,
   SCORE_DESCRIPTION_MAX,
@@ -63,6 +64,7 @@ import {
   SCORE_STATUS_DRAFT,
   SCORE_TRIGGERS_MAX,
   SCORE_TRIGGERS_TARGET,
+  SAFE_SEGMENT,
   SKILL_UPGRADE_RELEASE,
   SLUG_MAX_LENGTH,
   STOPWORDS as STOPWORD_LIST,
@@ -590,6 +592,14 @@ function validateMaterial(material: KnowledgeMaterial): void {
   }
   if (typeof material.catalog !== "string" || material.catalog.trim().length === 0) {
     throw new AuthoringError("KnowledgeMaterial.catalog is required");
+  }
+  // Reject catalogs that would escape the skills root once used as a path
+  // segment (same rule the registry enforces in `fileFor`), failing early and
+  // clearly rather than at write time.
+  if (!SAFE_SEGMENT.test(material.catalog) || RESERVED_SEGMENTS.has(material.catalog)) {
+    throw new AuthoringError("KnowledgeMaterial.catalog is not a safe path segment", {
+      details: { catalog: material.catalog },
+    });
   }
 }
 

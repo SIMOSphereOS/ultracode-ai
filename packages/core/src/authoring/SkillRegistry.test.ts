@@ -107,6 +107,37 @@ describe("SkillRegistry", () => {
     await expect(reg.save(makeSkill({ catalog: "a/b" }))).rejects.toBeInstanceOf(AuthoringError);
   });
 
+  it("rejects the reserved traversal segments '.'/'..' and writes nothing above root", async () => {
+    const reg = new SkillRegistry(home);
+    const skillsRoot = path.join(home, ".ultracode", "skills");
+    // PoC: SAFE_SEGMENT (/^[A-Za-z0-9._-]+$/) admits '..' as a charset, which
+    // would resolve to ~/.ultracode/<name>.md — ABOVE the skills root.
+    for (const bad of ["..", ".", "a/.."]) {
+      await expect(reg.save(makeSkill({ catalog: bad }))).rejects.toBeInstanceOf(AuthoringError);
+      await expect(reg.save(makeSkill({ name: bad }))).rejects.toBeInstanceOf(AuthoringError);
+    }
+    // The traversal target that the PoC would have created must NOT exist.
+    await expect(
+      fs.readFile(path.join(home, ".ultracode", "topic-a.md"), "utf8"),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+    await expect(
+      fs.readFile(path.join(home, ".ultracode", "innocent.md"), "utf8"),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+    // The skills root itself was never populated with an escaping entry.
+    const rootExists = await fs
+      .readdir(skillsRoot)
+      .then((e) => e)
+      .catch(() => []);
+    expect(rootExists).not.toContain("..");
+  });
+
+  it("still accepts a normal catalog after the traversal guard", async () => {
+    const reg = new SkillRegistry(home);
+    await reg.save(makeSkill({ catalog: "azure", name: "blob-storage" }));
+    const file = path.join(home, ".ultracode", "skills", "azure", "blob-storage.md");
+    expect(await fs.readFile(file, "utf8")).toContain("name: blob-storage");
+  });
+
   it("persists Unicode content faithfully", async () => {
     const reg = new SkillRegistry(home);
     const skill = makeSkill({ description: "café 日本語 🛡️", body: "𝕦𝕟𝕚 😀 surrogate" });
