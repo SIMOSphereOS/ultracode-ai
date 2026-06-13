@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-06-13
+
+Metadata-only patch — no code changes.
+
+### Fixed
+- Corrected the `repository`, `homepage` and `bugs` URLs in all package manifests to the
+  renamed GitHub repository (`AndreasSchwan-SIMO/ultracode-ai`); the `1.3.0` tarballs still
+  referenced the pre-rename `UltraCode` path. Tightened the publish workflow permissions
+  (dropped the unused `id-token: write`).
+
 ## [1.3.0] - 2026-06-13
 
 First production-ready release. Closes the confirmed P1 hardening backlog from the
