@@ -26,6 +26,13 @@ class TestProvider extends BaseProvider {
   public idleTimeout(): number {
     return this.streamIdleTimeoutMs();
   }
+  public drive(
+    stream: AsyncIterable<CompletionChunk>,
+    onChunk: (c: CompletionChunk) => void,
+    onConsumerError?: (err: unknown, c: CompletionChunk) => void,
+  ): Promise<CompletionChunk | undefined> {
+    return this.consumeStream(stream, onChunk, onConsumerError);
+  }
   public listModels(): Promise<string[]> {
     return Promise.resolve([]);
   }
@@ -170,6 +177,66 @@ describe("BaseProvider.fetchWithRetry", () => {
     expect(err).toBeInstanceOf(ProviderError);
     expect((err as ProviderError).retryable).toBe(false);
     expect((err as ProviderError).message).toMatch(/aborted/i);
+  });
+});
+
+describe("BaseProvider.consumeStream (consumer isolation)", () => {
+  async function* chunks(...items: CompletionChunk[]): AsyncIterable<CompletionChunk> {
+    for (const item of items) yield item;
+  }
+
+  it("keeps streaming when the consumer throws and still returns the done chunk", async () => {
+    const provider = new TestProvider(testOptions());
+    const seen: string[] = [];
+    let consumerErrors = 0;
+    const stream = chunks(
+      { type: "text", text: "a" },
+      { type: "text", text: "boom" },
+      { type: "text", text: "b" },
+      { type: "done", usage: { inputTokens: 1, outputTokens: 2 } },
+    );
+    const done = await provider.drive(
+      stream,
+      (c) => {
+        if (c.text === "boom") throw new Error("consumer blew up");
+        if (c.type === "text") seen.push(c.text ?? "");
+      },
+      () => {
+        consumerErrors += 1;
+      },
+    );
+    // Every chunk after the throwing one was still delivered; cleanup completed.
+    expect(seen).toEqual(["a", "b"]);
+    expect(consumerErrors).toBe(1);
+    expect(done).toEqual({ type: "done", usage: { inputTokens: 1, outputTokens: 2 } });
+  });
+
+  it("does not swallow errors raised by the stream itself", async () => {
+    const provider = new TestProvider(testOptions());
+    async function* faulty(): AsyncIterable<CompletionChunk> {
+      yield { type: "text", text: "a" };
+      throw new Error("stream failed");
+    }
+    const err = await provider.drive(faulty(), () => {}).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toMatch(/stream failed/);
+  });
+
+  it("survives a consumer that throws AND a faulty error sink", async () => {
+    const provider = new TestProvider(testOptions());
+    let delivered = 0;
+    const done = await provider.drive(
+      chunks({ type: "text", text: "x" }, { type: "done", usage: { inputTokens: 0, outputTokens: 0 } }),
+      () => {
+        delivered += 1;
+        throw new Error("always throws");
+      },
+      () => {
+        throw new Error("error sink also throws");
+      },
+    );
+    expect(delivered).toBe(2);
+    expect(done?.type).toBe("done");
   });
 });
 

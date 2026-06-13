@@ -764,6 +764,51 @@ export class UltraCode {
     return result;
   }
 
+  /**
+   * Delete a session and its optimizer sidecar.
+   *
+   * Deletes the raw {@link SessionRecord} from the store and, when the session
+   * optimizer is wired, calls {@link SessionOptimizer.forget} so the persisted
+   * sidecar never outlives the record it compacts (orphan-sidecar cleanup).
+   * The sidecar cleanup is best-effort and never throws.
+   *
+   * @param sessionId - Session to delete.
+   * @returns `true` when a record was actually removed.
+   */
+  async deleteSession(sessionId: string): Promise<boolean> {
+    const existed = await this.sessions.delete(sessionId);
+    if (this.sessionOptimizer) {
+      await this.sessionOptimizer.forget(sessionId);
+    }
+    return existed;
+  }
+
+  /**
+   * Retain only the `maxSessions` most-recent sessions, deleting the rest along
+   * with their optimizer sidecars.
+   *
+   * The set of removed ids is computed as the difference between the session
+   * list before and after the store's `prune`, so each pruned session's sidecar
+   * is also forgotten (orphan-sidecar cleanup). Sidecar cleanup is best-effort
+   * and never throws.
+   *
+   * @param maxSessions - Number of most-recent sessions to keep.
+   * @returns The number of sessions removed.
+   */
+  async pruneSessions(maxSessions: number): Promise<number> {
+    const before = this.sessionOptimizer
+      ? new Set((await this.sessions.list()).map((m) => m.id))
+      : undefined;
+    const removed = await this.sessions.prune(maxSessions);
+    if (this.sessionOptimizer && before !== undefined && removed > 0) {
+      const after = new Set((await this.sessions.list()).map((m) => m.id));
+      for (const id of before) {
+        if (!after.has(id)) await this.sessionOptimizer.forget(id);
+      }
+    }
+    return removed;
+  }
+
   /** Release resources; safe to call multiple times. */
   async dispose(): Promise<void> {
     if (this.disposed) return;

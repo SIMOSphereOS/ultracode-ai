@@ -123,7 +123,8 @@ export class ChangeAnalysisEngine {
 
     const resolved = await this.resolveRange(range);
     const commits = await this.collectCommits(resolved.logRange);
-    const files = await this.collectFiles(resolved.base, resolved.head);
+    const renames = new Map<string, string>();
+    const files = await this.collectFiles(resolved.base, resolved.head, renames);
 
     const breakingChanges: BreakingChange[] = commits
       .filter((c) => c.breaking)
@@ -132,7 +133,7 @@ export class ChangeAnalysisEngine {
         description: c.subject,
         location: c.hash,
       }));
-    breakingChanges.push(...(await this.apiDiff(resolved.base, resolved.head, files)));
+    breakingChanges.push(...(await this.apiDiff(resolved.base, resolved.head, files, renames)));
 
     const securityFindings = await this.scanSecurity(resolved.head, files);
     const categories = this.tally(commits);
@@ -198,8 +199,16 @@ export class ChangeAnalysisEngine {
     return commits;
   }
 
-  /** Collects file changes from `git diff --name-status` plus `--numstat`. */
-  private async collectFiles(base: string, head: string): Promise<FileChange[]> {
+  /**
+   * Collects file changes from `git diff --name-status` plus `--numstat`. When
+   * `renames` is supplied, each renamed file's `new path → old path` mapping is
+   * recorded so the API diff can compare the old and new exported symbols.
+   */
+  private async collectFiles(
+    base: string,
+    head: string,
+    renames?: Map<string, string>,
+  ): Promise<FileChange[]> {
     const nameStatusOut = await this.git.output([
       "diff",
       "--name-status",
@@ -223,8 +232,10 @@ export class ChangeAnalysisEngine {
       }
       const kind = statusToken.charAt(0);
       let path: string;
+      let oldPath: string | undefined;
       if (kind === "R" || kind === "C") {
         // rename/copy: <status> NUL <old> NUL <new>
+        oldPath = tokens[i + 1] ?? "";
         path = tokens[i + 2] ?? tokens[i + 1] ?? "";
         i += 3;
       } else {
@@ -232,6 +243,9 @@ export class ChangeAnalysisEngine {
         i += 2;
       }
       if (path === "") continue;
+      if (kind === "R" && renames !== undefined && oldPath !== undefined && oldPath !== "") {
+        renames.set(path, oldPath);
+      }
       const status: FileChange["status"] =
         kind === "A" || kind === "C"
           ? "added"
@@ -278,25 +292,52 @@ export class ChangeAnalysisEngine {
   }
 
   /**
-   * Simple API diff: exported symbols removed from modified TypeScript files
-   * are reported as breaking changes.
+   * Simple API diff over TypeScript files: exported symbols that disappear
+   * between the old and new revision are reported as breaking changes.
+   *
+   * Three change kinds are covered:
+   *  - `modified`: old vs new content at the same path.
+   *  - `deleted`: every symbol exported by the old file is treated as removed.
+   *  - `renamed`: old content at the pre-rename path is compared against the
+   *    new content at the post-rename path (`renames` maps new → old path), so
+   *    a rename that also drops an export is still flagged.
    */
   private async apiDiff(
     base: string,
     head: string,
     files: FileChange[],
+    renames?: Map<string, string>,
   ): Promise<BreakingChange[]> {
     const breaking: BreakingChange[] = [];
     for (const file of files) {
-      if (file.status !== "modified" || !API_DIFF_FILE_RE.test(file.path)) continue;
+      if (!API_DIFF_FILE_RE.test(file.path)) continue;
       // `git show <rev>:<path>` takes a single object spec; a `--` separator
       // would turn it into a pathspec, so we rely on base/head being validated
       // non-dash refs (see assertSafeRef) to prevent option injection here.
-      const oldContent = await this.git.tryOutput(["show", `${base}:${file.path}`]);
-      const newContent = await this.git.tryOutput(["show", `${head}:${file.path}`]);
-      if (oldContent === null || newContent === null) continue;
-      const oldNames = extractExportedNames(oldContent);
-      const newNames = extractExportedNames(newContent);
+      let oldNames: Set<string>;
+      let newNames: Set<string>;
+      if (file.status === "deleted") {
+        const oldContent = await this.git.tryOutput(["show", `${base}:${file.path}`]);
+        if (oldContent === null) continue;
+        oldNames = extractExportedNames(oldContent);
+        // A deleted file exports nothing afterwards: every old symbol is removed.
+        newNames = new Set<string>();
+      } else if (file.status === "renamed") {
+        const oldPath = renames?.get(file.path) ?? file.path;
+        const oldContent = await this.git.tryOutput(["show", `${base}:${oldPath}`]);
+        const newContent = await this.git.tryOutput(["show", `${head}:${file.path}`]);
+        if (oldContent === null || newContent === null) continue;
+        oldNames = extractExportedNames(oldContent);
+        newNames = extractExportedNames(newContent);
+      } else if (file.status === "modified") {
+        const oldContent = await this.git.tryOutput(["show", `${base}:${file.path}`]);
+        const newContent = await this.git.tryOutput(["show", `${head}:${file.path}`]);
+        if (oldContent === null || newContent === null) continue;
+        oldNames = extractExportedNames(oldContent);
+        newNames = extractExportedNames(newContent);
+      } else {
+        continue;
+      }
       for (const name of oldNames) {
         if (!newNames.has(name)) {
           breaking.push({
@@ -363,12 +404,21 @@ export class ChangeAnalysisEngine {
  */
 export function extractExportedNames(source: string): Set<string> {
   const names = new Set<string>();
+  // `export default …` exposes the module's default export under the
+  // conventional name "default".
+  if (/export\s+default\b/.test(source)) names.add("default");
   const declRe =
     /export\s+(?:declare\s+)?(?:abstract\s+)?(?:async\s+)?(?:function\s*\*?|class|interface|enum|type|const|let|var|namespace)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g;
   let match: RegExpExecArray | null;
   while ((match = declRe.exec(source)) !== null) {
     const name = match[1];
     if (name !== undefined) names.add(name);
+    // Comma-separated declarators share one keyword, e.g.
+    // `export const a = 1, b = 2;` — only the first name is captured above, so
+    // walk the remainder of the statement and collect the other binding names.
+    if (/^(?:const|let|var)$/.test(declaratorKeyword(match[0]))) {
+      for (const extra of extraDeclarators(source, declRe.lastIndex)) names.add(extra);
+    }
   }
   const listRe = /export\s*(?:type\s*)?\{([^}]*)\}/g;
   while ((match = listRe.exec(source)) !== null) {
@@ -382,4 +432,134 @@ export function extractExportedNames(source: string): Set<string> {
     }
   }
   return names;
+}
+
+/** Returns the `const`/`let`/`var`/… keyword from a matched declaration head. */
+function declaratorKeyword(head: string): string {
+  const m = /\b(const|let|var|function|class|interface|enum|type|namespace)\b/.exec(head);
+  return m?.[1] ?? "";
+}
+
+/**
+ * Given source and an index just past the first binding name of a
+ * `const`/`let`/`var` statement, returns the remaining comma-separated binding
+ * names (e.g. `b`, `c` in `export const a = 1, b = 2, c = 3;`).
+ *
+ * Scans with awareness of strings, template literals and bracket nesting so
+ * commas inside initializers (calls, arrays, objects, generics) are ignored;
+ * only top-level commas introduce a new binding. Stops at the terminating `;`
+ * or at top-level depth once the statement clearly ends.
+ *
+ * Angle brackets (`<…>`) are tracked separately from `()[]{}` because `<` and
+ * `>` are overloaded: they open/close type arguments (`Map<string, number>`)
+ * but also appear as comparison/shift operators (`<`, `>`, `<=`, `>=`, `<<`,
+ * `>>`, `=>`, `->`). A `<` only increments the angle depth when it plausibly
+ * opens a type argument — i.e. it directly follows an identifier char or a
+ * closing `>` and is not part of `<=`/`<<`/`=>`/`<<=`. A `>` only decrements
+ * while angle depth is positive and it is not part of `>=`/`>>`/`=>`/`->`.
+ * Commas split bindings only when both bracket depth and angle depth are zero;
+ * because false-merge (under-splitting) is safe here while false-split creates
+ * a phantom export, this errs toward not splitting.
+ */
+function extraDeclarators(source: string, start: number): string[] {
+  const names: string[] = [];
+  let depth = 0;
+  let angleDepth = 0;
+  let i = start;
+  let expectName = false;
+  while (i < source.length) {
+    const ch = source[i] ?? "";
+    if (ch === '"' || ch === "'" || ch === "`") {
+      i = skipString(source, i, ch);
+      expectName = false;
+      continue;
+    }
+    if (ch === "<" && opensTypeArgument(source, i)) {
+      angleDepth += 1;
+      i += 1;
+      continue;
+    }
+    if (ch === ">" && angleDepth > 0 && closesTypeArgument(source, i)) {
+      angleDepth -= 1;
+      i += 1;
+      continue;
+    }
+    if (ch === "(" || ch === "[" || ch === "{") {
+      depth += 1;
+      i += 1;
+      continue;
+    }
+    if (ch === ")" || ch === "]" || ch === "}") {
+      if (depth === 0) break; // left the declaration context
+      depth -= 1;
+      i += 1;
+      continue;
+    }
+    if (depth === 0 && ch === ";") break;
+    if (depth === 0 && angleDepth === 0 && ch === ",") {
+      expectName = true;
+      i += 1;
+      continue;
+    }
+    if (expectName) {
+      const rest = source.slice(i);
+      const idMatch = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)/.exec(rest);
+      if (idMatch?.[1] !== undefined) {
+        names.push(idMatch[1]);
+        i += idMatch[0].length;
+        expectName = false;
+        continue;
+      }
+      // Destructuring patterns (`, { x }` / `, [ y ]`) are not flat bindings —
+      // skip the name slot and let bracket tracking handle the contents.
+      if (/^\s*[[{]/.test(rest)) expectName = false;
+    }
+    i += 1;
+  }
+  return names;
+}
+
+/**
+ * Decides whether the `<` at `i` plausibly opens a type-argument list rather
+ * than acting as a less-than / shift / arrow operator. A type-argument `<`
+ * directly follows an identifier char or a closing `>` (e.g. `Map<`,
+ * `Foo<Bar><`) and is not the start of `<=` or `<<`. This conservative test
+ * may miss exotic cases, but a missed open only under-splits (safe) whereas a
+ * false split would resurrect the phantom-export bug.
+ */
+function opensTypeArgument(source: string, i: number): boolean {
+  const next = source[i + 1] ?? "";
+  if (next === "=" || next === "<") return false; // `<=`, `<<`
+  let j = i - 1;
+  while (j >= 0 && /\s/.test(source[j] ?? "")) j -= 1;
+  const prev = source[j] ?? "";
+  return /[A-Za-z0-9_$>]/.test(prev);
+}
+
+/**
+ * Decides whether the `>` at `i` closes a type-argument list rather than acting
+ * as a greater-than / shift / arrow operator. Only called while angle depth is
+ * positive; rejects `>=`, `>>` and the `>` of `=>`/`->`.
+ */
+function closesTypeArgument(source: string, i: number): boolean {
+  const next = source[i + 1] ?? "";
+  if (next === "=" || next === ">") return false; // `>=`, `>>`
+  const prev = source[i - 1] ?? "";
+  if (prev === "=" || prev === "-") return false; // `=>`, `->`
+  return true;
+}
+
+/** Advances past a string/template literal starting at `open`, returning the next index. */
+function skipString(source: string, open: number, quote: string): number {
+  let i = open + 1;
+  while (i < source.length) {
+    const ch = source[i];
+    if (ch === "\\") {
+      i += 2;
+      continue;
+    }
+    if (ch === quote) return i + 1;
+    i += 1;
+  }
+  return i;
 }

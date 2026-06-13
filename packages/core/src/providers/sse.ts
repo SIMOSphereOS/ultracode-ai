@@ -24,7 +24,32 @@
  * idle timeout.
  */
 
+import type { CompletionChunk, FinishReason, TokenUsage } from "@ultracode/shared";
 import type { Logger } from "@ultracode/shared";
+
+/**
+ * Terminal `"done"` chunk augmented with provider-local stream-completion
+ * metadata.
+ *
+ * The shared {@link CompletionChunk} contract is frozen and only declares
+ * `type`/`usage` for the terminal chunk. When a streaming body ends WITHOUT a
+ * proper terminal signal (OpenAI: the `[DONE]` sentinel; Anthropic:
+ * `message_stop`/`message_delta`; Ollama: a `done: true` line) the provider can
+ * neither trust the usage nor a guessed finish reason. Rather than silently
+ * reporting zeroed usage and a fabricated `finishReason`, providers yield this
+ * structurally-extended chunk: `incomplete: true` flags the truncation and
+ * `finishReason` carries the best-known value so a careful consumer can detect
+ * the cut-off. Plain {@link CompletionChunk} consumers ignore the extra fields,
+ * so the change is backward-compatible.
+ */
+export interface TerminalCompletionChunk extends CompletionChunk {
+  type: "done";
+  usage: TokenUsage;
+  /** Best-known finish reason; present when the stream ended without a terminal event. */
+  finishReason?: FinishReason;
+  /** `true` when the stream ended before a proper terminal signal was observed. */
+  incomplete?: boolean;
+}
 
 /**
  * Default streaming idle timeout (ms).

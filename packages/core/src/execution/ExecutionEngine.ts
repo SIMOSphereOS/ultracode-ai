@@ -189,6 +189,32 @@ function throwIfAborted(signal?: AbortSignal): void {
   if (signal?.aborted) throw abortErrorOf(signal);
 }
 
+/**
+ * A promise that never resolves and rejects with the abort-derived error the
+ * moment `signal` fires (or immediately, if it is already aborted). Used to
+ * race long-running work against cancellation so the engine rejects *promptly*
+ * on abort instead of blocking until the work settles. The listener is removed
+ * via the provided `cleanup` once the race is decided, so no handler leaks.
+ */
+function abortRace(signal: AbortSignal): { promise: Promise<never>; cleanup: () => void } {
+  let onAbort: (() => void) | undefined;
+  const promise = new Promise<never>((_resolve, reject) => {
+    if (signal.aborted) {
+      reject(abortErrorOf(signal));
+      return;
+    }
+    onAbort = () => reject(abortErrorOf(signal));
+    signal.addEventListener("abort", onAbort, { once: true });
+  });
+  // Swallow the eventual rejection when the race is won by the other side, so an
+  // unobserved abort promise never surfaces as an unhandled rejection.
+  promise.catch(() => undefined);
+  const cleanup = (): void => {
+    if (onAbort) signal.removeEventListener("abort", onAbort);
+  };
+  return { promise, cleanup };
+}
+
 /** JSON-stringify that never throws (circular structures, BigInt, …). */
 function safeJson(value: unknown): string {
   try {
@@ -534,12 +560,36 @@ export class ExecutionEngine {
    * Execute all tool calls of a turn in parallel. The returned `tool`
    * messages preserve the order of the requests regardless of completion
    * order. Never rejects for tool-level failures.
+   *
+   * An abort signalled *during* the batch is honoured promptly: the in-flight
+   * batch is raced against the abort signal, so the run rejects as soon as the
+   * signal fires rather than blocking until every (possibly slow) tool settles.
+   * The individual tool promises keep running to completion in the background —
+   * `executeOne` never throws, so they can never surface as unhandled
+   * rejections — but the engine no longer waits on them once aborted.
    */
   private async executeToolCalls(
     calls: ToolCallRequest[],
     signal?: AbortSignal,
   ): Promise<ChatMessage[]> {
-    const results = await Promise.all(calls.map((call) => this.executeOne(call, signal)));
+    const batch = Promise.all(calls.map((call) => this.executeOne(call, signal)));
+    // Keep the batch observed even if the abort branch wins the race, so a slow
+    // tool settling later never triggers an unhandled rejection (it can't, since
+    // `executeOne` never throws, but this is belt-and-braces).
+    batch.catch(() => undefined);
+
+    let results: ToolResult[];
+    if (signal) {
+      const { promise: aborted, cleanup } = abortRace(signal);
+      try {
+        results = await Promise.race([batch, aborted]);
+      } finally {
+        cleanup();
+      }
+    } else {
+      results = await batch;
+    }
+
     return results.map((result, i) => {
       // `calls` and `results` are index-aligned by construction.
       const call = calls[i] as ToolCallRequest;

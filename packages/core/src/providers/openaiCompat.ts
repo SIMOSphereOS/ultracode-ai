@@ -25,6 +25,7 @@ import type {
   ToolDefinition,
 } from "@ultracode/shared";
 import { BaseProvider } from "./BaseProvider.js";
+import type { TerminalCompletionChunk } from "./sse.js";
 import { parseSSEJson } from "./sse.js";
 
 /** Narrow an unknown value to a plain record, else `undefined`. */
@@ -85,6 +86,40 @@ export function safeParseArgs(raw: string, logger: Logger): Record<string, unkno
     });
     return {};
   }
+}
+
+/**
+ * Default sampling temperature OpenAI applies when the field is omitted.
+ *
+ * Reasoning models (o1/o3/o4/gpt-5) reject any non-default `temperature` with a
+ * 400, so the OpenAI-compat body only ever emits `temperature` for them when it
+ * equals this default (i.e. effectively a no-op the API also accepts as absent).
+ */
+export const OPENAI_DEFAULT_TEMPERATURE = 1;
+
+/**
+ * Reasoning-model id prefixes whose `chat/completions` contract differs from the
+ * classic GPT models: they require `max_completion_tokens` (rejecting
+ * `max_tokens` with a 400) and reject a non-default `temperature`. Matched
+ * case-insensitively against the leading id segment so vendor/date suffixes
+ * (`o3-mini`, `gpt-5-2025-08-01`, `o1-preview`) are covered, while look-alikes
+ * such as `gpt-4o` (which is NOT a reasoning model) stay on the classic path.
+ */
+const REASONING_MODEL_PREFIXES = ["o1", "o3", "o4", "gpt-5"] as const;
+
+/**
+ * Whether `model` is an OpenAI reasoning model (o1/o3/o4/gpt-5 family).
+ *
+ * Crucially `gpt-4o` must NOT match (it is a classic GPT model): we anchor on
+ * the prefix and require the next character to be a delimiter or end-of-string,
+ * so `o1`/`o1-preview` match but `o1mini-lookalike` style ids do not partially
+ * collide with `gpt-4o`. Exposed for focused tests.
+ */
+export function isReasoningModel(model: string): boolean {
+  const id = model.toLowerCase();
+  return REASONING_MODEL_PREFIXES.some(
+    (prefix) => id === prefix || id.startsWith(`${prefix}-`),
+  );
 }
 
 /** Map {@link ChatMessage}s onto OpenAI-compatible wire messages. */
@@ -253,6 +288,18 @@ export abstract class OpenAICompatProvider extends BaseProvider {
     return {};
   }
 
+  /**
+   * Whether this backend supports OpenAI's `prompt_cache_key` request field.
+   *
+   * Subclass hook: only the genuine OpenAI provider speaks this field. Mistral
+   * (which extends this OpenAI-compat base) does NOT — its `chat/completions`
+   * surface has no such parameter, so it must stay off to keep the wire format
+   * byte-identical to before. Defaults to `false`; `OpenAIProvider` overrides.
+   */
+  protected supportsPromptCacheKey(): boolean {
+    return false;
+  }
+
   private buildBody(req: CompletionRequest, stream: boolean): string {
     const body: Record<string, unknown> = {
       model: req.model,
@@ -260,15 +307,30 @@ export abstract class OpenAICompatProvider extends BaseProvider {
       stream,
       ...this.extraBody(stream),
     };
-    if (req.maxTokens !== undefined) body.max_tokens = req.maxTokens;
-    if (req.temperature !== undefined) body.temperature = req.temperature;
+    // Reasoning models (o1/o3/o4/gpt-5) reject `max_tokens` (must use
+    // `max_completion_tokens`) and reject a non-default `temperature` with a
+    // 400; classic GPT models (incl. gpt-4o) keep the legacy shape unchanged.
+    const reasoning = isReasoningModel(req.model);
+    if (req.maxTokens !== undefined) {
+      if (reasoning) body.max_completion_tokens = req.maxTokens;
+      else body.max_tokens = req.maxTokens;
+    }
+    if (req.temperature !== undefined) {
+      if (!reasoning || req.temperature === OPENAI_DEFAULT_TEMPERATURE) {
+        body.temperature = req.temperature;
+      }
+      // else: omit — reasoning models only accept the default temperature.
+    }
     if (req.tools !== undefined && req.tools.length > 0) body.tools = toOpenAITools(req.tools);
     // Optional, core-local cache hint: OpenAI caches prefixes ≥1024 tokens
     // automatically; a stable `prompt_cache_key` routes identical prefixes to
     // the same cache. Absent a hint, the wire format is byte-identical to
     // before. Rule: static (system + tools) first, variable history last.
-    const cacheKey = readOpenAICacheKey(req);
-    if (cacheKey !== undefined) body.prompt_cache_key = cacheKey;
+    // Gated behind `supportsPromptCacheKey()` so only OpenAI emits it.
+    if (this.supportsPromptCacheKey()) {
+      const cacheKey = readOpenAICacheKey(req);
+      if (cacheKey !== undefined) body.prompt_cache_key = cacheKey;
+    }
     return JSON.stringify(body);
   }
 
@@ -313,6 +375,13 @@ export abstract class OpenAICompatProvider extends BaseProvider {
     const body = this.requireBody(response, url);
     const assembler = new OpenAIToolCallAssembler(this.logger);
     let usage: TokenUsage | undefined;
+    /**
+     * Whether a terminal `finish_reason` was observed. A well-formed OpenAI
+     * stream emits one on its final choice; its presence is our proxy for "the
+     * stream completed properly" and gates the incomplete flag below.
+     */
+    let sawFinish = false;
+    let finishReason: FinishReason | undefined;
     try {
       for await (const evt of parseSSEJson(body, this.logger, req.signal, this.streamIdleTimeoutMs())) {
         const root = asRecord(evt.json);
@@ -324,16 +393,35 @@ export abstract class OpenAICompatProvider extends BaseProvider {
         const text = asString(delta?.content);
         if (text !== undefined && text !== "") yield { type: "text", text };
         if (delta?.tool_calls !== undefined) assembler.add(delta.tool_calls);
-        if (asString(choice.finish_reason) !== undefined && assembler.size > 0) {
-          for (const toolCall of assembler.drain()) yield { type: "tool_call", toolCall };
+        const rawFinish = asString(choice.finish_reason);
+        if (rawFinish !== undefined) {
+          sawFinish = true;
+          finishReason = mapOpenAIFinishReason(rawFinish, assembler.size > 0);
+          if (assembler.size > 0) {
+            for (const toolCall of assembler.drain()) yield { type: "tool_call", toolCall };
+          }
         }
       }
     } catch (err) {
       throw this.toProviderError(err, `Streaming from ${this.name} failed`, req.signal);
     }
     // Flush calls whose stream ended without an explicit finish_reason.
+    const flushedToolCalls = assembler.size > 0;
     for (const toolCall of assembler.drain()) yield { type: "tool_call", toolCall };
-    yield { type: "done", usage: usage ?? { inputTokens: 0, outputTokens: 0 } };
+    const done: TerminalCompletionChunk = {
+      type: "done",
+      usage: usage ?? { inputTokens: 0, outputTokens: 0 },
+    };
+    // A stream that ended without ever reporting a `finish_reason` was cut off
+    // mid-turn (dropped connection, truncated body): we cannot trust the usage
+    // and must not fabricate a clean stop. Flag the terminal chunk `incomplete`
+    // and carry the best-known finishReason. The clean path stays byte-identical
+    // (`{ type, usage }`) so existing consumers and tests are unaffected.
+    if (!sawFinish) {
+      done.incomplete = true;
+      done.finishReason = finishReason ?? (flushedToolCalls ? "tool_calls" : "error");
+    }
+    yield done;
   }
 
   public async listModels(): Promise<string[]> {

@@ -324,6 +324,56 @@ describe("ExecutionEngine", () => {
     expect(provider.requests).toHaveLength(1);
   });
 
+  it("rejects promptly on abort fired mid-batch without awaiting a slow pending tool", async () => {
+    const controller = new AbortController();
+    let slowSettled = false;
+    let slowStarted!: () => void;
+    const slowStartedPromise = new Promise<void>((resolve) => {
+      slowStarted = resolve;
+    });
+    // One fast tool that fires the abort once it has started, and one slow tool
+    // that stays pending well past the run's rejection. The engine must reject
+    // as soon as the signal fires, *not* block until the slow tool settles.
+    const tools = new FakeToolRunner(
+      [toolDef("fast"), toolDef("slow")],
+      async (name, _args, ctx) => {
+        if (name === "fast") {
+          slowStarted();
+          // Defer the abort until both tools are in-flight.
+          await sleep(1);
+          controller.abort();
+          return okResult("FAST");
+        }
+        await slowStartedPromise;
+        // Stay pending far longer than the run should ever wait; clear the timer
+        // on abort so the test leaves no dangling timer behind.
+        await new Promise<void>((resolve) => {
+          const t = setTimeout(resolve, 5_000);
+          ctx.signal?.addEventListener("abort", () => clearTimeout(t), { once: true });
+        });
+        slowSettled = true;
+        return okResult("SLOW");
+      },
+    );
+    const provider = new FakeProvider([
+      toolTurn([call("c1", "fast"), call("c2", "slow")]),
+      stop("never"),
+    ]);
+    const engine = makeEngine(provider, tools);
+
+    const started = Date.now();
+    await expect(
+      engine.run({ prompt: "x", signal: controller.signal }),
+    ).rejects.toSatisfy((err: unknown) => isAbortError(err));
+    const elapsed = Date.now() - started;
+
+    // Rejected well before the 5s slow tool could ever settle.
+    expect(elapsed).toBeLessThan(2_000);
+    expect(slowSettled).toBe(false);
+    // The model is never asked for a follow-up turn after the abort.
+    expect(provider.requests).toHaveLength(1);
+  });
+
   it("feeds failed tool results back as tool messages without aborting the run", async () => {
     const failing: ToolResult = {
       ok: false,

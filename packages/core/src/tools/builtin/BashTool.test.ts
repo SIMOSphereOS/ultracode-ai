@@ -1,10 +1,14 @@
 import os from "node:os";
 import path from "node:path";
+import { EventEmitter } from "node:events";
 import { promises as fs } from "node:fs";
+import type { ChildProcess } from "node:child_process";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { NoopLogger } from "@ultracode/shared";
 import type { ToolContext } from "@ultracode/shared";
 import { BashTool } from "./BashTool.js";
+
+const isPosix = process.platform !== "win32";
 
 let root: string;
 
@@ -199,4 +203,69 @@ describe("BashTool", () => {
     expect(/(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(result.output.stdout)).toBe(false);
     expect(result.output.stdout).not.toContain("�");
   }, 15_000);
+
+  // SEC: when the POSIX process-group kill (`process.kill(-pid, 'SIGKILL')`)
+  // throws — e.g. EPERM, or the group already gone — the kill must fall back to
+  // `child.kill('SIGKILL')` so a timed-out command is still terminated. We
+  // inject a `processKill` that always throws and confirm (1) it was reached and
+  // (2) the long-running child is nonetheless killed and the call times out.
+  it.runIf(isPosix)(
+    "falls back to child.kill('SIGKILL') when the process-group kill throws",
+    async () => {
+      let groupKillAttempts = 0;
+      const killTool = new BashTool({
+        processKill: () => {
+          groupKillAttempts += 1;
+          throw new Error("EPERM: group kill not permitted");
+        },
+      });
+      const started = Date.now();
+      const result = await killTool.execute(
+        killTool.validate({
+          command: nodeCmd("setTimeout(()=>{},10000)"),
+          timeout: 0.3,
+        }),
+        ctx(),
+      );
+      // The group kill was attempted (and threw), exercising the fallback path.
+      expect(groupKillAttempts).toBeGreaterThan(0);
+      // The fallback child.kill terminated the process, so we time out promptly
+      // instead of hanging for the full 10s child timer.
+      expect(result.ok).toBe(false);
+      expect(result.error?.code).toBe("TOOL_TIMEOUT");
+      expect(Date.now() - started).toBeLessThan(8000);
+    },
+    15_000,
+  );
+
+  // A spawn that fails to start (the child emits an 'error' event, e.g. the
+  // shell binary missing) must surface as a ToolError, not an unhandled
+  // rejection. We inject a fake child that emits 'error' on the next tick.
+  it("produces a ToolError when the child emits a spawn 'error' event", async () => {
+    const makeFakeChild = (): ChildProcess => {
+      const emitter = new EventEmitter() as EventEmitter & {
+        stdout: EventEmitter;
+        stderr: EventEmitter;
+        pid: number | undefined;
+        kill: (signal?: NodeJS.Signals) => boolean;
+      };
+      emitter.stdout = new EventEmitter();
+      emitter.stderr = new EventEmitter();
+      emitter.pid = undefined;
+      emitter.kill = () => true;
+      setImmediate(() => {
+        emitter.emit("error", new Error("spawn /bin/sh ENOENT"));
+      });
+      return emitter as unknown as ChildProcess;
+    };
+    const errorTool = new BashTool({ spawnFn: () => makeFakeChild() });
+    const result = await errorTool.execute(
+      errorTool.validate({ command: "echo hi" }),
+      ctx(),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.error?.code).toBe("TOOL_ERROR");
+    expect(result.error?.message).toContain("Failed to start shell");
+    expect(result.error?.message).toContain("ENOENT");
+  });
 });

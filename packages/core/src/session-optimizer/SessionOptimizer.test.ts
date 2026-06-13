@@ -249,6 +249,33 @@ describe("dedup", () => {
     const out = dedupMessages(msgs);
     expect(out.every((m) => !/duplicate of an earlier/.test(m.content))).toBe(true);
   });
+
+  it("never collapses a message carrying toolCalls — tool results survive replay", () => {
+    const dup = "Y".repeat(DEDUP_MIN_CONTENT_CHARS + 40);
+    // Two near-identical assistant turns with the SAME content; the second also
+    // carries toolCalls whose results follow it. Collapsing the second to a
+    // back-reference would drop its toolCalls and orphan the trailing tool
+    // result (matched by toolCallId) on replay.
+    const msgs: ChatMessage[] = [
+      { role: "assistant", content: dup },
+      { role: "user", content: "do it again" },
+      {
+        role: "assistant",
+        content: dup,
+        toolCalls: [{ id: "call-1", name: "read_file", arguments: { path: "a.ts" } }],
+      },
+      { role: "tool", content: "file contents of a.ts", toolCallId: "call-1" },
+    ];
+    const out = dedupMessages(msgs);
+    // The toolCalls-bearing assistant turn is preserved verbatim, not collapsed.
+    expect(out[2]?.content).toBe(dup);
+    expect(out[2]?.toolCalls).toEqual([
+      { id: "call-1", name: "read_file", arguments: { path: "a.ts" } },
+    ]);
+    expect(out[2]?.content).not.toMatch(/duplicate of an earlier/);
+    // The tool result that answers call-1 is therefore not orphaned.
+    expect(out[3]?.toolCallId).toBe("call-1");
+  });
 });
 
 describe("mergeSummary / extractiveSummary purity", () => {
@@ -423,5 +450,30 @@ describe("buildWorkingSetPersisted", () => {
     expect(persisted.durableSummary).toBe(sync.durableSummary);
     expect(persisted.pinnedFacts).toEqual(sync.pinnedFacts);
     expect(persisted.messages.length).toBe(sync.messages.length);
+  });
+});
+
+describe("forget — orphan sidecar cleanup", () => {
+  it("deletes the persisted sidecar for a session", async () => {
+    const record = rec(turns(12), "s1");
+    const store = new FakeStore(record);
+    const opt = createSessionOptimizer(baseOpts(store, { thresholds: { recentKeep: 4 } }));
+
+    // Persist a sidecar by running an incremental pass first.
+    await opt.processIncremental("s1");
+    const sidecar = path.join(home, ".ultracode", "sessions-opt", "s1.json");
+    await expect(fs.access(sidecar)).resolves.toBeUndefined();
+
+    await opt.forget("s1");
+
+    await expect(fs.access(sidecar)).rejects.toThrow();
+  });
+
+  it("is a no-op when no sidecar exists (idempotent, never throws)", async () => {
+    const store = new FakeStore(rec(turns(12), "s1"));
+    const opt = createSessionOptimizer(baseOpts(store, { thresholds: { recentKeep: 4 } }));
+    await expect(opt.forget("never-persisted")).resolves.toBeUndefined();
+    // A second call is still a no-op.
+    await expect(opt.forget("never-persisted")).resolves.toBeUndefined();
   });
 });

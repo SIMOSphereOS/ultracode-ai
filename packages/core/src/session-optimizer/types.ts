@@ -131,4 +131,13 @@ export interface SessionOptimizer {
   buildWorkingSetPersisted(
     record: import("@ultracode/shared").SessionRecord,
   ): Promise<WorkingSet>;
+  /**
+   * Delete the persisted sidecar for a session. Called from the session
+   * delete/prune path so an optimizer sidecar never outlives the raw session
+   * record it compacts (orphan-sidecar cleanup). Idempotent — deleting a
+   * session with no sidecar is a no-op. Never throws: a failed delete is logged
+   * and swallowed, mirroring the background-task error model of the rest of the
+   * optimizer.
+   */
+  forget(sessionId: string): Promise<void>;
 }

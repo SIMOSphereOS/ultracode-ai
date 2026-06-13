@@ -46,6 +46,26 @@ typecheck clean, coverage ~93 % statements / ~86 % branches (now a hard CI gate 
   the production documentation crawler in both construction sites.
 - Versioning git invocations reject leading-dash refspecs and insert `--` separators,
   closing an argument-injection / arbitrary-file-write vector.
+- `sanitizeEnv` is now also threaded into the **git tools'** child-process spawn, so git
+  subprocesses no longer inherit raw secrets (matching the bash tool's existing choke point).
+- The learning **source library validates URL scheme + SSRF rules at add time** (not only at
+  fetch time); `SkillInjector` **re-screens on-disk skill bodies for forbidden phrases** before
+  injecting them into LLM context.
+
+### Additionally hardened (P2)
+- **Providers:** OpenAI reasoning-model request shaping (`max_completion_tokens`, temperature
+  gating; `gpt-4o` unchanged); `prompt_cache_key` emitted by OpenAI only (Mistral excluded);
+  Anthropic mid-stream `overloaded_error`/`429` classified retryable; Ollama tool-result
+  correlation falls back to a stable tool name; streams that end without a terminal signal are
+  flagged `incomplete` instead of reporting a clean zero-usage stop.
+- **Versioning:** breaking-change API diff now handles deleted and renamed `.ts` files and
+  multi-declarator / `export default` lines (generic-aware comma scanning); changelog no longer
+  lists a breaking `feat`/`fix` twice.
+- **Execution:** an abort signalled during a tool batch now rejects the run promptly instead of
+  awaiting all in-flight tools.
+- **Sessions:** `SessionOptimizer.forget()` prunes orphan sidecars on session delete/prune.
+- **Tooling/tests:** `BashTool` process-group-kill fallback and spawn-error paths covered;
+  facade adapter + interactive TUI bootstrap coverage raised; a real runnable example added.
 
 ## [1.2.0] - 2026-06-12
 

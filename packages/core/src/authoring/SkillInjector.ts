@@ -21,6 +21,7 @@ import {
   DEFAULT_MAX_SKILLS,
   SKILL_CONTEXT_HEADER,
 } from "./defaults.js";
+import { findForbiddenPhrases } from "./safety.js";
 import { SkillRegistry } from "./SkillRegistry.js";
 import type { Skill } from "./types.js";
 
@@ -85,7 +86,26 @@ export function createSkillInjector(
         b.score !== a.score ? b.score - a.score : a.skill.name.localeCompare(b.skill.name),
       );
 
-      const top = scored.slice(0, maxSkills);
+      // Re-screen each skill body for forbidden phrases before injection.
+      // `~/.ultracode/skills` is untrusted on-disk input: a body may have been
+      // hand-edited or written by an untrusted learn run after it passed the
+      // author's safety gate, so we never inject an unscreened body into LLM
+      // context. A failing body is skipped (not injected) and logged.
+      const safe: ScoredSkill[] = [];
+      for (const candidate of scored) {
+        const hits = findForbiddenPhrases(candidate.skill.body ?? "");
+        if (hits.length > 0) {
+          logger.warn("skill-injector.skipped-unsafe", {
+            skill: candidate.skill.name,
+            phrases: hits,
+          });
+          continue;
+        }
+        safe.push(candidate);
+      }
+      if (safe.length === 0) return "";
+
+      const top = safe.slice(0, maxSkills);
       return assembleBlock(top, maxChars);
     } catch (err) {
       logger.warn("skill-injector.failed", { error: serializeError(err) });

@@ -115,6 +115,26 @@ describe("ReleasePlanningEngine.plan (heuristic, no provider)", () => {
     }
   });
 
+  it("lists a breaking feat exactly once (deduped between Added and Changed)", async () => {
+    const breakingFeat = analysis({
+      commits: [
+        commit({ type: "feat", breaking: true, subject: "feat!: drop legacy endpoint" }),
+        commit({ type: "feat", subject: "feat: keep this one" }),
+      ],
+      breakingChanges: [
+        { source: "commit", description: "feat!: drop legacy endpoint", location: "abc123" },
+      ],
+      categories: { ...analysis().categories, feat: 2 },
+    });
+    const plan = await engine.plan("2.0.0", breakingFeat);
+    const occurrences = plan.changelogDraft.split("drop legacy endpoint").length - 1;
+    expect(occurrences).toBe(1);
+    // it appears under Changed/Breaking, not under Added
+    expect(plan.changelogDraft).toContain("**BREAKING:** feat!: drop legacy endpoint");
+    // the non-breaking feat still shows up under Added
+    expect(plan.changelogDraft).toContain("- keep this one");
+  });
+
   it("produces a minimal plan for an empty analysis", async () => {
     const plan = await engine.plan("1.0.1", analysis());
     expect(plan.changelogDraft).toContain("_No notable changes._");

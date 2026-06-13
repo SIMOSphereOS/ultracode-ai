@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProviderError } from "@ultracode/shared";
-import type { ChatMessage, CompletionChunk, ToolDefinition } from "@ultracode/shared";
+import type { ChatMessage, CompletionChunk, CompletionRequest, ToolDefinition } from "@ultracode/shared";
 import { MistralProvider, MISTRAL_BASE_URL } from "./MistralProvider.js";
 import { OpenAIProvider } from "./OpenAIProvider.js";
 import {
   OpenAIToolCallAssembler,
+  isReasoningModel,
   mapOpenAIFinishReason,
   safeParseArgs,
   toOpenAIMessages,
@@ -81,6 +82,97 @@ describe("wire mapping", () => {
     expect(safeParseArgs("", logger)).toEqual({});
     expect(safeParseArgs('{"a":1}', logger)).toEqual({ a: 1 });
     expect(logs.filter((l) => l.level === "warn")).toHaveLength(1);
+  });
+});
+
+describe("isReasoningModel", () => {
+  it("matches the o1/o3/o4/gpt-5 families incl. suffixes", () => {
+    for (const id of ["o1", "o1-preview", "o3", "o3-mini", "o4-mini", "gpt-5", "gpt-5-2025-08-01", "O3-MINI"]) {
+      expect(isReasoningModel(id)).toBe(true);
+    }
+  });
+
+  it("does NOT match classic GPT models (gpt-4o stays on the legacy path)", () => {
+    for (const id of ["gpt-4o", "gpt-4o-mini", "gpt-4", "gpt-3.5-turbo", "gpt-4-turbo", "o1mini"]) {
+      expect(isReasoningModel(id)).toBe(false);
+    }
+  });
+});
+
+describe("reasoning-model request shaping (OpenAI)", () => {
+  const okResponse = (): Response =>
+    jsonResponse({
+      choices: [{ message: { role: "assistant", content: "ok" }, finish_reason: "stop" }],
+      usage: { prompt_tokens: 1, completion_tokens: 1 },
+    });
+
+  function bodyFrom(mock: ReturnType<typeof vi.fn>): Record<string, unknown> {
+    const [, init] = mock.mock.calls[0] as [string, { body: string }];
+    return JSON.parse(init.body) as Record<string, unknown>;
+  }
+
+  it("emits max_completion_tokens (not max_tokens) and omits a non-default temperature for o3", async () => {
+    const mock = stubFetchSequence(okResponse());
+    const provider = new OpenAIProvider(testOptions());
+    await provider.complete({ messages: [], model: "o3-mini", maxTokens: 256, temperature: 0.2 });
+    const body = bodyFrom(mock);
+    expect(body.max_completion_tokens).toBe(256);
+    expect(body.max_tokens).toBeUndefined();
+    expect(body.temperature).toBeUndefined();
+  });
+
+  it("keeps the default temperature for a reasoning model", async () => {
+    const mock = stubFetchSequence(okResponse());
+    const provider = new OpenAIProvider(testOptions());
+    await provider.complete({ messages: [], model: "gpt-5", maxTokens: 64, temperature: 1 });
+    const body = bodyFrom(mock);
+    expect(body.max_completion_tokens).toBe(64);
+    expect(body.temperature).toBe(1);
+  });
+
+  it("leaves the gpt-4o path unchanged (max_tokens + temperature)", async () => {
+    const mock = stubFetchSequence(okResponse());
+    const provider = new OpenAIProvider(testOptions());
+    await provider.complete({ messages: [], model: "gpt-4o", maxTokens: 256, temperature: 0.2 });
+    const body = bodyFrom(mock);
+    expect(body.max_tokens).toBe(256);
+    expect(body.max_completion_tokens).toBeUndefined();
+    expect(body.temperature).toBe(0.2);
+  });
+});
+
+describe("prompt_cache_key subclass gating", () => {
+  const cacheReq = (): CompletionRequest =>
+    ({
+      messages: [{ role: "user", content: "hi" }],
+      model: "m",
+      cacheHint: { cachePrefix: true, key: "prefix-xyz" },
+    }) as unknown as CompletionRequest;
+
+  it("Mistral does NOT emit prompt_cache_key even with a cache hint", async () => {
+    const mock = stubFetchSequence(
+      jsonResponse({
+        choices: [{ message: { content: "ok" }, finish_reason: "stop" }],
+        usage: { prompt_tokens: 1, completion_tokens: 1 },
+      }),
+    );
+    const provider = new MistralProvider(testOptions());
+    await provider.complete(cacheReq());
+    const [, init] = mock.mock.calls[0] as [string, { body: string }];
+    expect(JSON.parse(init.body).prompt_cache_key).toBeUndefined();
+  });
+
+  it("OpenAI still emits prompt_cache_key with a cache hint", async () => {
+    const mock = stubFetchSequence(
+      jsonResponse({
+        choices: [{ message: { content: "ok" }, finish_reason: "stop" }],
+        usage: { prompt_tokens: 1, completion_tokens: 1 },
+      }),
+    );
+    const provider = new OpenAIProvider(testOptions());
+    await provider.complete(cacheReq());
+    const [, init] = mock.mock.calls[0] as [string, { body: string }];
+    expect(JSON.parse(init.body).prompt_cache_key).toBe("prefix-xyz");
   });
 });
 
@@ -311,7 +403,7 @@ describe("OpenAI-compatible streaming", () => {
     expect((err as ProviderError).details?.aborted).toBe(true);
   });
 
-  it("handles a stream that ends without [DONE] by flushing tool calls and usage", async () => {
+  it("flushes tool calls and flags incomplete when a stream ends without a finish_reason", async () => {
     stubFetchSequence(
       streamResponse([
         sse(chunkDelta({ tool_calls: [{ index: 0, id: "c", function: { name: "x", arguments: "{}" } }] })),
@@ -319,17 +411,27 @@ describe("OpenAI-compatible streaming", () => {
     );
     const provider = new MistralProvider(testOptions());
     const chunks = await collect(provider.stream({ messages: [], model: "m" }));
-    expect(chunks).toEqual([
-      { type: "tool_call", toolCall: { id: "c", name: "x", arguments: {} } },
-      { type: "done", usage: { inputTokens: 0, outputTokens: 0 } },
-    ]);
+    // The tool call is still flushed, but the terminal chunk is now flagged
+    // incomplete (no finish_reason / no [DONE] was ever observed) and carries a
+    // best-known finishReason rather than implying a clean stop.
+    expect(chunks[0]).toEqual({ type: "tool_call", toolCall: { id: "c", name: "x", arguments: {} } });
+    expect(chunks[1]).toEqual({
+      type: "done",
+      usage: { inputTokens: 0, outputTokens: 0 },
+      incomplete: true,
+      finishReason: "tool_calls",
+    });
   });
 
-  it("handles an entirely empty SSE stream", async () => {
+  it("flags an entirely empty SSE stream as incomplete", async () => {
     stubFetchSequence(streamResponse([]));
     const provider = new OpenAIProvider(testOptions());
     const chunks = await collect(provider.stream({ messages: [], model: "m" }));
-    expect(chunks).toEqual([{ type: "done", usage: { inputTokens: 0, outputTokens: 0 } }]);
+    // No finish_reason / no [DONE] ever arrived → the terminal chunk is flagged
+    // incomplete instead of implying a clean, zero-token stop.
+    expect(chunks).toEqual([
+      { type: "done", usage: { inputTokens: 0, outputTokens: 0 }, incomplete: true, finishReason: "error" },
+    ]);
   });
 });
 

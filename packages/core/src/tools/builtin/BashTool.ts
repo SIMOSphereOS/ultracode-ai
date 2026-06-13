@@ -15,6 +15,7 @@
  */
 
 import { spawn } from "node:child_process";
+import type { ChildProcess, SpawnOptions } from "node:child_process";
 import { promises as fs } from "node:fs";
 import { StringDecoder } from "node:string_decoder";
 import { z } from "zod";
@@ -59,6 +60,23 @@ export interface BashToolOptions {
    * (`config.providers.apiKeys` and their `ULTRACODE_`-prefixed aliases).
    */
   secretEnvKeys?: readonly string[];
+  /**
+   * Process-group kill primitive (test seam). Defaults to {@link process.kill}.
+   * Injected only by tests to exercise the `child.kill('SIGKILL')` fallback
+   * when the POSIX `process.kill(-pid, …)` group-kill throws. Production never
+   * sets this, so the real behaviour is unchanged.
+   */
+  processKill?: (pid: number, signal: NodeJS.Signals) => void;
+  /**
+   * Child-process spawn primitive (test seam). Defaults to the Node
+   * `child_process.spawn`. Injected only by tests to simulate a spawn `error`
+   * event (e.g. the shell binary missing). Production never sets this.
+   */
+  spawnFn?: (
+    command: string,
+    args: readonly string[],
+    options: SpawnOptions,
+  ) => ChildProcess;
 }
 
 /** Cross-platform shell command execution with process-tree kill. */
@@ -83,11 +101,23 @@ export class BashTool extends BaseTool<typeof schema, BashToolOutput> {
   private readonly guard: PathGuard;
   /** Extra exact secret variable names (upper-cased) to strip from child env. */
   private readonly secretEnvKeys: ReadonlySet<string>;
+  /** Process-group kill primitive (test seam); defaults to `process.kill`. */
+  private readonly processKill: (pid: number, signal: NodeJS.Signals) => void;
+  /** Child spawn primitive (test seam); defaults to `child_process.spawn`. */
+  private readonly spawnFn: (
+    command: string,
+    args: readonly string[],
+    options: SpawnOptions,
+  ) => ChildProcess;
 
   constructor(options: BashToolOptions = {}) {
     super();
     this.guard = new PathGuard({ allowedDirs: options.allowedDirs });
     this.secretEnvKeys = new Set((options.secretEnvKeys ?? []).map((k) => k.toUpperCase()));
+    this.processKill =
+      options.processKill ?? ((pid, signal) => void process.kill(pid, signal));
+    this.spawnFn =
+      options.spawnFn ?? ((command, args, opts) => spawn(command, args as string[], opts));
   }
 
   protected async run(
@@ -121,13 +151,13 @@ export class BashTool extends BaseTool<typeof schema, BashToolOutput> {
         // the only way embedded quotes (e.g. `"C:\…\node.exe" -e "…"`) survive;
         // without it cmd mangles the first/last quote. Pairs with
         // windowsVerbatimArguments so Node does not re-quote the argv.
-        spawn("cmd.exe", ["/d", "/s", "/c", `"${args.command}"`], {
+        this.spawnFn("cmd.exe", ["/d", "/s", "/c", `"${args.command}"`], {
           cwd,
           env: childEnv,
           windowsVerbatimArguments: true,
           windowsHide: true,
         })
-      : spawn("/bin/sh", ["-c", args.command], {
+      : this.spawnFn("/bin/sh", ["-c", args.command], {
           cwd,
           env: childEnv,
           detached: true,
@@ -181,13 +211,21 @@ export class BashTool extends BaseTool<typeof schema, BashToolOutput> {
         }
       } else {
         try {
-          process.kill(-pid, "SIGKILL"); // whole process group
+          this.processKill(-pid, "SIGKILL"); // whole process group
         } catch {
           try {
             child.kill("SIGKILL");
           } catch {
             /* already gone */
           }
+          // The group kill failed, so only the direct child was signalled.
+          // Any detached grandchildren survive and keep the inherited
+          // stdout/stderr pipes open — which would stall the awaited `close`
+          // until they exit on their own. Detach the captured streams so the
+          // timed-out/aborted command terminates promptly rather than hanging
+          // on pipes held by an orphaned descendant.
+          child.stdout?.destroy();
+          child.stderr?.destroy();
         }
       }
     };
