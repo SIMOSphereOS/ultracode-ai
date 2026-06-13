@@ -10,7 +10,8 @@ Dieser Abschnitt enthält alles, was du brauchst, um **UltraCode AI schnell und 
 
 ```
 GETTING-STARTED/
-├── 📥 installation.md    # Installationsanleitungen für alle Plattformen
+├── 📥 installation.md    # Installationsanleitung (Deutsch)
+├── 📥 installation.en.md # Installation guide (English)
 ├── ⚡ quick-start.md     # 5-Minuten-Tutorial für erste Schritte
 └── ⚙️  configuration.md   # Detaillierte Konfigurationsanleitung
 ```
@@ -21,7 +22,7 @@ GETTING-STARTED/
 
 | **Schritt** | **Dokument** | **Dauer** | **Ziel** |
 |-------------|--------------|-----------|----------|
-| 1 | [Installation →](./installation.md) | 2-5 Min | UltraCode AI auf deinem System installieren |
+| 1 | [Installation →](./installation.md) ([EN](./installation.en.md)) | 2-5 Min | UltraCode AI auf deinem System installieren |
 | 2 | [Quick Start →](./quick-start.md) | 5 Min | Erste Befehle ausprobieren |
 | 3 | [Konfiguration →](./configuration.md) | 10 Min | UltraCode AI an deine Bedürfnisse anpassen |
 
@@ -67,11 +68,11 @@ ultracode-ai
 
 ## 📖 Inhaltsübersicht
 
-### [Installation →](./installation.md)
-- **Plattformunterstützung**: Windows, macOS, Linux
-- **Installationsmethoden**: npm, pnpm, yarn, brew, scoop, Docker
-- **Voraussetzungen**: Node.js, Python (optional), Git
-- **Verifizierung**: Installation prüfen
+### [Installation →](./installation.md) · [English →](./installation.en.md)
+- **Plattformunterstützung**: Windows, macOS, Linux (Node 22/24)
+- **Installationsmethoden**: npm (`npm i -g ultracode-ai`) oder aus dem Quellcode (pnpm)
+- **Voraussetzungen**: Node.js ≥ 22.13, Git (für AI-Versioning)
+- **Verifizierung**: `ultracode-ai doctor`
 
 ### [Quick Start →](./quick-start.md)
 - **Erste Schritte**: UltraCode AI starten

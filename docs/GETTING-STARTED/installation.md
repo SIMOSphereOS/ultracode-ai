@@ -1,106 +1,165 @@
-# UltraCode AI Installation
+# UltraCode AI — Installation (Deutsch)
 
-> **Installation aus dem Quellcode (heute) und per npm (ab 1.3.0).**
+> 🇬🇧 English version: [`installation.en.md`](./installation.en.md)
+
+UltraCode AI ist ein agentischer KI-Coding-Assistent fürs Terminal mit KI-gestützter
+Versionierung. Diese Anleitung deckt **Installation per npm** (empfohlen) und **aus dem
+Quellcode** ab, inklusive Konfiguration, Verifikation und erstem Lauf.
 
 ---
 
-## Systemvoraussetzungen
+## 1. Systemvoraussetzungen
 
 | Komponente | Anforderung | Prüfen |
 |---|---|---|
-| **Betriebssystem** | Linux, macOS 12+, Windows 10+ (x64/ARM64) | `uname -a` |
-| **Node.js** | **>= 22.13** (alle Pakete deklarieren `engines.node` `>=22.13.0`; `node:sqlite` braucht 22.5+) | `node --version` |
-| **pnpm** | `pnpm@11.5.2` (Projekt-Standard) | `pnpm --version` |
-| **Git** | 2.30+ (für die AI-Versioning-Features; sonst optional) | `git --version` |
+| **Node.js** | **≥ 22.13** (alle Pakete deklarieren `engines.node` `>=22.13.0`; `node:sqlite` braucht 22.5+) | `node --version` |
+| **npm** | bei globaler Installation (Bestandteil von Node) | `npm --version` |
+| **pnpm** | nur für die Quellcode-Installation: `pnpm@11.5.2` | `pnpm --version` |
+| **Git** | 2.30+ für die AI-Versioning-Features (sonst optional) | `git --version` |
+| **Betriebssystem** | Linux, macOS 12+, Windows 10+ (x64/ARM64) | — |
 
-UltraCode AI ist ein reines TypeScript-ESM-Monorepo ohne native Abhängigkeiten und läuft
-plattformneutral auf Linux, macOS und Windows.
+UltraCode AI ist ein reines TypeScript-ESM-Projekt ohne native Abhängigkeiten und läuft
+plattformneutral. CI verifiziert Linux, macOS und Windows auf Node 22 und 24.
 
 ---
 
-## Installation aus dem Quellcode (empfohlen, funktioniert heute)
-
-Das ist der Weg, den auch das [Haupt-README](../../README.md) dokumentiert und den CI auf
-Linux, macOS und Windows verifiziert.
+## 2. Installation per npm (empfohlen)
 
 ```bash
-# Repository klonen
+# Global installieren — stellt den Befehl `ultracode-ai` bereit
+npm install -g ultracode-ai
+
+# Ohne globale Installation direkt ausführen
+npx ultracode-ai --help
+```
+
+Die Pakete liegen öffentlich auf npm:
+
+| Paket | Zweck |
+|---|---|
+| [`ultracode-ai`](https://www.npmjs.com/package/ultracode-ai) | CLI (installiert den Befehl `ultracode-ai`) |
+| [`ultracode-core`](https://www.npmjs.com/package/ultracode-core) | Kern-Bibliothek (Agenten, Tools, Versioning) |
+| [`ultracode-shared`](https://www.npmjs.com/package/ultracode-shared) | Geteilte Typen & Kontrakte |
+
+`ultracode-core` und `ultracode-shared` werden als Abhängigkeiten automatisch mitinstalliert.
+
+---
+
+## 3. Installation aus dem Quellcode
+
+Für Mitentwicklung oder den neuesten `main`-Stand:
+
+```bash
+# Repository klonen (Klon-Verzeichnis heißt ultracode-ai)
 git clone https://github.com/AndreasSchwan-SIMO/ultracode-ai.git
-cd UltraCode
+cd ultracode-ai
 
 # Abhängigkeiten installieren
 pnpm install
 
-# Alle drei Pakete bauen (tsc -b shared → core → cli)
+# Alle drei Pakete bauen (tsc -b: shared → core → cli)
 pnpm build
 ```
 
-Die CLI lässt sich anschließend direkt über das gebaute Bundle aufrufen:
+Anschließend die CLI über das gebaute Bundle aufrufen:
 
 ```bash
 node packages/cli/dist/index.js --help
 ```
 
-Nach `pnpm install` ist im Workspace auch der Bin-Name `ultracode-ai` verfügbar (von pnpm
-verlinkt). In der übrigen Dokumentation steht `ultracode-ai` stellvertretend für
-`node packages/cli/dist/index.js`.
+Nach `pnpm install` ist im Workspace auch der Bin-Name `ultracode-ai` verlinkt. In der
+Dokumentation steht `ultracode-ai` stellvertretend für `node packages/cli/dist/index.js`.
 
 ---
 
-## Installation per npm (ab 1.3.0 verfügbar)
+## 4. Konfiguration
 
-> **Hinweis:** Die npm-Veröffentlichung wird mit dem 1.3.0-Release ausgeliefert. Vor 1.3.0
-> bitte den Quellcode-Weg oben verwenden.
+### 4a. Einrichtungsassistent (am einfachsten)
 
 ```bash
-# Globale Installation
-npm install -g ultracode-ai
-
-# Oder ohne globale Installation direkt ausführen
-npx ultracode-ai --help
-
-# Verifizieren
-ultracode-ai --version
+ultracode-ai setup
 ```
 
-`pnpm` und `yarn` funktionieren analog (`pnpm add -g ultracode-ai`, `yarn global add ultracode-ai`).
+Der Assistent fragt Provider, API-Key (maskierte Eingabe) und Standard-Agent ab und
+schreibt den Key nach `~/.ultracode/.env` (Datei mit Berechtigung `0600`; Keys gehören
+**nie** in die `config.toml`).
 
----
+### 4b. Manuell per Umgebungsvariablen
 
-> Homebrew, Scoop, Chocolatey, Docker-Images und ein `curl | bash`-Installer sind **nicht**
-> verfügbar und derzeit auch nicht geplant — frühere Versionen dieser Seite haben sie
-> fälschlich aufgeführt.
-
----
-
-## Installation verifizieren
+Lege den passenden API-Key deines Providers an:
 
 ```bash
-# Version prüfen
-ultracode-ai --version
-
-# Hilfe anzeigen
-ultracode-ai --help
-
-# Offline-Umgebungsdiagnose (Node-Version, Git, Config-Verzeichnis, API-Keys maskiert)
-ultracode-ai doctor
+export OPENAI_API_KEY="sk-..."                   # OpenAI
+export ANTHROPIC_API_KEY="sk-ant-..."            # Anthropic
+export MISTRAL_API_KEY="..."                     # Mistral
+export OLLAMA_BASE_URL="http://localhost:11434"  # Ollama (lokal, kein Key)
 ```
 
-`ultracode-ai doctor` meldet eine `✓`/`✗`-Checkliste; bei kritischen Problemen (zu alte
-Node-Version, nicht beschreibbares Config-Verzeichnis, ungültige Config) endet es mit
-Exit-Code `1`. Details: [CLI-Referenz → `doctor`](../REFERENCE/cli-commands.md#ultracode-doctor).
+Optionale Overrides (Auszug): `ULTRACODE_MODEL`, `ULTRACODE_CORE__MAX_TOKENS`,
+`ULTRACODE_CORE__TEMPERATURE`, `ULTRACODE_DEBUG=1`. Persistente Einstellungen liegen in
+`~/.ultracode/config.toml` — Details in [`configuration.md`](./configuration.md).
 
 ---
 
-## Nächste Schritte
+## 5. Installation verifizieren
 
-- [Quick Start](./quick-start.md) — erste Schritte mit UltraCode AI
-- [Konfiguration](./configuration.md) — UltraCode AI einrichten
-- [Architektur](../DEVELOPMENT/architecture.md) — Systemdesign verstehen
+```bash
+ultracode-ai --version     # zeigt die installierte Version (z. B. 1.3.1)
+ultracode-ai doctor        # prüft Node-Version, Config, Provider-Erreichbarkeit
+```
+
+`doctor` erzwingt Node ≥ 22.13 und meldet fehlende API-Keys oder Konfigurationsprobleme
+mit Exit-Code ≠ 0.
 
 ---
 
-## Externe Ressourcen
+## 6. Erster Lauf
 
-- [Node.js Installation](https://nodejs.org/en/download/)
-- [pnpm Installation](https://pnpm.io/installation)
+```bash
+# Interaktiv (TTY): startet die Terminal-UI
+ultracode-ai
+
+# Nicht-interaktiv: ein einzelner Prompt, Ergebnis wird gestreamt
+ultracode-ai run -p "Erkläre die Architektur dieses Repos"
+
+# Maschinenlesbar: vollständiges Ergebnis als JSON
+ultracode-ai run -p "..." --json
+
+# KI-gestützte Versions-Empfehlung aus den Git-Commits
+ultracode-ai version analyze "v1.3.0..HEAD"
+```
+
+Weitere Befehle: `config`, `tools`, `agents`, `release`, `quality`, `budget`, `skills`,
+`learn`. Mit `ultracode-ai <befehl> --help` siehst du die jeweiligen Optionen.
+
+---
+
+## 7. Aktualisieren & Deinstallieren
+
+```bash
+# Aktualisieren
+npm update -g ultracode-ai
+
+# Deinstallieren
+npm uninstall -g ultracode-ai
+# Optional die lokale Konfiguration entfernen
+rm -rf ~/.ultracode
+```
+
+---
+
+## 8. Fehlerbehebung
+
+| Problem | Lösung |
+|---|---|
+| `Unsupported engine` / Node zu alt | Node auf **≥ 22.13** aktualisieren (`node --version`). |
+| `command not found: ultracode-ai` | Globalen npm-Bin-Pfad prüfen (`npm bin -g`) bzw. `npx ultracode-ai` nutzen. |
+| Kein Output / „kein API-Key" | `ultracode-ai setup` ausführen oder `*_API_KEY` exportieren; mit `ultracode-ai doctor` prüfen. |
+| `SQLITE`-Hinweis beim Start | Informativ — `node:sqlite` ist experimentell; die Warnung wird intern unterdrückt. |
+| Build aus Quellcode schlägt fehl | `pnpm --version` (`11.5.2`?) und Node-Version prüfen, dann `pnpm install && pnpm build`. |
+
+Bei Bugs: [Issues](https://github.com/AndreasSchwan-SIMO/ultracode-ai/issues).
+
+---
+
+**Nächste Schritte:** [Schnellstart](./quick-start.md) · [Konfiguration](./configuration.md)
