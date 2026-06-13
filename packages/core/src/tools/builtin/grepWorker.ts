@@ -19,7 +19,7 @@
  * files would fail to resolve. The few helpers it needs (line splitting,
  * Unicode-safe truncation, the directory walk) are therefore inlined; they are
  * kept byte-for-byte equivalent to the shared implementations in `fsUtils.ts`,
- * `walk.ts` and `@ultracode/shared`'s `truncate`, which the main-thread code
+ * `walk.ts` and `ultracode-shared`'s `truncate`, which the main-thread code
  * still imports — so grep behaviour is identical.
  */
 

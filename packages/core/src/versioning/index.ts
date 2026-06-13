@@ -10,7 +10,7 @@
 import { readFile } from "node:fs/promises";
 import * as path from "node:path";
 import { clean, valid } from "semver";
-import { DEFAULT_CONFIG } from "@ultracode/shared";
+import { DEFAULT_CONFIG } from "ultracode-shared";
 import type {
   ChangeAnalysis,
   ILLMProvider,
@@ -20,7 +20,7 @@ import type {
   UltraCodeConfig,
   VersionSuggestion,
   VersioningConfig,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { ChangeAnalysisEngine } from "./ChangeAnalysisEngine.js";
 import { GitClient } from "./GitClient.js";
 import type { GitRunner } from "./GitClient.js";

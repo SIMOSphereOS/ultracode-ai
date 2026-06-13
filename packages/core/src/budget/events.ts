@@ -1,14 +1,14 @@
 /**
  * Core-local budget reporting events.
  *
- * The frozen `@ultracode/shared` `UltraCodeEvent` union is 1.0 and not extended
+ * The frozen `ultracode-shared` `UltraCodeEvent` union is 1.0 and not extended
  * here. We define separate, core-local event types and tiny emitters that
  * publish them onto any provided {@link IEventBus} via a structural cast,
  * falling back to `logger` when no bus is available. Subscribers that know the
  * `"budget.*"` string types can listen for them; the shared union is untouched.
  */
 
-import type { IEventBus, Logger } from "@ultracode/shared";
+import type { IEventBus, Logger } from "ultracode-shared";
 import type { BudgetCategory, BudgetDecision, CostEstimate, LedgerEntry } from "./types.js";
 
 /** Discriminator: a budget check completed (allowed/approval decision made). */

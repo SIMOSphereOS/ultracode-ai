@@ -11,7 +11,7 @@
 import os from "node:os";
 import process from "node:process";
 import { spawn } from "node:child_process";
-import type { UltraCode, UltraCodeCreateOptions } from "@ultracode/core";
+import type { UltraCode, UltraCodeCreateOptions } from "ultracode-core";
 import { loadCore } from "./core-loader.js";
 
 /** Instance type of the UltraCode facade. */
@@ -49,7 +49,7 @@ export interface CliContext {
   stderr: CliWriter;
   /** Standard input. */
   stdin: CliReader;
-  /** Construct the UltraCode facade (lazily imports `@ultracode/core`). */
+  /** Construct the UltraCode facade (lazily imports `ultracode-core`). */
   createFacade(options?: UltraCodeCreateOptions): Promise<UltraCodeFacade>;
   /** Probe `git --version`; resolves `null` when git is unavailable. */
   gitVersion(): Promise<string | null>;
@@ -83,7 +83,7 @@ export function defaultGitVersion(): Promise<string | null> {
 
 /**
  * Build the production {@link CliContext} from the real process streams and
- * the dynamically imported `@ultracode/core` facade.
+ * the dynamically imported `ultracode-core` facade.
  */
 export function createDefaultContext(): CliContext {
   return {

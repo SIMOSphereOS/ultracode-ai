@@ -57,8 +57,8 @@ Die System-Prompts sind über `SYSTEM_PROMPTS` keyed (Konstanten `DEFAULT_SYSTEM
 Live anzeigen:
 
 ```bash
-ultracode agents list
-ultracode agents list --json
+ultracode-ai agents list
+ultracode-ai agents list --json
 ```
 
 Im interaktiven Modus: `/agents` bzw. `/agents <name>` (siehe [../REFERENCE/slash-commands.md](../REFERENCE/slash-commands.md)).
@@ -113,7 +113,7 @@ disabled_tools = ["bash", "delete_file"]
 active_model = "mistral-medium"
 ```
 
-Damit steht ein Agent `docs` zur Verfügung (`ultracode run -p "…" --agent docs`). Zur Laufzeit lassen sich Definitionen über `AgentManager.register(definition)` registrieren oder ersetzen (invalidiert die gecachte Instanz).
+Damit steht ein Agent `docs` zur Verfügung (`ultracode-ai run -p "…" --agent docs`). Zur Laufzeit lassen sich Definitionen über `AgentManager.register(definition)` registrieren oder ersetzen (invalidiert die gecachte Instanz).
 
 ---
 
@@ -135,5 +135,5 @@ Der `AgentManager` unterstützt Subagenten-Delegation mit begrenzter Tiefe (`MAX
 
 - [tools-reference.md](./tools-reference.md) – Built-in-Tools und Permissions
 - [../REFERENCE/configuration-options.md](../REFERENCE/configuration-options.md) – `agents.*`-Konfigurationsschlüssel
-- [../REFERENCE/cli-commands.md](../REFERENCE/cli-commands.md) – `ultracode agents list`, `run --agent`
+- [../REFERENCE/cli-commands.md](../REFERENCE/cli-commands.md) – `ultracode-ai agents list`, `run --agent`
 - [../REFERENCE/slash-commands.md](../REFERENCE/slash-commands.md) – `/agents`, `Shift+Tab`

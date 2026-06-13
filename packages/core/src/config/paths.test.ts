@@ -2,7 +2,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { afterEach, describe, expect, it } from "vitest";
-import { ConfigError } from "@ultracode/shared";
+import { ConfigError } from "ultracode-shared";
 import {
   atomicWriteFile,
   profileFile,

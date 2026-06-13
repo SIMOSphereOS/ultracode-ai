@@ -5,7 +5,7 @@
  * the memory `index.ts` instead.
  */
 
-import type { ChatMessage, SessionMeta, SessionRecord } from "@ultracode/shared";
+import type { ChatMessage, SessionMeta, SessionRecord } from "ultracode-shared";
 
 /** Default title for sessions created without an explicit one. */
 export const DEFAULT_SESSION_TITLE = "New Session";

@@ -6,7 +6,7 @@
 
 ## 🚀 Übersicht
 
-**Phase 1** ist die Fundamentphase von UltraCode. Hier werden die Grundlagen für alles Weitere geschaffen: Architektur, Core-System, Basis-Features und Dokumentation.
+**Phase 1** ist die Fundamentphase von UltraCode AI. Hier werden die Grundlagen für alles Weitere geschaffen: Architektur, Core-System, Basis-Features und Dokumentation.
 
 - **Status**: ✅ **100% ABGESCHLOSSEN** (Dokumentation) | 🔄 **Code-Implementierung läuft**
 - **Dauer**: Q2 2026 (April - Juni)
@@ -91,7 +91,7 @@
 ### System-Architektur
 
 ```
-UltraCode Phase 1 Architektur
+UltraCode AI Phase 1 Architektur
 ├── Core Module (TypeScript)
 │   ├── Kernel/               # System-Kern
 │   │   ├── Container/       # Dependency Injection
@@ -182,7 +182,7 @@ ultracode/
 ├── turbo.json                      # Turborepo Konfiguration
 │
 ├── packages/
-│   ├── @ultracode/core/            # Core Modul (P0)
+│   ├── ultracode-core/            # Core Modul (P0)
 │   │   ├── package.json
 │   │   ├── tsconfig.json
 │   │   ├── src/
@@ -684,7 +684,7 @@ interface CLIArgument {
 ### Kommandostruktur
 
 ```
-ultracode/
+ultracode-ai/
 ├── ask           # Frage an AI
 ├── ai/           # AI-Kommandos
 │   ├── complete  # Code vervollständigen
@@ -782,7 +782,7 @@ ultracode/
 
 ```
 packages/
-├── @ultracode/core/
+├── ultracode-core/
 │   └── tests/
 │       ├── unit/
 │       │   ├── kernel.test.ts
@@ -928,4 +928,4 @@ packages/
 
 → [Phase 2: Integration](./phase-2-integration.md)
 
-© 2026 UltraCode Team
+© 2026 UltraCode AI Team

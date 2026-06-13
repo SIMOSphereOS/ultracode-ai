@@ -1,14 +1,14 @@
 /**
  * Core-local learning lifecycle events.
  *
- * The frozen `@ultracode/shared` `UltraCodeEvent` union is 1.0 and not extended
+ * The frozen `ultracode-shared` `UltraCodeEvent` union is 1.0 and not extended
  * here. Following the `tokens` module's pattern, we declare separate core-local
  * event types and a tiny non-throwing emitter that publishes them onto any
  * provided {@link IEventBus} via a structural cast, falling back to
  * `logger.info` when no bus is available.
  */
 
-import type { IEventBus, Logger } from "@ultracode/shared";
+import type { IEventBus, Logger } from "ultracode-shared";
 import type { CostEstimate, LearnRunPlan, LearnRunReport } from "./types.js";
 
 /** Discriminator: a learn run has begun. */

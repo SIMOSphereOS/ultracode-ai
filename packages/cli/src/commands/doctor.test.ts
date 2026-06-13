@@ -2,7 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { afterEach, describe, expect, it } from "vitest";
-import { ConfigError } from "@ultracode/shared";
+import { ConfigError } from "ultracode-shared";
 import {
   collectDoctorReport,
   defaultCheckWritable,

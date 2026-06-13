@@ -6,10 +6,10 @@
 
 ## Überblick
 
-Wird `ultracode` ohne Subkommando in einem interaktiven Terminal (TTY für `stdin` und `stdout`) gestartet, läuft die interaktive UI auf Basis von [Ink](https://github.com/vadimdemedes/ink) (React im Terminal). Der Einstieg erfolgt über `startInteractive` (`packages/cli/src/ui/start.ts`), die Root-Komponente ist `App` (`packages/cli/src/ui/App.tsx`).
+Wird `ultracode-ai` ohne Subkommando in einem interaktiven Terminal (TTY für `stdin` und `stdout`) gestartet, läuft die interaktive UI auf Basis von [Ink](https://github.com/vadimdemedes/ink) (React im Terminal). Der Einstieg erfolgt über `startInteractive` (`packages/cli/src/ui/start.ts`), die Root-Komponente ist `App` (`packages/cli/src/ui/App.tsx`).
 
 ```bash
-ultracode
+ultracode-ai
 ```
 
 Eingaben, die mit `/` beginnen, werden als Slash-Kommando interpretiert (`handleSlash`). Jede andere Eingabe wird als Prompt an den aktiven Agenten geschickt. Die UI funktioniert plattformübergreifend (Linux/macOS/Windows) in jedem TTY-fähigen Terminal.
@@ -28,7 +28,7 @@ Aus der eingebauten `HELP_TEXT`-Konstante und dem `switch` in `handleSlash`:
 | `/config show` | Druckt die Konfiguration als formatiertes JSON (Secrets maskiert über `redactConfig`). Andere Argumente → `Usage: /config show`. |
 | `/theme <name>` | Wechselt das Theme. Verfügbar: `dark`, `light`, `dracula`. Unbekanntes Theme → Fehlermeldung mit Liste der verfügbaren Themes. |
 | `/clear` | Leert das Transkript und die Tool-Event-Anzeige. |
-| `/exit` | Beendet UltraCode. |
+| `/exit` | Beendet UltraCode AI. |
 
 Ein unbekanntes Kommando erzeugt die Meldung `Unknown command /<cmd> — try /help`.
 

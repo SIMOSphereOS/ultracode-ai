@@ -6,8 +6,8 @@
  * configuration, logger and optional event bus.
  */
 
-import { ENV_PREFIX } from "@ultracode/shared";
-import type { IEventBus, Logger, PerToolConfig, UltraCodeConfig } from "@ultracode/shared";
+import { ENV_PREFIX } from "ultracode-shared";
+import type { IEventBus, Logger, PerToolConfig, UltraCodeConfig } from "ultracode-shared";
 import { ToolRegistry } from "./ToolRegistry.js";
 import { ToolExecutor, DEFAULT_TOOL_TIMEOUT_SECONDS } from "./ToolExecutor.js";
 import { DEFAULT_PROTECTED_EXTENSIONS, DEFAULT_READ_DENY } from "./defaults.js";

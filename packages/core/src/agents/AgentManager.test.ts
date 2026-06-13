@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AgentError, DEFAULT_CONFIG, EventBus, NoopLogger, ProviderError } from "@ultracode/shared";
+import { AgentError, DEFAULT_CONFIG, EventBus, NoopLogger, ProviderError } from "ultracode-shared";
 import type {
   CompletionChunk,
   CompletionRequest,
@@ -9,7 +9,7 @@ import type {
   ToolResult,
   UltraCodeConfig,
   UltraCodeEvent,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import type { IToolRunner } from "../execution/types.js";
 import { AgentManager, createAgentManager, MAX_DELEGATION_DEPTH } from "./AgentManager.js";
 import { BUILT_IN_AGENTS } from "./builtins.js";

@@ -1,21 +1,21 @@
-# Claude Code → UltraCode Migration
+# Claude Code → UltraCode AI Migration
 
-> **Komplette Anleitung für die Migration von Claude Code zu UltraCode**
+> **Komplette Anleitung für die Migration von Claude Code zu UltraCode AI**
 
 ---
 
 ## 🎯 Übersicht
 
-Diese Anleitung hilft dir, **von Claude Code (leaked) zu UltraCode zu migrieren**. UltraCode kombiniert die besten Features von Claude Code mit OpenCode und Mistral Vibe, bietet aber **Multi-Model-Unterstützung** (nicht nur Anthropic).
+Diese Anleitung hilft dir, **von Claude Code (leaked) zu UltraCode AI zu migrieren**. UltraCode AI kombiniert die besten Features von Claude Code mit OpenCode und Mistral Vibe, bietet aber **Multi-Model-Unterstützung** (nicht nur Anthropic).
 
 ---
 
-## 📊 Vergleich: Claude Code vs UltraCode
+## 📊 Vergleich: Claude Code vs UltraCode AI
 
-| **Feature** | **Claude Code** | **UltraCode** | **Hinweise** |
+| **Feature** | **Claude Code** | **UltraCode AI** | **Hinweise** |
 |-------------|-----------------|---------------|--------------|
-| **Sprache** | TypeScript | TypeScript (+ Python) | ✅ Multi-Language in UltraCode |
-| **Runtime** | Bun | Node.js (+ Bun) | ⚠️ Bun ist optional in UltraCode |
+| **Sprache** | TypeScript | TypeScript (+ Python) | ✅ Multi-Language in UltraCode AI |
+| **Runtime** | Bun | Node.js (+ Bun) | ⚠️ Bun ist optional in UltraCode AI |
 | **UI** | React + Ink | React + Ink | ✅ Identisch |
 | **Agenten** | ✅ | ✅++ (10+ Agenten) | ✅ Alle Claude-Agenten + weitere |
 | **Tools** | ~40 | **80+** | ✅ Alle Claude-Tools + viele mehr |
@@ -23,7 +23,7 @@ Diese Anleitung hilft dir, **von Claude Code (leaked) zu UltraCode zu migrieren*
 | **MCP Support** | ✅ | ✅ | ✅ Voll unterstützt |
 | **LSP Support** | ✅ | ✅ | ✅ Voll unterstützt |
 | **Bridge System** | ✅ (VS Code/JB) | ✅++ | ✅ Verbessert |
-| **AI-Versionierung** | ❌ | ✅ **UNIQUE** | ✅ UltraCode USP |
+| **AI-Versionierung** | ❌ | ✅ **UNIQUE** | ✅ UltraCode AI USP |
 | **Multi-Model** | ❌ (nur Anthropic) | ✅ (Mistral, Anthropic, OpenAI, lokal) | ✅ **Hauptvorteil!** |
 | **Konfiguration** | JSON/TOML | TOML | ⚠️ Format-Portierung |
 | **Skills System** | ✅ | ✅++ (erweitert) | ✅ Kompatibel |
@@ -34,7 +34,7 @@ Diese Anleitung hilft dir, **von Claude Code (leaked) zu UltraCode zu migrieren*
 ## 📁 Dateistruktur-Vergleich
 
 ```
-Claude Code (leaked):        UltraCode:
+Claude Code (leaked):        UltraCode AI:
 ┌─────────────────┐          ┌─────────────────┐
 │ src/             │          │ packages/       │
 │ ├── main.tsx     │          │ ├── core/       │
@@ -48,7 +48,7 @@ Claude Code (leaked):        UltraCode:
 └─────────────────┘          └─────────────────┘
 
 Konfiguration:
-Claude: ~/.claude/           UltraCode: ~/.ultracode/
+Claude: ~/.claude/           UltraCode AI: ~/.ultracode/
 ```
 
 ---
@@ -71,21 +71,21 @@ if [ -f ~/.claude/.env ]; then
 fi
 ```
 
-#### 2. UltraCode installieren
+#### 2. UltraCode AI installieren
 
 ```bash
-npm install -g ultracode
+npm install -g ultracode-ai
 ```
 
-#### 3. API-Keys für UltraCode einrichten
+#### 3. API-Keys für UltraCode AI einrichten
 
-**Wichtig:** Claude Code verwendet **nur Anthropic API-Keys**. UltraCode unterstützt **mehrere Anbieter**.
+**Wichtig:** Claude Code verwendet **nur Anthropic API-Keys**. UltraCode AI unterstützt **mehrere Anbieter**.
 
 ```bash
 # Anthropic API-Key (für Kompatibilität)
 echo "ANTHROPIC_API_KEY=sk-..." >> ~/.ultracode/.env
 
-# UltraCode unterstützt auch andere Anbieter
+# UltraCode AI unterstützt auch andere Anbieter
 echo "MISTRAL_API_KEY=sk-..." >> ~/.ultracode/.env
 echo "OPENAI_API_KEY=sk-..." >> ~/.ultracode/.env
 ```
@@ -96,9 +96,9 @@ echo "OPENAI_API_KEY=sk-..." >> ~/.ultracode/.env
 
 #### 1. Tool-Mapping
 
-**Alle Claude Code-Tools sind in UltraCode verfügbar!**
+**Alle Claude Code-Tools sind in UltraCode AI verfügbar!**
 
-| **Claude Tool** | **UltraCode Tool** | **Hinweise** |
+| **Claude Tool** | **UltraCode AI Tool** | **Hinweise** |
 |-----------------|--------------------|--------------|
 | `BashTool` | `bash` | ✅ Identisch |
 | `FileReadTool` | `read` | ✅ Identisch |
@@ -112,16 +112,16 @@ echo "OPENAI_API_KEY=sk-..." >> ~/.ultracode/.env
 | `SkillTool` | `skill` | ✅ Identisch |
 | `MCPTool` | `mcp_*` | ✅ Erweitert |
 | `LSPTool` | `lsp_*` | ✅ Identisch |
-| `SendMessageTool` | `send_message` | ✅ Neu in UltraCode |
+| `SendMessageTool` | `send_message` | ✅ Neu in UltraCode AI |
 | `GitTools` | `git_*` | ✅ Erweitert |
 
-**UltraCode hat alle Claude-Tools + viele weitere!**
+**UltraCode AI hat alle Claude-Tools + viele weitere!**
 
 ---
 
 #### 2. Commands migrieren
 
-| **Claude Command** | **UltraCode Command** | **Hinweise** |
+| **Claude Command** | **UltraCode AI Command** | **Hinweise** |
 |--------------------|------------------------|--------------|
 | `/commit` | `/commit` | ✅ Identisch |
 | `/review` | `/review` + Agent | ✅ Verbessert |
@@ -136,7 +136,7 @@ echo "OPENAI_API_KEY=sk-..." >> ~/.ultracode/.env
 | `/vim` | `/vim` | ✅ Identisch |
 | `/diff` | `/diff` | ✅ Identisch |
 
-**✅ Fast alle Claude-Commands sind in UltraCode verfügbar!**
+**✅ Fast alle Claude-Commands sind in UltraCode AI verfügbar!**
 
 ---
 
@@ -144,13 +144,13 @@ echo "OPENAI_API_KEY=sk-..." >> ~/.ultracode/.env
 
 #### 1. Agenten-Mapping
 
-| **Claude Agent** | **UltraCode Agent** | **Hinweise** |
+| **Claude Agent** | **UltraCode AI Agent** | **Hinweise** |
 |------------------|---------------------|--------------|
 | Default | default | ✅ Ähnlich |
 | Plan Mode | plan | ✅ Ähnlich |
 | Custom Agents | custom | ✅ Ähnlich |
 
-**UltraCode hat zusätzliche Agenten:**
+**UltraCode AI hat zusätzliche Agenten:**
 - `build` - Entwicklung
 - `review` - Code Review
 - `release` - Release-Management
@@ -160,7 +160,7 @@ echo "OPENAI_API_KEY=sk-..." >> ~/.ultracode/.env
 
 ### Phase 4: Konfiguration portieren
 
-Claude Code verwendet **TypeScript-Konfiguration**, UltraCode verwendet **TOML**.
+Claude Code verwendet **TypeScript-Konfiguration**, UltraCode AI verwendet **TOML**.
 
 #### 1. Wichtige Konfigurationen
 
@@ -174,7 +174,7 @@ Claude Code verwendet **TypeScript-Konfiguration**, UltraCode verwendet **TOML**
 }
 ```
 
-**UltraCode (TOML):**
+**UltraCode AI (TOML):**
 ```toml
 [core]
 active_model = "claude-3-5-sonnet"
@@ -190,15 +190,15 @@ max_tokens = 40000
 #### 2. Automatische Portierung
 
 ```bash
-# UltraCode versucht, Claude-Konfiguration automatisch zu portieren
-ultracode --migrate-from claude
+# UltraCode AI versucht, Claude-Konfiguration automatisch zu portieren
+ultracode-ai --migrate-from claude
 ```
 
 ---
 
 ### Phase 5: MCP-Server migrieren
 
-**Claude Code MCP-Server** sind **1:1 kompatibel** mit UltraCode:
+**Claude Code MCP-Server** sind **1:1 kompatibel** mit UltraCode AI:
 
 ```toml
 # ~/.ultracode/config.toml
@@ -218,7 +218,7 @@ args = ["mcp-server-fetch"]
 
 ### Phase 6: LSP-Integration migrieren
 
-Claude Codes **LSP-Bridge** ist in UltraCode **voll unterstützt**:
+Claude Codes **LSP-Bridge** ist in UltraCode AI **voll unterstützt**:
 
 - VS Code Extension
 - JetBrains Plugin
@@ -230,17 +230,17 @@ Claude Codes **LSP-Bridge** ist in UltraCode **voll unterstützt**:
 code --install-extension ultracode.vscode
 
 # JetBrains
-# UltraCode Plugin installieren
+# UltraCode AI Plugin installieren
 
 # Neovim
-# UltraCode Neovim Plugin installieren
+# UltraCode AI Neovim Plugin installieren
 ```
 
 ---
 
 ### Phase 7: Bun → Node.js Migration (optional)
 
-Claude Code verwendet **Bun** als Runtime. UltraCode verwendet **Node.js**, unterstützt aber auch **Bun**.
+Claude Code verwendet **Bun** als Runtime. UltraCode AI verwendet **Node.js**, unterstützt aber auch **Bun**.
 
 #### 1. Bun installieren (optional)
 
@@ -249,14 +249,14 @@ Claude Code verwendet **Bun** als Runtime. UltraCode verwendet **Node.js**, unte
 curl -fsSL https://bun.sh/install | bash
 ```
 
-#### 2. UltraCode mit Bun verwenden
+#### 2. UltraCode AI mit Bun verwenden
 
 ```bash
-# UltraCode mit Bun-Runtime
-bunx ultracode
+# UltraCode AI mit Bun-Runtime
+bunx ultracode-ai
 ```
 
-**✅ UltraCode funktioniert mit Node.js und Bun!**
+**✅ UltraCode AI funktioniert mit Node.js und Bun!**
 
 ---
 
@@ -265,9 +265,9 @@ bunx ultracode
 #### 1. Grundlegende Funktionalität
 
 ```bash
-ultracode
+ultracode-ai
 
-> "Hallo UltraCode"
+> "Hallo UltraCode AI"
 > /agents default
 > /tools list
 ```
@@ -285,7 +285,7 @@ ultracode
 > task(task="Analysiere Codebase", agent="general")
 ```
 
-#### 3. Neue UltraCode-Features
+#### 3. Neue UltraCode AI-Features
 
 ```
 # Multi-Model
@@ -302,7 +302,7 @@ ultracode
 ## 🔧 Kompatibilitätsmodus
 
 ```bash
-ultracode --compat claude
+ultracode-ai --compat claude
 ```
 
 **Features:**
@@ -314,21 +314,21 @@ ultracode --compat claude
 
 ## ⚠️ Bekannte Unterschiede
 
-| **Unterschied** | **Claude Code** | **UltraCode** | **Lösung** |
+| **Unterschied** | **Claude Code** | **UltraCode AI** | **Lösung** |
 |----------------|-----------------|---------------|------------|
 | **Multi-Model** | ❌ (nur Anthropic) | ✅ (Mistral, Anthropic, OpenAI, lokal) | Neue Anbieter hinzufügen |
 | **Runtime** | Bun | Node.js (+ Bun) | Node.js installieren, Bun optional |
-| **Auth** | `/login` | `/auth` oder `--setup` | `/auth` oder `ultracode --setup` |
+| **Auth** | `/login` | `/auth` oder `--setup` | `/auth` oder `ultracode-ai --setup` |
 | **Konfiguration** | TypeScript/JSON | TOML | Automatische Portierung |
 | **AI-Versionierung** | ❌ | ✅ | Neue Features nutzen |
-| **Skills** | ✅ | ✅++ | Erweitert in UltraCode |
+| **Skills** | ✅ | ✅++ | Erweitert in UltraCode AI |
 
 ---
 
 ## 📝 Migrations-Checkliste
 
 - [ ] **Backup** von Claude-Konfiguration erstellt
-- [ ] **UltraCode** installiert
+- [ ] **UltraCode AI** installiert
 - [ ] **API-Keys** migriert (Anthropic + neue Anbieter)
 - [ ] **Konfiguration** portiert
 - [ ] **Tools/Commands** getestet
@@ -342,7 +342,7 @@ ultracode --compat claude
 
 ## 💡 Tipps für Claude Code-Nutzer
 
-### 1. Vorteile von UltraCode
+### 1. Vorteile von UltraCode AI
 
 ✅ **Multi-Model-Unterstützung** - Nicht nur Anthropic!
 ✅ **AI-Versionierung** - Einzigartiges USP
@@ -355,21 +355,21 @@ ultracode --compat claude
 
 ```bash
 # Mistral Modelle verwenden
-ultracode --model mistral-large --provider mistral
+ultracode-ai --model mistral-large --provider mistral
 
 # OpenAI Modelle verwenden
-ultracode --model gpt-4 --provider openai
+ultracode-ai --model gpt-4 --provider openai
 
 # Lokale Modelle verwenden
-ultracode --model llama3:70b --provider local
+ultracode-ai --model llama3:70b --provider local
 ```
 
 ### 3. Gewohnte Workflows
 
-| **Claude Code-Workflow** | **UltraCode-Workflow** |
+| **Claude Code-Workflow** | **UltraCode AI-Workflow** |
 |--------------------------|------------------------|
-| `claude` | `ultracode` |
-| `claude --model sonnet` | `ultracode --model claude-3-5-sonnet` |
+| `claude` | `ultracode-ai` |
+| `claude --model sonnet` | `ultracode-ai --model claude-3-5-sonnet` |
 | `/review` | `/agents review` oder `/review` |
 | `task(...)` | `task(...)` (verbessert) |
 
@@ -390,7 +390,7 @@ ultracode --model llama3:70b --provider local
 
 ## 🔗 Nützliche Links
 
-- [UltraCode Dokumentation →](../../README.md)
+- [UltraCode AI Dokumentation →](../../README.md)
 - [Multi-Model Konfiguration →](../../GETTING-STARTED/configuration.md)
 - [Tools-Referenz →](../DEVELOPMENT/tools-reference.md)
 - [Agenten-Referenz →](../DEVELOPMENT/agents-reference.md)

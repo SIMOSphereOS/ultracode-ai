@@ -1,14 +1,14 @@
 # Selbsthosting
 
-> ⚠️ **Vision / noch nicht implementiert.** UltraCode hat heute keinen server-seitigen Dienst, der sich „self-hosten“ ließe — es ist ein lokales CLI, das auf der eigenen Maschine läuft. Die folgende Anleitung beschreibt eine geplante self-hosted Server-Variante und ist **derzeit nicht lauffähig**. Für die reale Nutzung siehe [Installation](../GETTING-STARTED/installation.md).
+> ⚠️ **Vision / noch nicht implementiert.** UltraCode AI hat heute keinen server-seitigen Dienst, der sich „self-hosten“ ließe — es ist ein lokales CLI, das auf der eigenen Maschine läuft. Die folgende Anleitung beschreibt eine geplante self-hosted Server-Variante und ist **derzeit nicht lauffähig**. Für die reale Nutzung siehe [Installation](../GETTING-STARTED/installation.md).
 
-> **Komplette Anleitung zum Selbsthosting von UltraCode - Volle Kontrolle über Ihre Daten** *(geplant)*
+> **Komplette Anleitung zum Selbsthosting von UltraCode AI - Volle Kontrolle über Ihre Daten** *(geplant)*
 
 ---
 
 ## 🚀 Übersicht
 
-UltraCode kann vollständig in Ihrer eigenen Infrastruktur gehostet werden. Dies gibt Ihnen volle Kontrolle über Ihre Daten, verbesserte Sicherheit und die Möglichkeit, die Lösung an Ihre spezifischen Anforderungen anzupassen.
+UltraCode AI kann vollständig in Ihrer eigenen Infrastruktur gehostet werden. Dies gibt Ihnen volle Kontrolle über Ihre Daten, verbesserte Sicherheit und die Möglichkeit, die Lösung an Ihre spezifischen Anforderungen anzupassen.
 
 ---
 
@@ -99,7 +99,7 @@ docker compose ps
 #### 4. Dienste verifizieren
 
 ```bash
-# UltraCode Server
+# UltraCode AI Server
 curl http://localhost:3000/health
 
 # Datenbank
@@ -117,7 +117,7 @@ redis-cli ping
 version: '3.8'
 
 services:
-  # UltraCode Core
+  # UltraCode AI Core
   ultracode:
     image: ultracode/ultracode-enterprise:latest
     container_name: ultracode
@@ -368,7 +368,7 @@ ultracode/
 ├── data/
 │   ├── postgres/              # PostgreSQL Daten
 │   ├── redis/                 # Redis Daten
-│   └── ultracode/             # UltraCode Daten
+│   └── ultracode/             # UltraCode AI Daten
 ├── models/                   # LLM Modelle (optional)
 ├── certs/                    # SSL Zertifikate
 ├── docker-compose.yml        # Docker Compose
@@ -523,10 +523,10 @@ logrotate:
 
 ```bash
 # Aktuelle Version
-ultracode version
+ultracode-ai version
 
 # Neue Version prüfen
-ultracode update check
+ultracode-ai update check
 ```
 
 ### Update-Prozess
@@ -542,13 +542,13 @@ docker compose down
 docker compose pull
 
 # 4. Migration ausführen (falls nötig)
-ultracode db migrate
+ultracode-ai db migrate
 
 # 5. Container starten
 docker compose up -d
 
 # 6. Status prüfen
-ultracode health
+ultracode-ai health
 ```
 
 ---
@@ -627,4 +627,4 @@ cache:
 - **Community**: [https://discord.gg/ultracode](https://discord.gg/ultracode)
 - **Enterprise-Support**: support@ultracode.ai
 
-© 2026 UltraCode Team
+© 2026 UltraCode AI Team

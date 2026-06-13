@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { ChatMessage, CompletionResult, ILLMProvider, ToolDefinition } from "@ultracode/shared";
+import type { ChatMessage, CompletionResult, ILLMProvider, ToolDefinition } from "ultracode-shared";
 import { HeuristicTokenCounter } from "./TokenCounter.js";
 import type { OptimizeContext, PromptPayload } from "./types.js";
 import {

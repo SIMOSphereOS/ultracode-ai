@@ -16,7 +16,7 @@ import {
   USER_CONFIG_FILE,
   USER_ENV_FILE,
   ConfigError,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 
 /**
  * Expands a leading `~` to the user's home directory.

@@ -1,5 +1,5 @@
 /**
- * `@ultracode/shared` — the contract layer.
+ * `ultracode-shared` — the contract layer.
  *
  * This package defines the types, interfaces, errors, events and utilities that
  * the `core` and `cli` packages build against. It contains no business logic
@@ -7,7 +7,7 @@
  *
  * Import everything from the package root:
  * ```ts
- * import { UltraCodeError, EventBus, deepMerge, type ToolDefinition } from "@ultracode/shared";
+ * import { UltraCodeError, EventBus, deepMerge, type ToolDefinition } from "ultracode-shared";
  * ```
  */
 

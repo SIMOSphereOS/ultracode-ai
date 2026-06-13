@@ -17,7 +17,7 @@ import type {
   Risk,
   SecurityFinding,
   UltraCodeConfig,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { parseConventionalSubject } from "./conventional.js";
 
 /** Construction options for {@link ReleasePlanningEngine}. */

@@ -6,7 +6,7 @@
  * `stream_options.include_usage` is set, which this provider enables.
  */
 
-import type { Logger, ProviderOptions } from "@ultracode/shared";
+import type { Logger, ProviderOptions } from "ultracode-shared";
 import { OpenAICompatProvider } from "./openaiCompat.js";
 
 /** Default OpenAI API base URL. */

@@ -2,7 +2,7 @@
  * Core-local session-optimization event.
  *
  * As with the `tokens`/`authoring`/`budget` modules, the frozen
- * `@ultracode/shared` `UltraCodeEvent` union is **not** extended here. Instead
+ * `ultracode-shared` `UltraCodeEvent` union is **not** extended here. Instead
  * this module defines its own event type and a tiny non-throwing emitter that
  * publishes it onto any provided {@link IEventBus} via a structural cast,
  * always falling back to `logger.info`. Subscribers that know the
@@ -10,7 +10,7 @@
  * untouched.
  */
 
-import type { IEventBus, Logger } from "@ultracode/shared";
+import type { IEventBus, Logger } from "ultracode-shared";
 
 /** Discriminator for the core-local session-optimization event. */
 export const SESSION_OPTIMIZED_EVENT = "session.optimized" as const;

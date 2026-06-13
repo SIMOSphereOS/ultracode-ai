@@ -12,8 +12,8 @@ import { mkdir, readFile, rename, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
-import { NoopLogger } from "@ultracode/shared";
-import type { Logger } from "@ultracode/shared";
+import { NoopLogger } from "ultracode-shared";
+import type { Logger } from "ultracode-shared";
 
 import { LearnError } from "./errors.js";
 import { stateDir, stateFile, sanitizeId } from "./paths.js";

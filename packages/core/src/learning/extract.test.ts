@@ -5,7 +5,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-import type { CompletionRequest, CompletionResult, ILLMProvider } from "@ultracode/shared";
+import type { CompletionRequest, CompletionResult, ILLMProvider } from "ultracode-shared";
 import { chunkText, distillPage, estimateTokens, routeModel, sha256, DEFAULT_ROUTING } from "./extract.js";
 import { Semaphore, mapWithConcurrency } from "./concurrency.js";
 

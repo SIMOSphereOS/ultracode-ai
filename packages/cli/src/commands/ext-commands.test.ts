@@ -2,7 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_CONFIG, EventBus } from "@ultracode/shared";
+import { DEFAULT_CONFIG, EventBus } from "ultracode-shared";
 import type { CliContext, UltraCodeFacade } from "../context.js";
 import { runCli } from "../program.js";
 import { registerLearnCommands } from "./learn.js";
@@ -19,7 +19,7 @@ import type {
   Skill,
   SkillFrontmatter,
   AuthoringTestResult as TestResult,
-} from "@ultracode/core";
+} from "ultracode-core";
 
 /* ------------------------------------------------------------------ */
 /* fixtures                                                            */
@@ -204,7 +204,7 @@ function makeCtx(facade: UltraCodeFacade, over: Partial<CliContext> = {}) {
 }
 
 function argv(...a: string[]): string[] {
-  return ["node", "ultracode", ...a];
+  return ["node", "ultracode-ai", ...a];
 }
 
 /**
@@ -228,7 +228,7 @@ async function runLearn(
   registerLearnCommands(program, ctx, io);
   let code = 0;
   try {
-    await program.parseAsync(["node", "ultracode", ...args]);
+    await program.parseAsync(["node", "ultracode-ai", ...args]);
     code = typeof process.exitCode === "number" ? process.exitCode : 0;
   } catch {
     code = 1;

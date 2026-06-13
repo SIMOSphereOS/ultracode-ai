@@ -1,4 +1,4 @@
-# Getting Started – UltraCode
+# Getting Started – UltraCode AI
 
 > **Dein erster Schritt mit dem mächtigsten AI Code Assistenten**
 
@@ -6,7 +6,7 @@
 
 ## 📚 In diesem Abschnitt
 
-Dieser Abschnitt enthält alles, was du brauchst, um **UltraCode schnell und einfach** in deinem Projekt einzusetzen.
+Dieser Abschnitt enthält alles, was du brauchst, um **UltraCode AI schnell und einfach** in deinem Projekt einzusetzen.
 
 ```
 GETTING-STARTED/
@@ -21,9 +21,9 @@ GETTING-STARTED/
 
 | **Schritt** | **Dokument** | **Dauer** | **Ziel** |
 |-------------|--------------|-----------|----------|
-| 1 | [Installation →](./installation.md) | 2-5 Min | UltraCode auf deinem System installieren |
+| 1 | [Installation →](./installation.md) | 2-5 Min | UltraCode AI auf deinem System installieren |
 | 2 | [Quick Start →](./quick-start.md) | 5 Min | Erste Befehle ausprobieren |
-| 3 | [Konfiguration →](./configuration.md) | 10 Min | UltraCode an deine Bedürfnisse anpassen |
+| 3 | [Konfiguration →](./configuration.md) | 10 Min | UltraCode AI an deine Bedürfnisse anpassen |
 
 ---
 
@@ -31,13 +31,13 @@ GETTING-STARTED/
 
 ```bash
 # 1. Installieren (empfohlen: npm)
-npm install -g ultracode
+npm install -g ultracode-ai
 
 # 2. In deinem Projekt-Ordner navigieren
 cd /pfad/zu/deinem/projekt
 
-# 3. UltraCode starten
-ultracode
+# 3. UltraCode AI starten
+ultracode-ai
 
 # 4. Erster Befehl
 > "Analysiere die Projektstruktur und schlage Verbesserungen vor"
@@ -48,7 +48,7 @@ ultracode
 ## 💡 Tipps für den Einstieg
 
 ### Für **OpenCode-Nutzer**
-- UltraCode übernimmt alle OpenCode-Agenten (`build`, `plan`)
+- UltraCode AI übernimmt alle OpenCode-Agenten (`build`, `plan`)
 - Die CLI ist ähnlich, aber mit mehr Features
 - Siehe [OpenCode Migration →](../INTEGRATION/opencode-migration.md)
 
@@ -74,7 +74,7 @@ ultracode
 - **Verifizierung**: Installation prüfen
 
 ### [Quick Start →](./quick-start.md)
-- **Erste Schritte**: UltraCode starten
+- **Erste Schritte**: UltraCode AI starten
 - **Grundlegende Befehle**: Navigation und Interaktion
 - **Beispiel-Workflows**: Typische Anwendungsfälle
 - **Tipps & Tricks**: Effizienter arbeiten
@@ -96,6 +96,7 @@ ultracode
 | API-Key nicht erkannt | Environment-Variablen prüfen | [configuration.md](./configuration.md) |
 | Tool nicht gefunden | Tool-Berechtigungen prüfen | [configuration.md](./configuration.md) |
 | UI-Probleme | Terminal-Kompatibilität prüfen | [installation.md](./installation.md) |
+
 
 ---
 

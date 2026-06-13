@@ -11,7 +11,7 @@
  * - `listModels` via `GET /models` and a fetch-based `healthCheck`.
  */
 
-import { ProviderError } from "@ultracode/shared";
+import { ProviderError } from "ultracode-shared";
 import type {
   ChatMessage,
   CompletionChunk,
@@ -23,7 +23,7 @@ import type {
   TokenUsage,
   ToolCallRequest,
   ToolDefinition,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { BaseProvider } from "./BaseProvider.js";
 import type { TerminalCompletionChunk } from "./sse.js";
 import { parseSSEJson } from "./sse.js";

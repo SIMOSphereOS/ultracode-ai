@@ -10,12 +10,12 @@
  * rebuilt on demand.
  *
  * These types are deliberately defined *here* in `core` rather than in the
- * frozen `@ultracode/shared` 1.0 contract layer: the subsystem is new and may
+ * frozen `ultracode-shared` 1.0 contract layer: the subsystem is new and may
  * still evolve. All cross-module dependencies (token counter, budget gate, LLM
  * provider) are consumed through narrow, constructor-injected interfaces.
  */
 
-import type { ChatMessage } from "@ultracode/shared";
+import type { ChatMessage } from "ultracode-shared";
 
 import {
   DEFAULT_ENABLE_LLM_SUMMARY,
@@ -119,7 +119,7 @@ export interface SessionOptimizer {
    * message + pinned facts + durable summary + the last `recentKeep` messages,
    * never splitting a tool-call/tool-result pair.
    */
-  buildWorkingSet(record: import("@ultracode/shared").SessionRecord): WorkingSet;
+  buildWorkingSet(record: import("ultracode-shared").SessionRecord): WorkingSet;
   /**
    * Like {@link SessionOptimizer.buildWorkingSet} but reads the persisted
    * sidecar first, so the rolling durable summary and pinned facts produced by
@@ -129,7 +129,7 @@ export interface SessionOptimizer {
    * sidecar exists.
    */
   buildWorkingSetPersisted(
-    record: import("@ultracode/shared").SessionRecord,
+    record: import("ultracode-shared").SessionRecord,
   ): Promise<WorkingSet>;
   /**
    * Delete the persisted sidecar for a session. Called from the session

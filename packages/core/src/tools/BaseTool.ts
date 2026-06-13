@@ -8,8 +8,8 @@
  *   `durationMs` is always populated.
  */
 
-import { ValidationError, serializeError } from "@ultracode/shared";
-import type { ITool, ToolContext, ToolDefinition, ToolResult } from "@ultracode/shared";
+import { ValidationError, serializeError } from "ultracode-shared";
+import type { ITool, ToolContext, ToolDefinition, ToolResult } from "ultracode-shared";
 import type { z } from "zod";
 
 /** What a concrete tool's {@link BaseTool.run} returns on success. */

@@ -15,8 +15,8 @@ import os from "node:os";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 
-import { NoopLogger } from "@ultracode/shared";
-import type { Logger } from "@ultracode/shared";
+import { NoopLogger } from "ultracode-shared";
+import type { Logger } from "ultracode-shared";
 
 import { createBudgetPlanner, type BudgetPlanner } from "../budget/BudgetPlanner.js";
 import { ledgerFile } from "../budget/paths.js";

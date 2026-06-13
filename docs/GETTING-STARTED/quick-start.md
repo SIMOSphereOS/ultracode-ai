@@ -1,4 +1,4 @@
-# UltraCode – Quick Start
+# UltraCode AI – Quick Start
 
 > **5-Minuten-Tutorial für den Einstieg**
 
@@ -6,7 +6,7 @@
 
 ## ⚡ Sofort loslegen
 
-Führe diese **5 Schritte** aus, um UltraCode in Aktion zu erleben:
+Führe diese **5 Schritte** aus, um UltraCode AI in Aktion zu erleben:
 
 ---
 
@@ -26,14 +26,14 @@ git init
 
 ---
 
-## Schritt 2: UltraCode starten
+## Schritt 2: UltraCode AI starten
 
 ```bash
-ultracode
+ultracode-ai
 ```
 
 **Was passiert:**
-1. UltraCode prüft die Umgebung
+1. UltraCode AI prüft die Umgebung
 2. Lädt die Konfiguration (oder erstellt eine neue)
 3. Startet die interaktive CLI
 
@@ -59,7 +59,7 @@ Gib einen der folgenden Befehle ein und drücke **Enter**:
 
 ## Schritt 4: Mit Tools arbeiten
 
-UltraCode registriert **14 Tools** (13 Built-in-Tools plus das `task`-Subagent-Tool). Hier sind die wichtigsten:
+UltraCode AI registriert **14 Tools** (13 Built-in-Tools plus das `task`-Subagent-Tool). Hier sind die wichtigsten:
 
 | **Tool** | **Befehl** | **Beispiel** |
 |----------|------------|--------------|
@@ -81,7 +81,7 @@ UltraCode registriert **14 Tools** (13 Built-in-Tools plus das `task`-Subagent-T
 > "Analysiere alle TypeScript-Dateien und finde potenzielle Bugs"
 ```
 
-**UltraCode wird:**
+**UltraCode AI wird:**
 - Alle `.ts`-Dateien finden
 - Code mit LLM analysieren
 - Potenzielle Probleme melden
@@ -95,7 +95,7 @@ UltraCode registriert **14 Tools** (13 Built-in-Tools plus das `task`-Subagent-T
 > "Erstelle eine neue Funktion 'calculateTotal' in src/utils.ts, die die Summe eines Arrays berechnet"
 ```
 
-**UltraCode wird:**
+**UltraCode AI wird:**
 - Die Datei `src/utils.ts` lesen
 - Die Funktion hinzufügen
 - Den Code formatieren
@@ -109,7 +109,7 @@ UltraCode registriert **14 Tools** (13 Built-in-Tools plus das `task`-Subagent-T
 > "Führe alle Tests aus und berichte die Ergebnisse"
 ```
 
-**UltraCode wird:**
+**UltraCode AI wird:**
 - `npm test` oder ähnlichen Befehl finden
 - Tests ausführen
 - Ergebnisse analysieren
@@ -167,7 +167,7 @@ Drücke **Strg+J** oder **Shift+Enter** für mehrzeiligen Input:
 
 ### 1. Agenten wechseln
 
-UltraCode hat vordefinierte Agenten:
+UltraCode AI hat vordefinierte Agenten:
 
 | **Agent** | **Zweck** | **Aktivierung** |
 |-----------|-----------|----------------|
@@ -183,13 +183,13 @@ UltraCode hat vordefinierte Agenten:
 
 ```bash
 # Session fortsetzen
-ultracode --continue
+ultracode-ai --continue
 
 # Spezifische Session laden
-ultracode --resume abc123
+ultracode-ai --resume abc123
 
 # Neue Session starten
-ultracode --new
+ultracode-ai --new
 ```
 
 ---
@@ -277,7 +277,7 @@ ultracode --new
 
 Nach dem Quick Start:
 
-1. **[Konfiguration →](./configuration.md)** – UltraCode anpassen
+1. **[Konfiguration →](./configuration.md)** – UltraCode AI anpassen
 2. **[AI-Versionierung →](../AI-FEATURES/versioning-system.md)** – Einzigartige Features entdecken
 3. **[Tools-Referenz →](../REFERENCE/tools-reference.md)** – Alle 14 Tools kennenlernen
 4. **[Agenten →](../DEVELOPMENT/agents-reference.md)** – Agenten im Detail
@@ -301,10 +301,10 @@ Unterstützte Anbieter: `mistral`, `anthropic`, `openai`, `local`
 
 ```bash
 # Interaktiv
-ultracode --setup
+ultracode-ai --setup
 
 # Oder manuell
-ultracode --config set MISTRAL_API_KEY=xxx
+ultracode-ai --config set MISTRAL_API_KEY=xxx
 ```
 
 ---

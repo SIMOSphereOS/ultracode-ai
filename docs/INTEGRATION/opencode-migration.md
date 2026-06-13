@@ -1,37 +1,37 @@
-# OpenCode → UltraCode Migration
+# OpenCode → UltraCode AI Migration
 
-> **Komplette Anleitung für die Migration von OpenCode zu UltraCode**
+> **Komplette Anleitung für die Migration von OpenCode zu UltraCode AI**
 
 ---
 
 ## 🎯 Übersicht
 
-Diese Anleitung hilft dir, **nahtlos von OpenCode zu UltraCode zu migrieren**. UltraCode kombiniert alle Vorteile von OpenCode mit zusätzliche Features aus Mistral Vibe und Claude Code.
+Diese Anleitung hilft dir, **nahtlos von OpenCode zu UltraCode AI zu migrieren**. UltraCode AI kombiniert alle Vorteile von OpenCode mit zusätzliche Features aus Mistral Vibe und Claude Code.
 
 ---
 
-## 📊 Vergleich: OpenCode vs UltraCode
+## 📊 Vergleich: OpenCode vs UltraCode AI
 
-| **Feature** | **OpenCode** | **UltraCode** | **Hinweise** |
+| **Feature** | **OpenCode** | **UltraCode AI** | **Hinweise** |
 |-------------|--------------|---------------|--------------|
 | **Agenten** | build, plan, general | build, plan, review, release, security, +custom | ✅ Alle OpenCode-Agenten verfügbar + weitere |
 | **Tools** | ~30 | **80+** | ✅ Alle OpenCode-Tools verfügbar + weitere |
 | **UI** | React + Terminal | React + Ink | ⚠️ Ähnliche, aber verbesserte UI |
 | **Desktop App** | Beta | ✅ Voll unterstützt | ✅ Verbessert |
 | **IDE Integration** | ✅ | ✅++ (VS Code, JetBrains, Neovim) | ✅ Erweitert |
-| **MCP Support** | ❌ | ✅ | ✅ Neu in UltraCode |
-| **LSP Support** | ❌ | ✅ | ✅ Neu in UltraCode |
-| **AI-Versionierung** | ❌ | ✅ **UNIQUE** | ✅ UltraCode USP |
+| **MCP Support** | ❌ | ✅ | ✅ Neu in UltraCode AI |
+| **LSP Support** | ❌ | ✅ | ✅ Neu in UltraCode AI |
+| **AI-Versionierung** | ❌ | ✅ **UNIQUE** | ✅ UltraCode AI USP |
 | **Multi-Model** | ✅ | ✅ (Mistral, Anthropic, OpenAI, lokal) | ✅ Erweitert |
 | **Konfiguration** | JSON/YAML | TOML | ⚠️ Format ändert sich |
-| **Skills System** | ❌ | ✅ | ✅ Neu in UltraCode |
+| **Skills System** | ❌ | ✅ | ✅ Neu in UltraCode AI |
 
 ---
 
 ## 📁 Dateistruktur-Vergleich
 
 ```
-OpenCode:                       UltraCode:
+OpenCode:                       UltraCode AI:
 ┌─────────────────┐            ┌─────────────────┐
 │ ~/.opencode/    │            │ ~/.ultracode/   │
 │ ├── config.json │            │ ├── config.toml  │
@@ -60,13 +60,13 @@ cp -r ~/.opencode ~/.opencode-backup-$(date +%Y%m%d)
 cp ~/.opencode/.env ~/.opencode-backup.env 2>/dev/null || true
 ```
 
-#### 2. UltraCode installieren
+#### 2. UltraCode AI installieren
 
 ```bash
-npm install -g ultracode
+npm install -g ultracode-ai
 ```
 
-#### 3. UltraCode-Verzeichnis erstellen
+#### 3. UltraCode AI-Verzeichnis erstellen
 
 ```bash
 mkdir -p ~/.ultracode
@@ -80,10 +80,10 @@ mkdir -p ~/.ultracode
 
 ```bash
 # Trockenlauf (simuliert Migration)
-ultracode --migrate-from opencode --dry-run
+ultracode-ai --migrate-from opencode --dry-run
 
 # Echte Migration
-ultracode --migrate-from opencode --backup
+ultracode-ai --migrate-from opencode --backup
 ```
 
 **Was wird migriert:**
@@ -114,7 +114,7 @@ echo "ANTHROPIC_API_KEY=sk-..." >> ~/.ultracode/.env
 
 **b) Konfiguration konvertieren**
 
-| **OpenCode** | **UltraCode** | **Beispiel** |
+| **OpenCode** | **UltraCode AI** | **Beispiel** |
 |--------------|---------------|--------------|
 | `defaultAgent` | `default_agent` | `default_agent = "build"` |
 | `model` | `active_model` | `active_model = "mistral-large"` |
@@ -135,7 +135,7 @@ echo "ANTHROPIC_API_KEY=sk-..." >> ~/.ultracode/.env
 }
 ```
 
-**UltraCode (`~/.ultracode/config.toml`):**
+**UltraCode AI (`~/.ultracode/config.toml`):**
 ```toml
 [core]
 default_agent = "build"
@@ -155,14 +155,14 @@ theme = "dark"
 
 #### Agenten-Mapping
 
-| **OpenCode-Agent** | **UltraCode-Agent** | **Hinweise** |
+| **OpenCode-Agent** | **UltraCode AI-Agent** | **Hinweise** |
 |--------------------|---------------------|--------------|
 | `build` | `build` | ✅ Identisch |
 | `plan` | `plan` | ✅ Identisch |
 | `general` | `general` (Subagent) | ✅ Identisch |
 | `default` | `default` | ✅ Identisch |
 
-**Alle OpenCode-Agenten sind in UltraCode verfügbar!**
+**Alle OpenCode-Agenten sind in UltraCode AI verfügbar!**
 
 ---
 
@@ -170,7 +170,7 @@ theme = "dark"
 
 #### Tools-Mapping
 
-| **OpenCode-Tool** | **UltraCode-Tool** | **Hinweise** |
+| **OpenCode-Tool** | **UltraCode AI-Tool** | **Hinweise** |
 |-------------------|--------------------|--------------|
 | `read` | `read` | ✅ Identisch |
 | `write` | `write_file` | ⚠️ Umbenannt |
@@ -184,7 +184,7 @@ theme = "dark"
 - `write` → `write_file`
 - Git-Tools sind jetzt separat (git_status, git_commit, etc.)
 
-**Alle OpenCode-Tools sind in UltraCode verfügbar!**
+**Alle OpenCode-Tools sind in UltraCode AI verfügbar!**
 
 ---
 
@@ -192,15 +192,15 @@ theme = "dark"
 
 OpenCode unterstützt **kein Plug-in-System**, aber du kannst:
 
-1. **Eigene Tools erstellen** in UltraCode
-2. **Skills als UltraCode-Skills** erstellen
+1. **Eigene Tools erstellen** in UltraCode AI
+2. **Skills als UltraCode AI-Skills** erstellen
 
-**Beispiel: OpenCode-Tool als UltraCode-Tool**
+**Beispiel: OpenCode-Tool als UltraCode AI-Tool**
 
 Falls du benutzerdefinierte Tools in OpenCode hattest:
 
 ```typescript
-// UltraCode Tool (Packages/core/src/tools/implementations/custom/MyTool.ts)
+// UltraCode AI Tool (Packages/core/src/tools/implementations/custom/MyTool.ts)
 import { BaseTool } from '../../BaseTool';
 
 export class MyTool extends BaseTool {
@@ -233,8 +233,8 @@ export class MyTool extends BaseTool {
 #### 1. Grundlegende Funktionalität testen
 
 ```bash
-# UltraCode starten
-ultracode
+# UltraCode AI starten
+ultracode-ai
 
 # Grundlegende Befehle testen
 > read(file_path="package.json")
@@ -257,7 +257,7 @@ ultracode
 
 ```
 > read(file_path="src/index.ts")
-> write_file(path="test.txt", content="Hello UltraCode")
+> write_file(path="test.txt", content="Hello UltraCode AI")
 > grep(pattern="TODO", path=".")
 ```
 
@@ -265,7 +265,7 @@ ultracode
 
 ### Phase 7: Anpassen und optimieren
 
-#### 1. Neue UltraCode-Features ausprobieren
+#### 1. Neue UltraCode AI-Features ausprobieren
 
 ```
 # AI-Versionierung
@@ -292,8 +292,8 @@ url = "http://localhost:8080"
 #### 3. IDE-Integration einrichten
 
 - **VS Code:** `code --install-extension ultracode.vscode`
-- **JetBrains:** UltraCode Plugin installieren
-- **Neovim:** UltraCode Neovim Plugin installieren
+- **JetBrains:** UltraCode AI Plugin installieren
+- **Neovim:** UltraCode AI Neovim Plugin installieren
 
 ---
 
@@ -302,7 +302,7 @@ url = "http://localhost:8080"
 Falls du Probleme mit der Migration hast, kannst du den **OpenCode-Kompatibilitätsmodus** aktivieren:
 
 ```bash
-ultracode --compat opencode
+ultracode-ai --compat opencode
 ```
 
 **Features:**
@@ -314,12 +314,12 @@ ultracode --compat opencode
 
 ## ⚠️ Bekannte Unterschiede
 
-| **Unterschied** | **OpenCode** | **UltraCode** | **Lösung** |
+| **Unterschied** | **OpenCode** | **UltraCode AI** | **Lösung** |
 |----------------|--------------|---------------|------------|
 | Tool-Name `write` | ✅ | ❌ (nur `write_file`) | `write_file` verwenden oder Kompatibilitätsmodus |
 | Git-Tools | `git` (ein Tool) | `git_*` (mehrere Tools) | `git_status`, `git_commit`, etc. verwenden |
 | Konfiguration | JSON | TOML | Konvertierungsskript verwenden |
-| Desktop App | Beta | Voll unterstützt | UltraCode Desktop installieren |
+| Desktop App | Beta | Voll unterstützt | UltraCode AI Desktop installieren |
 | MCP Support | ❌ | ✅ | MCP-Server manuell hinzufügen |
 | LSP Support | ❌ | ✅ | LSP-Tools verwenden |
 
@@ -328,7 +328,7 @@ ultracode --compat opencode
 ## 📝 Migrations-Checkliste
 
 - [ ] **Backup** von OpenCode-Konfiguration erstellt
-- [ ] **UltraCode** installiert
+- [ ] **UltraCode AI** installiert
 - [ ] **API-Keys** migriert
 - [ ] **Konfiguration** migriert (automatisch/manuell)
 - [ ] **Agenten** getestet
@@ -344,11 +344,11 @@ ultracode --compat opencode
 
 ### 1. Gewohnte Workflows
 
-| **OpenCode-Workflow** | **UltraCode-Workflow** |
+| **OpenCode-Workflow** | **UltraCode AI-Workflow** |
 |------------------------|------------------------|
-| `opencode` | `ultracode` |
-| `opencode --agent plan` | `ultracode --agent plan` |
-| `opencode --model mistral-large` | `ultracode --model mistral-large` |
+| `opencode` | `ultracode-ai` |
+| `opencode --agent plan` | `ultracode-ai --agent plan` |
+| `opencode --model mistral-large` | `ultracode-ai --model mistral-large` |
 | `/agents` | `/agents` |
 | `/tools` | `/tools` |
 
@@ -362,7 +362,7 @@ ultracode --compat opencode
 
 ### 3. Performance-Verbesserungen
 
-- UltraCode ist **schneller** (optimierte Architektur)
+- UltraCode AI ist **schneller** (optimierte Architektur)
 - **Parallel Execution** für Tools
 - **Besseres Caching**
 - **Streaming** von LLM-Antworten
@@ -384,7 +384,7 @@ ultracode --compat opencode
 
 ## 🔗 Nützliche Links
 
-- [UltraCode Dokumentation →](../../README.md)
+- [UltraCode AI Dokumentation →](../../README.md)
 - [Konfiguration →](../../GETTING-STARTED/configuration.md)
 - [Agenten-Referenz →](../DEVELOPMENT/agents-reference.md)
 - [Tools-Referenz →](../DEVELOPMENT/tools-reference.md)

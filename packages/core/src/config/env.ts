@@ -13,7 +13,7 @@
  *      separator, single underscores inside a segment map to camelCase).
  */
 
-import { DEFAULT_CONFIG, ENV_PREFIX } from "@ultracode/shared";
+import { DEFAULT_CONFIG, ENV_PREFIX } from "ultracode-shared";
 import { CONFIG_SPEC, DANGEROUS_KEYS, camelizeKey, type SpecNode } from "./spec.js";
 import type { ConfigOverlay, WarnFn } from "./mapping.js";
 

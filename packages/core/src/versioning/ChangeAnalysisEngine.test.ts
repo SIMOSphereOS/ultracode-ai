@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { NoopLogger, VersioningError } from "@ultracode/shared";
+import { NoopLogger, VersioningError } from "ultracode-shared";
 import { ChangeAnalysisEngine, extractExportedNames } from "./ChangeAnalysisEngine.js";
 import { defaultGitRunner } from "./GitClient.js";
 import type { GitRunner } from "./GitClient.js";

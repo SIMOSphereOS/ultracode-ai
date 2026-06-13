@@ -5,7 +5,7 @@ import {
   NoopLogger,
   ProviderError,
   MAX_TOOL_OUTPUT_CHARS,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import type {
   ChatMessage,
   CompletionChunk,
@@ -20,7 +20,7 @@ import type {
   ToolDefinition,
   ToolResult,
   UltraCodeEvent,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { DEFAULT_NO_PROGRESS_LIMIT, ExecutionEngine, isAbortError } from "./ExecutionEngine.js";
 import type { IToolRunner } from "./types.js";
 

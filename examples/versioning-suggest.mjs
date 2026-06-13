@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Minimal, self-contained example: ask UltraCode's AI versioning system for the
+ * Minimal, self-contained example: ask the UltraCode AI versioning system for the
  * next SemVer version of the *current* repository.
  *
  * It exercises a real public API — `createVersioningSystem(...).suggest()` from
- * `@ultracode/core` — entirely offline: the only external process is the local
+ * `ultracode-core` — entirely offline: the only external process is the local
  * `git` binary that the change analyser shells out to. No network, no LLM, no
  * API key required (the provider is optional; without it the recommender uses
  * its deterministic conventional-commit heuristics).
@@ -28,9 +28,9 @@
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-// Import the built core package. When `@ultracode/core` is installed as a
+// Import the built core package. When `ultracode-core` is installed as a
 // dependency this is simply `import { createVersioningSystem } from
-// "@ultracode/core"`; inside this monorepo (no workspace install required) we
+// "ultracode-core"`; inside this monorepo (no workspace install required) we
 // load the package's compiled entry point by relative path so the example runs
 // straight from a fresh checkout after `pnpm -r build`.
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -42,7 +42,7 @@ try {
   ({ createVersioningSystem } = await import(coreEntry));
 } catch (err) {
   process.stderr.write(
-    `Could not load @ultracode/core from ${coreEntry}.\n` +
+    `Could not load ultracode-core from ${coreEntry}.\n` +
       `Build the workspace first:  pnpm -r build\n` +
       `(${err?.message ?? err})\n`,
   );

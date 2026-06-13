@@ -3,7 +3,7 @@
  * types. Mirrors `../format.ts` for the versioning subsystem. Never throws.
  */
 
-import { truncate } from "@ultracode/shared";
+import { truncate } from "ultracode-shared";
 import type {
   BudgetStatusView,
   CostEstimate,
@@ -12,7 +12,7 @@ import type {
   LedgerEntry,
   SkillFrontmatter,
   AuthoringTestResult as TestResult,
-} from "@ultracode/core";
+} from "ultracode-core";
 
 /** Cap applied to free-form blocks. */
 const MAX_BLOCK_CHARS = 10_000;

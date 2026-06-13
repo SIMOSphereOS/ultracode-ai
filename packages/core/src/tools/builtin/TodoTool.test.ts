@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { NoopLogger, ValidationError } from "@ultracode/shared";
-import type { ToolContext } from "@ultracode/shared";
+import { NoopLogger, ValidationError } from "ultracode-shared";
+import type { ToolContext } from "ultracode-shared";
 import { TodoTool } from "./TodoTool.js";
 
 function ctx(extra: Partial<ToolContext> = {}): ToolContext {

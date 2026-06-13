@@ -9,7 +9,7 @@
 
 import process from "node:process";
 import { Command, CommanderError } from "commander";
-import { UltraCodeError } from "@ultracode/shared";
+import { UltraCodeError } from "ultracode-shared";
 import type { CliContext } from "./context.js";
 import { createDefaultContext } from "./context.js";
 import { registerConfigCommand } from "./commands/config.js";
@@ -35,7 +35,7 @@ export function createProgram(ctx: CliContext): Command {
   const program = new Command();
 
   program
-    .name("ultracode")
+    .name("ultracode-ai")
     .description("UltraCode — interactive AI code assistant for the terminal")
     .version(getCliVersion(), "-V, --version", "print the CLI version")
     .option("--debug", "print stack traces for unexpected errors")

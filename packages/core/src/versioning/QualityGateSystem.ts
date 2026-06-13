@@ -9,14 +9,14 @@
 
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { clamp } from "@ultracode/shared";
+import { clamp } from "ultracode-shared";
 import type {
   ChangeAnalysis,
   Logger,
   QualityGateResult,
   QualityReport,
   VersioningConfig,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { spawn } from "node:child_process";
 
 /** Result of an external command execution. */

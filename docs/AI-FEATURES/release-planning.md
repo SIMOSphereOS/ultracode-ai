@@ -1,4 +1,4 @@
-# UltraCode Release Planning
+# UltraCode AI Release Planning
 
 > Aus einer Change-Analyse einen vollständigen Release-Plan ableiten: Changelog-Entwurf im Keep-a-Changelog-Format, Meilensteine und eine Risikobewertung.
 
@@ -9,9 +9,9 @@ Die `ReleasePlanningEngine` (in `packages/core/src/versioning/ReleasePlanningEng
 ## Befehl
 
 ```bash
-ultracode release plan
-ultracode release plan 0.3.0
-ultracode release plan 0.3.0 --json
+ultracode-ai release plan
+ultracode-ai release plan 0.3.0
+ultracode-ai release plan 0.3.0 --json
 ```
 
 - Ohne `version` wird die Zielversion **automatisch** über den Version Recommender vorgeschlagen (Basis: Channel `stable`).
@@ -141,7 +141,7 @@ Ist ein `ILLMProvider` konfiguriert, wird der heuristische Changelog-Entwurf von
 ## Programmatische Nutzung
 
 ```typescript
-import { ReleasePlanningEngine } from "@ultracode/core";
+import { ReleasePlanningEngine } from "ultracode-core";
 
 const planner = new ReleasePlanningEngine({ logger, provider, config });
 const plan = await planner.plan("0.3.0", analysis, { targetDate: "2026-09-01" });

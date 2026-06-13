@@ -9,7 +9,7 @@
  * arbitrary Unicode.
  */
 
-import type { ChatMessage } from "@ultracode/shared";
+import type { ChatMessage } from "ultracode-shared";
 
 import {
   BARE_FILE_RE,

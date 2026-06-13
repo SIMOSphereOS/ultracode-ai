@@ -27,8 +27,8 @@ Schnellübersicht der aktuell registrierten Tools (`createToolSystem`):
 Live abrufbar mit:
 
 ```bash
-ultracode tools list
-ultracode tools list --json
+ultracode-ai tools list
+ultracode-ai tools list --json
 ```
 
 Siehe auch [cli-commands.md](./cli-commands.md) und [slash-commands.md](./slash-commands.md) (`/tools`).

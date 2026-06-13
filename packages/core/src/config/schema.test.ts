@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ConfigError, DEFAULT_CONFIG, deepMerge } from "@ultracode/shared";
+import { ConfigError, DEFAULT_CONFIG, deepMerge } from "ultracode-shared";
 import { checkConfig, validateConfig } from "./schema.js";
 
 function candidate(extra: Record<string, unknown> = {}): Record<string, unknown> {

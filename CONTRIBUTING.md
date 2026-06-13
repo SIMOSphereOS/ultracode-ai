@@ -1,6 +1,6 @@
-# Contributing zu UltraCode
+# Contributing zu UltraCode AI
 
-Danke für dein Interesse an UltraCode. Dieses Dokument fasst zusammen, wie du Änderungen
+Danke für dein Interesse an UltraCode AI. Dieses Dokument fasst zusammen, wie du Änderungen
 beiträgst, damit das Monorepo grün, deterministisch und cross-platform bleibt.
 
 ## Voraussetzungen
@@ -9,7 +9,7 @@ beiträgst, damit das Monorepo grün, deterministisch und cross-platform bleibt.
 - **pnpm** (Projekt nutzt `pnpm@11.5.2`)
 - **Git** (für die AI-Versioning-Features benötigt; ansonsten optional)
 
-Cross-Platform: UltraCode läuft auf **Linux, macOS und Windows**. Beiträge dürfen keine
+Cross-Platform: UltraCode AI läuft auf **Linux, macOS und Windows**. Beiträge dürfen keine
 Unix-only-Annahmen einführen — Pfade über `node:path`, Git ohne Shell, plattformneutrale
 Tests.
 
@@ -26,9 +26,9 @@ pnpm build
 
 Drei Pakete, Abhängigkeitsrichtung `cli → core → shared`:
 
-- **`@ultracode/shared`** — bindender Kontrakt-Layer (Typen, Interfaces, Fehler, Utils).
+- **`ultracode-shared`** — bindender Kontrakt-Layer (Typen, Interfaces, Fehler, Utils).
   Quelle der Wahrheit: [`packages/shared/CONTRACTS.md`](./packages/shared/CONTRACTS.md).
-- **`@ultracode/core`** — Config, Provider, Tools, Memory, Context, Execution, Agenten,
+- **`ultracode-core`** — Config, Provider, Tools, Memory, Context, Execution, Agenten,
   AI-Versioning.
 - **`ultracode`** — die CLI (Commander + React/Ink).
 
@@ -55,7 +55,7 @@ Kontrakt erfordern, dass alle Implementierungen und Tests mitziehen.
 
 - **TypeScript strict / ESM (`NodeNext`):** relative Imports mit `.js`-Endung,
   `import type` für reine Typ-Importe (`verbatimModuleSyntax` ist aktiv).
-- **Fehler:** mit den Klassen aus `@ultracode/shared` werfen
+- **Fehler:** mit den Klassen aus `ultracode-shared` werfen
   (`ConfigError`, `ProviderError`, `ToolError`, `AgentError`, `VersioningError`,
   `ValidationError`). Tools werfen **nicht** aus `execute` — sie melden Fehler als
   `ToolResult { ok: false, error }`.

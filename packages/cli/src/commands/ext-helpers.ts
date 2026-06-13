@@ -1,13 +1,13 @@
 /**
  * Shared helpers for the budget/authoring/learning command groups.
  *
- * The `@ultracode/core` `UltraCode` facade now exposes the additive
+ * The `ultracode-core` `UltraCode` facade now exposes the additive
  * `budget` / `authoring` / `learning` sub-APIs directly (Modules A/B/C of
  * v1.2.0), so these helpers simply create/dispose a facade and narrow to the
  * relevant sub-API — no casts, no ambient shapes.
  */
 
-import type { BudgetFacade, AuthoringFacade, LearningFacade } from "@ultracode/core";
+import type { BudgetFacade, AuthoringFacade, LearningFacade } from "ultracode-core";
 import type { CliContext, UltraCodeFacade } from "../context.js";
 import { safeDispose } from "../context.js";
 

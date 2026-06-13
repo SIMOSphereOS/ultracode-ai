@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { NoopLogger } from "@ultracode/shared";
-import type { ToolContext, ToolDefinition, ToolResult } from "@ultracode/shared";
+import { NoopLogger } from "ultracode-shared";
+import type { ToolContext, ToolDefinition, ToolResult } from "ultracode-shared";
 import type { IToolRunner } from "../execution/types.js";
 import {
   FilteredToolRunner,

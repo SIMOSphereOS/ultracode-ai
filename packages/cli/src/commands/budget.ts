@@ -13,11 +13,11 @@
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import type { Command } from "commander";
-import { ValidationError } from "@ultracode/shared";
+import { ValidationError } from "ultracode-shared";
 import type { CliContext } from "../context.js";
 import { budgetOf, withExtFacade } from "./ext-helpers.js";
 import { formatBudgetStatus, formatLedger } from "./ext-format.js";
-import type { BudgetPlanView } from "@ultracode/core";
+import type { BudgetPlanView } from "ultracode-core";
 
 interface JsonOption {
   json?: boolean;

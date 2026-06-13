@@ -1,5 +1,5 @@
 /**
- * `@ultracode/core/learning` — Module C: the documentation learn agent.
+ * `ultracode-core/learning` — Module C: the documentation learn agent.
  *
  * Public surface:
  * - {@link LearnAgent} / {@link createLearnAgent} — plan + (approved) run.

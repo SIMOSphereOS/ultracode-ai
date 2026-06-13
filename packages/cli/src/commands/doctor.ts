@@ -12,7 +12,7 @@ import process from "node:process";
 import { promises as fs } from "node:fs";
 import { randomUUID } from "node:crypto";
 import type { Command } from "commander";
-import { USER_CONFIG_DIR, serializeError } from "@ultracode/shared";
+import { USER_CONFIG_DIR, serializeError } from "ultracode-shared";
 import type { CliContext } from "../context.js";
 import { safeDispose } from "../context.js";
 import { resolveHome } from "../utils/resolve-home.js";

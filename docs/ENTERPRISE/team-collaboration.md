@@ -2,20 +2,20 @@
 
 > ⚠️ **Vision / noch nicht implementiert.** Multi-User-Zusammenarbeit, geteilte Projekt-Teams und eine gemeinsame Wissensdatenbank sind **Roadmap**. Der aktuelle Code ist Single-User und lokal; es existiert kein Server, der mehrere Nutzer verbindet. Verbindlich ist die [CLI-Referenz](../REFERENCE/cli-commands.md).
 
-> **Kollaborative Entwicklung mit UltraCode - Multi-User, Projekt-Teams, Wissensdatenbank** *(geplant)*
+> **Kollaborative Entwicklung mit UltraCode AI - Multi-User, Projekt-Teams, Wissensdatenbank** *(geplant)*
 
 ---
 
 ## 👥 Übersicht
 
-UltraCode Enterprise ermöglicht nahtlose Zusammenarbeit in Teams jeder Größe. Mit Multi-User-Unterstützung, Projektorganisation und einer gemeinsamen Wissensdatenbank wird die Entwicklung produktiver und effizienter.
+UltraCode AI Enterprise ermöglicht nahtlose Zusammenarbeit in Teams jeder Größe. Mit Multi-User-Unterstützung, Projektorganisation und einer gemeinsamen Wissensdatenbank wird die Entwicklung produktiver und effizienter.
 
 ---
 
 ## 📊 Architektur
 
 ```
-UltraCode Team Collaboration Architecture
+UltraCode AI Team Collaboration Architecture
 ├── User Management
 │   ├── User Profiles
 │   ├── User Preferences
@@ -54,7 +54,7 @@ UltraCode Team Collaboration Architecture
 
 ```bash
 # CLI - Benutzer erstellen
-ultracode user create alice \
+ultracode-ai user create alice \
   --email alice@yourcompany.com \
   --password secure-password \
   --first-name Alice \
@@ -65,7 +65,7 @@ ultracode user create alice \
 # Keine manuelle Erstellung nötig
 
 # Batch Import (CSV)
-ultracode user import users.csv
+ultracode-ai user import users.csv
 ```
 
 **CSV-Format für Batch-Import:**
@@ -131,26 +131,26 @@ user:
 
 ```bash
 # Benutzer auflisten
-ultracode user list
-ultracode user list --role developer
-ultracode user list --team "Dev Team A"
+ultracode-ai user list
+ultracode-ai user list --role developer
+ultracode-ai user list --team "Dev Team A"
 
 # Benutzer anzeigen
-ultracode user show alice
-ultracode user show alice@yourcompany.com
+ultracode-ai user show alice
+ultracode-ai user show alice@yourcompany.com
 
 # Benutzer aktualisieren
-ultracode user update alice --first-name Alice --last-name Smith
+ultracode-ai user update alice --first-name Alice --last-name Smith
 
 # Benutzer deaktivieren
-ultracode user disable alice
+ultracode-ai user disable alice
 
 # Benutzer löschen
-ultracode user delete alice --force
+ultracode-ai user delete alice --force
 
 # Benutzer suchen
-ultracode user search "Alice"
-ultracode user search --email "@yourcompany.com"
+ultracode-ai user search "Alice"
+ultracode-ai user search --email "@yourcompany.com"
 ```
 
 ---
@@ -161,13 +161,13 @@ ultracode user search --email "@yourcompany.com"
 
 ```bash
 # Team erstellen
-ultracode team create "Dev Team A" \
+ultracode-ai team create "Dev Team A" \
   --description "Backend Development Team" \
   --lead bob@yourcompany.com \
   --members alice@yourcompany.com,charlie@yourcompany.com,dave@yourcompany.com
 
 # Team aus Datei erstellen
-ultracode team create "Data Team" --file team-data.json
+ultracode-ai team create "Data Team" --file team-data.json
 ```
 
 **team-data.json:**
@@ -210,27 +210,27 @@ ultracode team create "Data Team" --file team-data.json
 
 ```bash
 # Teams auflisten
-ultracode team list
-ultracode team list --search "Dev"
+ultracode-ai team list
+ultracode-ai team list --search "Dev"
 
 # Team anzeigen
-ultracode team show "Dev Team A"
-ultracode team show "Dev Team A" --members
-ultracode team show "Dev Team A" --projects
+ultracode-ai team show "Dev Team A"
+ultracode-ai team show "Dev Team A" --members
+ultracode-ai team show "Dev Team A" --projects
 
 # Team aktualisieren
-ultracode team update "Dev Team A" \
+ultracode-ai team update "Dev Team A" \
   --name "Dev Team Alpha" \
   --lead bob@yourcompany.com
 
 # Team-Mitglied hinzufügen
-ultracode team add "Dev Team A" alice@yourcompany.com
+ultracode-ai team add "Dev Team A" alice@yourcompany.com
 
 # Team-Mitglied entfernen
-ultracode team remove "Dev Team A" alice@yourcompany.com
+ultracode-ai team remove "Dev Team A" alice@yourcompany.com
 
 # Team löschen
-ultracode team delete "Dev Team A" --force
+ultracode-ai team delete "Dev Team A" --force
 ```
 
 ---
@@ -241,7 +241,7 @@ ultracode team delete "Dev Team A" --force
 
 ```bash
 # Projekt erstellen
-ultracode project create "New Product" \
+ultracode-ai project create "New Product" \
   --description "New product development" \
   --team "Dev Team A" \
   --lead bob@yourcompany.com \
@@ -249,7 +249,7 @@ ultracode project create "New Product" \
   --template react-typescript
 
 # Projekt mit Konfiguration
-ultracode project create "API Service" --file project-config.yml
+ultracode-ai project create "API Service" --file project-config.yml
 ```
 
 **project-config.yml:**
@@ -312,28 +312,28 @@ environments:
 
 ```bash
 # Projekte auflisten
-ultracode project list
-ultracode project list --team "Dev Team A"
-ultracode project list --user alice@yourcompany.com
+ultracode-ai project list
+ultracode-ai project list --team "Dev Team A"
+ultracode-ai project list --user alice@yourcompany.com
 
 # Projekt anzeigen
-ultracode project show "New Product"
-ultracode project show "New Product" --files
-ultracode project show "New Product" --members
+ultracode-ai project show "New Product"
+ultracode-ai project show "New Product" --files
+ultracode-ai project show "New Product" --members
 
 # Projekt aktualisieren
-ultracode project update "New Product" \
+ultracode-ai project update "New Product" \
   --description "Enhanced product with AI features" \
   --visibility team
 
 # Mitglied zu Projekt hinzufügen
-ultracode project add "New Product" alice@yourcompany.com --role developer
+ultracode-ai project add "New Product" alice@yourcompany.com --role developer
 
 # Mitglied aus Projekt entfernen
-ultracode project remove "New Product" alice@yourcompany.com
+ultracode-ai project remove "New Product" alice@yourcompany.com
 
 # Projekt löschen
-ultracode project delete "New Product" --force
+ultracode-ai project delete "New Product" --force
 ```
 
 ---
@@ -342,7 +342,7 @@ ultracode project delete "New Product" --force
 
 ### Übersicht
 
-Die UltraCode Wissensdatenbank ist eine gemeinsame Lernumgebung für Teams. Sie speichert:
+Die UltraCode AI Wissensdatenbank ist eine gemeinsame Lernumgebung für Teams. Sie speichert:
 
 - **Koden-Konventionen**: Team-spezifische Codierungsstandards
 - **Projekt-Kontext**: Technische Details und Hintergrundwissen
@@ -387,28 +387,28 @@ Knowledge Base/
 
 ```bash
 # Wissen hinzufügen
-ultracode knowledge add "TypeScript Best Practices" \
+ultracode-ai knowledge add "TypeScript Best Practices" \
   --content "Always use interfaces for type definitions..." \
   --category "Best Practices" \
   --scope global \
   --team "Dev Team A"
 
 # Wissen durchsuchen
-ultracode knowledge search "TypeScript"
-ultracode knowledge search "performance optimization"
+ultracode-ai knowledge search "TypeScript"
+ultracode-ai knowledge search "performance optimization"
 
 # Wissen aktualisieren
-ultracode knowledge update "TypeScript Best Practices" \
+ultracode-ai knowledge update "TypeScript Best Practices" \
   --content "Updated content..."
 
 # Wissen löschen
-ultracode knowledge delete "TypeScript Best Practices"
+ultracode-ai knowledge delete "TypeScript Best Practices"
 
 # Wissen exportieren
-ultracode knowledge export --format markdown > knowledge-base.md
+ultracode-ai knowledge export --format markdown > knowledge-base.md
 
 # Wissen importieren
-ultracode knowledge import knowledge-base.md
+ultracode-ai knowledge import knowledge-base.md
 ```
 
 ### AI-Lernprozess
@@ -417,17 +417,17 @@ Die Wissensdatenbank lernt kontinuierlich von der Team-Zusammenarbeit:
 
 ```
 AI Learning Cycle:
-1. Team arbeitet mit UltraCode
+1. Team arbeitet mit UltraCode AI
    └── Code generiert
    └── Feedback gegeben
    └── Lösungen akzeptiert
    
-2. UltraCode analysiert:
+2. UltraCode AI analysiert:
    └── Code-Muster
    └── Feedback-Muster
    └── Lösungsmuster
    
-3. UltraCode aktualisiert:
+3. UltraCode AI aktualisiert:
    └── Team-Kontext
    └── Code-Vorlagen
    └── Vorschlagsqualität
@@ -501,7 +501,7 @@ context:
 
 ### AI-gestützte Code-Reviews
 
-UltraCode bietet automatisierte Code-Reviews mit:
+UltraCode AI bietet automatisierte Code-Reviews mit:
 
 - **Qualitätschecks**: Code-Qualität nach Best Practices
 - **Sicherheitschecks**: Sicherheitslücken erkennen
@@ -537,22 +537,22 @@ graph TD
 
 ```bash
 # Code-Review anfordern
-ultracode review request --project "New Product" --branch feature/new-api
+ultracode-ai review request --project "New Product" --branch feature/new-api
 
 # Code-Review durchführen
-ultracode review run --pull-request 123
+ultracode-ai review run --pull-request 123
 
 # Review-Ergebnisse anzeigen
-ultracode review show 123
+ultracode-ai review show 123
 
 # Review-Kommentare hinzufügen
-ultracode review comment 123 --line 42 --message "Consider using TypeScript interface here"
+ultracode-ai review comment 123 --line 42 --message "Consider using TypeScript interface here"
 
 # Review genehmigen
-ultracode review approve 123
+ultracode-ai review approve 123
 
 # Review ablehnen
-ultracode review reject 123 --message "Please fix the security issues"
+ultracode-ai review reject 123 --message "Please fix the security issues"
 ```
 
 ### Review-Konfiguration
@@ -624,7 +624,7 @@ review:
 | E-Mail | Traditionelle E-Mail | Wichtige Updates, tägliche Zusammenfassungen |
 | Slack | Sofortige Nachrichten | Echtzeit-Kollaboration, Benachrichtigungen |
 | Microsoft Teams | Unternehmens-Chat | Team-Kommunikation |
-| Discord | Community-Chat | Offizielle UltraCode-Community |
+| Discord | Community-Chat | Offizielle UltraCode AI-Community |
 | Desktop | System-Benachrichtigungen | Sofortige Alerts |
 | Mobile Push | Mobile App | Dringende Benachrichtigungen |
 
@@ -692,20 +692,20 @@ notifications:
 
 ```bash
 # Benachrichtigungen anzeigen
-ultracode notification list
-ultracode notification list --unread
+ultracode-ai notification list
+ultracode-ai notification list --unread
 
 # Benachrichtigung anzeigen
-ultracode notification show 123
+ultracode-ai notification show 123
 
 # Benachrichtigung als gelesen markieren
-ultracode notification mark 123 --read
+ultracode-ai notification mark 123 --read
 
 # Alle Benachrichtigungen als gelesen markieren
-ultracode notification mark all --read
+ultracode-ai notification mark all --read
 
 # Benachrichtigungs-Einstellungen
-ultracode notification settings
+ultracode-ai notification settings
 ```
 
 ---
@@ -716,19 +716,19 @@ ultracode notification settings
 
 ```bash
 # Session starten
-ultracode session start --type pair --project "New Product"
+ultracode-ai session start --type pair --project "New Product"
 
 # Session beitreten
-ultracode session join session_123
+ultracode-ai session join session_123
 
 # Session verlassen
-ultracode session leave session_123
+ultracode-ai session leave session_123
 
 # Session beenden
-ultracode session end session_123
+ultracode-ai session end session_123
 
 # Aktive Sessions anzeigen
-ultracode session list
+ultracode-ai session list
 ```
 
 ### Shared Sessions (Live-Kollaboration)
@@ -741,13 +741,13 @@ ultracode session list
 
 ```bash
 # Shared Session starten
-ultracode session start --type shared --users alice,bob,charlie
+ultracode-ai session start --type shared --users alice,bob,charlie
 
 # Session aufzeichnen
-ultracode session start --type shared --record
+ultracode-ai session start --type shared --record
 
 # Session-Aufzeichnung abspielen
-ultracode session play session_123
+ultracode-ai session play session_123
 ```
 
 ---
@@ -758,13 +758,13 @@ ultracode session play session_123
 
 ```bash
 # Team-Statistiken
-ultracode analytics team "Dev Team A"
+ultracode-ai analytics team "Dev Team A"
 
 # Team-Produktivität
-ultracode analytics team "Dev Team A" --productivity
+ultracode-ai analytics team "Dev Team A" --productivity
 
 # Team-Code-Qualität
-ultracode analytics team "Dev Team A" --quality
+ultracode-ai analytics team "Dev Team A" --quality
 ```
 
 **Beispiel Team-Analytics:**
@@ -816,13 +816,13 @@ ultracode analytics team "Dev Team A" --quality
 
 ```bash
 # Projekt-Statistiken
-ultracode analytics project "New Product"
+ultracode-ai analytics project "New Product"
 
 # Projekt-Fortschritt
-ultracode analytics project "New Product" --progress
+ultracode-ai analytics project "New Product" --progress
 
 # Projekt-Qualität
-ultracode analytics project "New Product" --quality
+ultracode-ai analytics project "New Product" --quality
 ```
 
 ---
@@ -841,4 +841,4 @@ ultracode analytics project "New Product" --quality
 - **Projekt-Fragen**: projects@ultracode.ai
 - **Allgemeiner Support**: support@ultracode.ai
 
-© 2026 UltraCode Team
+© 2026 UltraCode AI Team

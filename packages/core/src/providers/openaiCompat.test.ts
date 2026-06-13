@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ProviderError } from "@ultracode/shared";
-import type { ChatMessage, CompletionChunk, CompletionRequest, ToolDefinition } from "@ultracode/shared";
+import { ProviderError } from "ultracode-shared";
+import type { ChatMessage, CompletionChunk, CompletionRequest, ToolDefinition } from "ultracode-shared";
 import { MistralProvider, MISTRAL_BASE_URL } from "./MistralProvider.js";
 import { OpenAIProvider } from "./OpenAIProvider.js";
 import {

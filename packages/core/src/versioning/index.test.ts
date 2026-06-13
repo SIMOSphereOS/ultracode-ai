@@ -2,13 +2,13 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG, NoopLogger, VersioningError } from "@ultracode/shared";
+import { DEFAULT_CONFIG, NoopLogger, VersioningError } from "ultracode-shared";
 import type {
   CompletionChunk,
   CompletionResult,
   ILLMProvider,
   UltraCodeConfig,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { defaultGitRunner } from "./GitClient.js";
 import type { GitCommandResult, GitRunner } from "./GitClient.js";
 import { createVersioningSystem } from "./index.js";

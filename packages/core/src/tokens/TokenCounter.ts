@@ -24,7 +24,7 @@
  * deliberately offline.
  */
 
-import type { ChatMessage } from "@ultracode/shared";
+import type { ChatMessage } from "ultracode-shared";
 import {
   CHARS_PER_TOKEN,
   CJK_OR_ASTRAL_PENALTY,

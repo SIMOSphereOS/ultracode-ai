@@ -8,8 +8,8 @@
  */
 
 import { z } from "zod";
-import { ValidationError, generateId } from "@ultracode/shared";
-import type { ToolContext, ToolDefinition } from "@ultracode/shared";
+import { ValidationError, generateId } from "ultracode-shared";
+import type { ToolContext, ToolDefinition } from "ultracode-shared";
 import { BaseTool } from "../BaseTool.js";
 import type { ToolRunOutcome } from "../BaseTool.js";
 

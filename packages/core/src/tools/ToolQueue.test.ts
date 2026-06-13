@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG, NoopLogger, sleep } from "@ultracode/shared";
-import type { ITool, ToolContext, ToolDefinition } from "@ultracode/shared";
+import { DEFAULT_CONFIG, NoopLogger, sleep } from "ultracode-shared";
+import type { ITool, ToolContext, ToolDefinition } from "ultracode-shared";
 import { ToolRegistry } from "./ToolRegistry.js";
 import { ToolExecutor } from "./ToolExecutor.js";
 import { ToolQueue } from "./ToolQueue.js";

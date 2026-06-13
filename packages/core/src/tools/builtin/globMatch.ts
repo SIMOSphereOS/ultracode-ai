@@ -8,7 +8,7 @@
  * paths must be normalised to `/` before matching.
  */
 
-import { ToolError } from "@ultracode/shared";
+import { ToolError } from "ultracode-shared";
 
 /** Maximum number of patterns a single brace expansion may produce. */
 export const MAX_BRACE_EXPANSIONS = 1000;

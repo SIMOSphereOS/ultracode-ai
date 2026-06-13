@@ -1,6 +1,6 @@
-# UltraCode AI-Versionierungssystem
+# UltraCode AI — AI-Versionierungssystem
 
-> Das Herzstück und Alleinstellungsmerkmal von UltraCode: ein KI-gestütztes Versionierungs- und Release-Management-System, das aus dem Git-Verlauf die nächste Version, den Changelog und die Freigabereife ableitet.
+> Das Herzstück und Alleinstellungsmerkmal von UltraCode AI: ein KI-gestütztes Versionierungs- und Release-Management-System, das aus dem Git-Verlauf die nächste Version, den Changelog und die Freigabereife ableitet.
 
 Diese Seite erklärt das System aus Anwendersicht und zeigt echte CLI-Beispiele mit der tatsächlichen Ausgabestruktur. Die technische Architektur findet sich unter [AI-Versionierung (Entwicklung)](../DEVELOPMENT/ai-versioning.md).
 
@@ -27,7 +27,7 @@ Alles ist **deterministisch und offline lauffähig**. Ein LLM-Provider (Mistral,
 
 - Node.js ≥ 20
 - ein Git-Repository (Work-Tree) mit installiertem `git`-Binary
-- die UltraCode-CLI (Binary `ultracode`) bzw. die Kernbibliothek `@ultracode/core`
+- die UltraCode AI-CLI (Binary `ultracode-ai`) bzw. die Kernbibliothek `ultracode-core`
 
 Das System läuft plattformübergreifend auf **Linux, macOS und Windows**. Git wird ohne Shell aufgerufen; Quality-Gate-Kommandos werden unter Windows automatisch über `cmd.exe` gestartet, damit `npm`/`pnpm`/`vitest`-Shims funktionieren.
 
@@ -37,10 +37,10 @@ Das System läuft plattformübergreifend auf **Linux, macOS und Windows**. Git w
 
 | Befehl | Zweck |
 |---|---|
-| `ultracode version analyze [range]` | Änderungen im Bereich analysieren |
-| `ultracode version suggest [range]` | nächste Version vorschlagen |
-| `ultracode release plan [version]` | Release-Plan entwerfen |
-| `ultracode quality` | Quality Gates ausführen (Exit-Code 1 bei Fehlschlag) |
+| `ultracode-ai version analyze [range]` | Änderungen im Bereich analysieren |
+| `ultracode-ai version suggest [range]` | nächste Version vorschlagen |
+| `ultracode-ai release plan [version]` | Release-Plan entwerfen |
+| `ultracode-ai quality` | Quality Gates ausführen (Exit-Code 1 bei Fehlschlag) |
 
 Jeder Befehl unterstützt `--json` für maschinenlesbare Ausgabe. Der `range` ist ein Git-Bereich wie `v1.2.0..HEAD`; ohne Angabe wird vom letzten Tag bis `HEAD` analysiert (oder die volle Historie, falls kein Tag existiert).
 
@@ -49,9 +49,9 @@ Jeder Befehl unterstützt `--json` für maschinenlesbare Ausgabe. Der `range` is
 ## `version analyze` — Änderungen analysieren
 
 ```bash
-ultracode version analyze
-ultracode version analyze v0.2.3..HEAD
-ultracode version analyze v0.2.3..HEAD --json
+ultracode-ai version analyze
+ultracode-ai version analyze v0.2.3..HEAD
+ultracode-ai version analyze v0.2.3..HEAD --json
 ```
 
 Textausgabe (`formatChangeAnalysis`):
@@ -89,9 +89,9 @@ JSON-Struktur (`ChangeAnalysis`):
 ## `version suggest` — nächste Version vorschlagen
 
 ```bash
-ultracode version suggest
-ultracode version suggest v0.2.3..HEAD
-ultracode version suggest --json
+ultracode-ai version suggest
+ultracode-ai version suggest v0.2.3..HEAD
+ultracode-ai version suggest --json
 ```
 
 Textausgabe (`formatVersionSuggestion`):
@@ -140,17 +140,17 @@ Die Basisversion stammt aus dem Channel `stable` (`versioning.channels.stable`).
 
 Siehe die eigenen Seiten mit vollständigen Beispielen:
 
-- [Release Planning](./release-planning.md) — `ultracode release plan`, Changelog-Entwurf, Meilensteine, Risiken
-- [Quality Gates](./quality-gates.md) — `ultracode quality`, Gewichtung und Gesamtscore
+- [Release Planning](./release-planning.md) — `ultracode-ai release plan`, Changelog-Entwurf, Meilensteine, Risiken
+- [Quality Gates](./quality-gates.md) — `ultracode-ai quality`, Gewichtung und Gesamtscore
 
 ---
 
 ## Programmatische Nutzung
 
-Über die Bibliothek `@ultracode/core`:
+Über die Bibliothek `ultracode-core`:
 
 ```typescript
-import { createVersioningSystem } from "@ultracode/core";
+import { createVersioningSystem } from "ultracode-core";
 
 const system = createVersioningSystem({ cwd: process.cwd(), logger, provider, config });
 
@@ -168,26 +168,26 @@ In der Kern-Fassade ist das System als `ultra.versioning` verfügbar (`UltraCode
 
 ```bash
 # 1. Was hat sich seit dem letzten Tag getan?
-ultracode version analyze
+ultracode-ai version analyze
 
-# 2. Welche Version schlägt UltraCode vor?
-ultracode version suggest
+# 2. Welche Version schlägt UltraCode AI vor?
+ultracode-ai version suggest
 
 # 3. Release-Plan für die vorgeschlagene Version entwerfen
-ultracode release plan
+ultracode-ai release plan
 
 # 4. Quality Gates ausführen (Exit-Code 1 bricht die CI-Pipeline ab)
-ultracode quality
+ultracode-ai quality
 ```
 
 Beispiel für CI (plattformunabhängig):
 
 ```yaml
 - name: Quality Gates
-  run: ultracode quality
+  run: ultracode-ai quality
 ```
 
-`ultracode quality` setzt bei nicht bestandenen Gates den Exit-Code auf 1 — die Pipeline bricht dann von selbst ab.
+`ultracode-ai quality` setzt bei nicht bestandenen Gates den Exit-Code auf 1 — die Pipeline bricht dann von selbst ab.
 
 ---
 

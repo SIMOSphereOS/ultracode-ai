@@ -14,7 +14,7 @@ import {
   type ReleasePlan,
   type ToolDefinition,
   type VersionSuggestion,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import type { CliContext, UltraCodeFacade } from "./context.js";
 import { runCli } from "./program.js";
 
@@ -131,7 +131,7 @@ function makeCtx(facade: UltraCodeFacade, over: Partial<CliContext> = {}) {
 }
 
 function argv(...args: string[]): string[] {
-  return ["node", "ultracode", ...args];
+  return ["node", "ultracode-ai", ...args];
 }
 
 afterEach(() => {

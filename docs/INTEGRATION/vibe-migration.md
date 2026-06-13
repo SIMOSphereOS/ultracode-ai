@@ -1,28 +1,28 @@
-# Mistral Vibe → UltraCode Migration
+# Mistral Vibe → UltraCode AI Migration
 
-> **Komplette Anleitung für die Migration von Mistral Vibe zu UltraCode**
+> **Komplette Anleitung für die Migration von Mistral Vibe zu UltraCode AI**
 
 ---
 
 ## 🎯 Übersicht
 
-Diese Anleitung hilft dir, **nahtlos von Mistral Vibe zu UltraCode zu migrieren**. UltraCode kombiniert die besten Features von Vibe mit OpenCode und Claude Code.
+Diese Anleitung hilft dir, **nahtlos von Mistral Vibe zu UltraCode AI zu migrieren**. UltraCode AI kombiniert die besten Features von Vibe mit OpenCode und Claude Code.
 
 ---
 
-## 📊 Vergleich: Mistral Vibe vs UltraCode
+## 📊 Vergleich: Mistral Vibe vs UltraCode AI
 
-| **Feature** | **Mistral Vibe** | **UltraCode** | **Hinweise** |
+| **Feature** | **Mistral Vibe** | **UltraCode AI** | **Hinweise** |
 |-------------|------------------|---------------|--------------|
-| **Sprache** | Python | TypeScript (+ Python) | ✅ Multi-Language in UltraCode |
+| **Sprache** | Python | TypeScript (+ Python) | ✅ Multi-Language in UltraCode AI |
 | **Runtime** | Python 3.12+ | Node.js 22.13+ (+ Bun) | ⚠️ Runtime-Wechsel |
 | **UI** | React + Rich | React + Ink | ⚠️ Unterschiedliche UI-Bibliothek |
 | **Agenten** | ❌ (begrenzt) | ✅++ (10+ Agenten) | ✅ Volles Agenten-System |
 | **Tools** | ~25 | **80+** | ✅ Alle Vibe-Tools + viele mehr |
 | **Skills** | ✅ | ✅++ (erweitert) | ✅ Kompatibel |
 | **MCP Support** | ✅ | ✅ | ✅ Voll unterstützt |
-| **LSP Support** | ❌ | ✅ | ✅ Neu in UltraCode |
-| **AI-Versionierung** | ❌ | ✅ **UNIQUE** | ✅ UltraCode USP |
+| **LSP Support** | ❌ | ✅ | ✅ Neu in UltraCode AI |
+| **AI-Versionierung** | ❌ | ✅ **UNIQUE** | ✅ UltraCode AI USP |
 | **Multi-Model** | ✅ | ✅ (Mistral, Anthropic, OpenAI, lokal) | ✅ Erweitert |
 | **Konfiguration** | TOML | TOML | ✅ Kompatibel |
 | **Session Management** | ✅ | ✅++ | ✅ Verbessert |
@@ -32,7 +32,7 @@ Diese Anleitung hilft dir, **nahtlos von Mistral Vibe zu UltraCode zu migrieren*
 ## 📁 Dateistruktur-Vergleich
 
 ```
-Mistral Vibe:                 UltraCode:
+Mistral Vibe:                 UltraCode AI:
 ┌─────────────────┐          ┌─────────────────┐
 │ ~/.vibe/         │          │ ~/.ultracode/   │
 │ ├── config.toml  │          │ ├── config.toml  │
@@ -65,13 +65,13 @@ if [ -f ~/.vibe/.env ]; then
 fi
 ```
 
-#### 2. UltraCode installieren
+#### 2. UltraCode AI installieren
 
 ```bash
-npm install -g ultracode
+npm install -g ultracode-ai
 ```
 
-#### 3. UltraCode-Verzeichnis erstellen
+#### 3. UltraCode AI-Verzeichnis erstellen
 
 ```bash
 mkdir -p ~/.ultracode
@@ -85,10 +85,10 @@ mkdir -p ~/.ultracode
 
 ```bash
 # Trockenlauf
-ultracode --migrate-from vibe --dry-run
+ultracode-ai --migrate-from vibe --dry-run
 
 # Echte Migration
-ultracode --migrate-from vibe --backup
+ultracode-ai --migrate-from vibe --backup
 ```
 
 **Was wird migriert:**
@@ -132,7 +132,7 @@ theme = "dracula"
 mistral_api_key = "sk-..."
 ```
 
-**UltraCode (`~/.ultracode/config.toml`):**
+**UltraCode AI (`~/.ultracode/config.toml`):**
 ```toml
 # Die Konfiguration ist 1:1 kompatibel!
 [core]
@@ -149,7 +149,7 @@ theme = "dracula"
 mistral_api_key = "sk-..."
 ```
 
-**✅ Die Vibe-Konfiguration ist mit UltraCode kompatibel!**
+**✅ Die Vibe-Konfiguration ist mit UltraCode AI kompatibel!**
 
 ---
 
@@ -158,11 +158,11 @@ mistral_api_key = "sk-..."
 #### 1. Skills-Verzeichnis kopieren
 
 ```bash
-# Skills von Vibe zu UltraCode kopieren
+# Skills von Vibe zu UltraCode AI kopieren
 cp -r ~/.vibe/skills/ ~/.ultracode/skills/
 ```
 
-**Hinweis:** UltraCode unterstützt **beide Skill-Formate**:
+**Hinweis:** UltraCode AI unterstützt **beide Skill-Formate**:
 - **Vibe-Format** (Python-basiert)
 - **Agent Skills Specification** (Standard)
 
@@ -182,28 +182,28 @@ user-invocable: true
 # Skill-Logik in Python
 ```
 
-**UltraCode-Skill (kompatibel):**
+**UltraCode AI-Skill (kompatibel):**
 ```markdown
 # ~/.ultracode/skills/my-skill/SKILL.md
 ---
 name: my-skill
-description: Mein UltraCode Skill
+description: Mein UltraCode AI Skill
 user-invocable: true
 allowed-tools:
   - read
   - grep
 ---
 
-# Skill-Logik (wird von UltraCode unterstützt)
+# Skill-Logik (wird von UltraCode AI unterstützt)
 ```
 
-**✅ Vibe-Skills funktionieren in UltraCode ohne Änderungen!**
+**✅ Vibe-Skills funktionieren in UltraCode AI ohne Änderungen!**
 
 ---
 
 #### 3. Skills registrieren
 
-UltraCode findet Skills automatisch in:
+UltraCode AI findet Skills automatisch in:
 - `~/.ultracode/skills/` (Benutzer)
 - `./.vibe/skills/` (Projekt)
 - `./.agents/skills/` (Agent Skills Standard)
@@ -222,7 +222,7 @@ skill_paths = ["~/.ultracode/skills", "./.vibe/skills"]
 
 ### Phase 4: Prompts migrieren
 
-Vibe-Prompts sind **1:1 kompatibel** mit UltraCode:
+Vibe-Prompts sind **1:1 kompatibel** mit UltraCode AI:
 
 ```bash
 # Prompts kopieren
@@ -252,9 +252,9 @@ fi
 #### 1. Grundlegende Funktionalität
 
 ```bash
-ultracode
+ultracode-ai
 
-> "Hallo UltraCode"
+> "Hallo UltraCode AI"
 > /agents default
 > /skills list
 ```
@@ -279,9 +279,9 @@ ultracode
 
 Falls du **Python-spezifische Tools oder Skripte** hattest:
 
-#### 1. Python-Tools in UltraCode
+#### 1. Python-Tools in UltraCode AI
 
-UltraCode hat **native Python-Unterstützung** durch:
+UltraCode AI hat **native Python-Unterstützung** durch:
 - **Python-Integration Paket** (`packages/python/`)
 - **Vibe-CLI Portierung**
 
@@ -296,7 +296,7 @@ UltraCode hat **native Python-Unterstützung** durch:
 
 #### 2. Python-Skills
 
-Python-basierte Skills können in UltraCode verwendet werden durch:
+Python-basierte Skills können in UltraCode AI verwendet werden durch:
 - **Subprocess-Aufrufe**
 - **Python-Provider**
 - **MCP-Python-Server**
@@ -308,7 +308,7 @@ Python-basierte Skills können in UltraCode verwendet werden durch:
 Falls du Probleme hast:
 
 ```bash
-ultracode --compat vibe
+ultracode-ai --compat vibe
 ```
 
 **Features:**
@@ -320,12 +320,12 @@ ultracode --compat vibe
 
 ## ⚠️ Bekannte Unterschiede
 
-| **Unterschied** | **Mistral Vibe** | **UltraCode** | **Lösung** |
+| **Unterschied** | **Mistral Vibe** | **UltraCode AI** | **Lösung** |
 |----------------|------------------|---------------|------------|
 | **Runtime** | Python | Node.js | Node.js installieren |
-| **CLI** | Python CLI | TypeScript CLI | UltraCode CLI verwenden |
+| **CLI** | Python CLI | TypeScript CLI | UltraCode AI CLI verwenden |
 | **Skills** | Python-basiert | TypeScript + Python | Beide unterstützt |
-| **Agenten** | Begrenzt | Vollständig | UltraCode-Agenten verwenden |
+| **Agenten** | Begrenzt | Vollständig | UltraCode AI-Agenten verwenden |
 | **Tools** | ~25 | 80+ | Neue Tools entdecken |
 | **LSP** | ❌ | ✅ | LSP-Tools verwenden |
 | **AI-Versionierung** | ❌ | ✅ | Neue Features nutzen |
@@ -335,7 +335,7 @@ ultracode --compat vibe
 ## 📝 Migrations-Checkliste
 
 - [ ] **Backup** von Vibe-Konfiguration erstellt
-- [ ] **UltraCode** installiert
+- [ ] **UltraCode AI** installiert
 - [ ] **API-Keys** migriert
 - [ ] **config.toml** kopiert
 - [ ] **Skills** migriert
@@ -350,11 +350,11 @@ ultracode --compat vibe
 
 ### 1. Gewohnte Workflows
 
-| **Vibe-Workflow** | **UltraCode-Workflow** |
+| **Vibe-Workflow** | **UltraCode AI-Workflow** |
 |--------------------|------------------------|
-| `vibe` | `ultracode` |
-| `vibe --agent plan` | `ultracode --agent plan` |
-| `vibe --prompt "..."` | `ultracode "..."` |
+| `vibe` | `ultracode-ai` |
+| `vibe --agent plan` | `ultracode-ai --agent plan` |
+| `vibe --prompt "..."` | `ultracode-ai "..."` |
 | `/skills` | `/skills` |
 | `/mcp` | `/mcp` |
 
@@ -368,7 +368,7 @@ ultracode --compat vibe
 
 ### 3. Performance-Verbesserungen
 
-- UltraCode ist **schneller** (Node.js vs Python)
+- UltraCode AI ist **schneller** (Node.js vs Python)
 - **Parallel Execution** für Tools
 - **Besseres Caching**
 - **Streaming** von LLM-Antworten
@@ -390,7 +390,7 @@ ultracode --compat vibe
 
 ## 🔗 Nützliche Links
 
-- [UltraCode Dokumentation →](../../README.md)
+- [UltraCode AI Dokumentation →](../../README.md)
 - [Konfiguration →](../../GETTING-STARTED/configuration.md)
 - [Skills-System →](../DEVELOPMENT/architecture.md)
 - [MCP-Integration →](../DEVELOPMENT/architecture.md#mcp-server-integration)

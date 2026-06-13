@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to UltraCode are documented in this file.
+All notable changes to UltraCode AI are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning follows [SemVer 2.0](https://semver.org/).
 
 ## [Unreleased]
@@ -9,7 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 First production-ready release. Closes the confirmed P1 hardening backlog from the
 production-readiness audit plus security quick-wins. All packages aligned to `1.3.0`
-(`@ultracode/core`, `ultracode` CLI, `@ultracode/shared`). Test baseline 1347 → 1426,
+(`ultracode-core`, `ultracode` CLI, `ultracode-shared`). Test baseline 1347 → 1426,
 typecheck clean, coverage ~93 % statements / ~86 % branches (now a hard CI gate at 85/85/80).
 
 ### Added
@@ -70,10 +70,10 @@ typecheck clean, coverage ~93 % statements / ~86 % branches (now a hard CI gate 
 ## [1.2.0] - 2026-06-12
 
 ### Added
-- Self-improvement & cost-governance layer (`@ultracode/core` 1.2.0, `ultracode` CLI 1.1.0): BudgetPlanner (cost governance, EUR+USD, ask-threshold+hard-cap), Skill-/Agent-Creator with runtime SkillInjector, LernAgent with a growing source library (Azure docs, Azure training, pytest seeded; budget-gated cost-report-before-run), and an incremental SessionOptimizer. All module parameters centralized into per-module defaults.ts (catalog in docs/REFERENCE/parameters.md).
+- Self-improvement & cost-governance layer (`ultracode-core` 1.2.0, `ultracode` CLI 1.1.0): BudgetPlanner (cost governance, EUR+USD, ask-threshold+hard-cap), Skill-/Agent-Creator with runtime SkillInjector, LernAgent with a growing source library (Azure docs, Azure training, pytest seeded; budget-gated cost-report-before-run), and an incremental SessionOptimizer. All module parameters centralized into per-module defaults.ts (catalog in docs/REFERENCE/parameters.md).
 
 ### Security
-- SSRF-hardened documentation crawler and path-traversal-hardened skill registry (see @ultracode/core 1.2.0).
+- SSRF-hardened documentation crawler and path-traversal-hardened skill registry (see ultracode-core 1.2.0).
 
 ### Fixed
 - Hardened `serializeFrontmatter`'s list rendering: a skill object missing an optional/required list field (e.g. `triggers` or `sources` absent or `undefined`) now serializes to an empty `[]` list instead of throwing a `TypeError` on `items.length`.
@@ -81,7 +81,7 @@ typecheck clean, coverage ~93 % statements / ~86 % branches (now a hard CI gate 
 ## [1.1.0] - 2026-06-12
 
 ### Added
-- Token-optimization module in `@ultracode/core` (see its changelog 1.1.0): deterministic, ML-free, offline prompt-token reduction (dedup, whitespace, system-prompt minify with bit-for-bit IMMUTABLE compliance protection, tool-schema slimming, conversation compaction) plus opt-in provider prompt-caching hints, with honest before/after measurement.
+- Token-optimization module in `ultracode-core` (see its changelog 1.1.0): deterministic, ML-free, offline prompt-token reduction (dedup, whitespace, system-prompt minify with bit-for-bit IMMUTABLE compliance protection, tool-schema slimming, conversation compaction) plus opt-in provider prompt-caching hints, with honest before/after measurement.
 
 ### Fixed
 - Final Windows CI defects from the cross-platform matrix: bounded delete-pending lock contention and `EBUSY` temp-dir teardown flakiness.
@@ -89,7 +89,7 @@ typecheck clean, coverage ~93 % statements / ~86 % branches (now a hard CI gate 
 ## [1.0.1] - 2026-06-12
 
 ### Fixed
-- Cross-platform CI surfaced and fixed two real Windows defects (BashTool cmd.exe quoting, JsonSessionStore lock contention). See `@ultracode/core` 1.0.1.
+- Cross-platform CI surfaced and fixed two real Windows defects (BashTool cmd.exe quoting, JsonSessionStore lock contention). See `ultracode-core` 1.0.1.
 
 ### Changed
 - GitHub Actions CI matrix across Linux/macOS/Windows on Node 22 and 24; minimum runtime raised to `node >= 22.13.0` (pnpm/node:sqlite requirement). node:sqlite tests are now version-aware (skip with JSON fallback where unavailable).
@@ -107,6 +107,6 @@ typecheck clean, coverage ~93 % statements / ~86 % branches (now a hard CI gate 
 
 ### Added
 
-- Monorepo foundation (pnpm workspaces): `@ultracode/shared`, `@ultracode/core`, `ultracode` (CLI)
+- Monorepo foundation (pnpm workspaces): `ultracode-shared`, `ultracode-core`, `ultracode` (CLI)
 - TypeScript strict-mode build setup with project references
 - Vitest test infrastructure (unit per package + e2e project) with V8 coverage

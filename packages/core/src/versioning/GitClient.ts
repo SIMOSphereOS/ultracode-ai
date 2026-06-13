@@ -9,8 +9,8 @@
  */
 
 import { spawn } from "node:child_process";
-import { VersioningError } from "@ultracode/shared";
-import type { Logger } from "@ultracode/shared";
+import { VersioningError } from "ultracode-shared";
+import type { Logger } from "ultracode-shared";
 
 /** Result of a single git invocation. */
 export interface GitCommandResult {

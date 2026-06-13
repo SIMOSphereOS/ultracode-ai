@@ -9,7 +9,7 @@ import {
   type AgentRunResult,
   type CompletionChunk,
   type ToolDefinition,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import type { UltraCodeFacade } from "../context.js";
 import { App } from "./App.js";
 

@@ -22,8 +22,8 @@ import {
   NoopLogger,
   deepMerge,
   isPlainObject,
-} from "@ultracode/shared";
-import type { DeepPartial, Logger, UltraCodeConfig } from "@ultracode/shared";
+} from "ultracode-shared";
+import type { DeepPartial, Logger, UltraCodeConfig } from "ultracode-shared";
 import {
   atomicWriteFile,
   profileFile,

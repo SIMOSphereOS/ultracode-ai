@@ -4,7 +4,7 @@ import type {
   QualityReport,
   ReleasePlan,
   VersionSuggestion,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import {
   formatChangeAnalysis,
   formatQualityReport,

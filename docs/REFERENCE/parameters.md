@@ -33,7 +33,7 @@ Jedes Modul exportiert eine Factory-Funktion, die ein Options-Objekt entgegennim
 Beispiel (learning):
 
 ```ts
-import { createLearnAgent } from "@ultracode/core";
+import { createLearnAgent } from "ultracode-core";
 
 // Default: DEFAULT_CONCURRENCY = 4, DEFAULT_CHUNK_TOKENS = 512
 const agent = createLearnAgent({
@@ -46,7 +46,7 @@ const agent = createLearnAgent({
 Dynamische Seeds (learning): Der `SourceLibrary`-Konstruktor nimmt optional ein `seeds`-Override; ohne Argument greift `SEED_SOURCES` aus `defaults.ts`.
 
 ```ts
-import { SourceLibrary, SEED_SOURCES } from "@ultracode/core";
+import { SourceLibrary, SEED_SOURCES } from "ultracode-core";
 
 // Standard: SEED_SOURCES
 const lib = new SourceLibrary();

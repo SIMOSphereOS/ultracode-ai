@@ -87,7 +87,7 @@ export const MCP_SERVER_SPEC: ObjectSpec = {
 
 /**
  * The full configuration tree in camelCase. Mirrors `UltraCodeConfig` from
- * `@ultracode/shared`, plus the in-memory-only `providers.apiKeys` record.
+ * `ultracode-shared`, plus the in-memory-only `providers.apiKeys` record.
  */
 export const CONFIG_SPEC: ObjectSpec = {
   kind: "object",

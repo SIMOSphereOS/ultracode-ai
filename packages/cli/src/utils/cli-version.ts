@@ -7,7 +7,7 @@
  */
 
 import { createRequire } from "node:module";
-import { VERSION } from "@ultracode/shared";
+import { VERSION } from "ultracode-shared";
 
 interface PackageJsonLike {
   name?: unknown;
@@ -27,7 +27,7 @@ export function getCliVersion(): string {
   for (const rel of ["../../package.json", "../package.json"]) {
     try {
       const pkg = require(rel) as PackageJsonLike;
-      if (pkg.name === "ultracode" && typeof pkg.version === "string") {
+      if (pkg.name === "ultracode-ai" && typeof pkg.version === "string") {
         return pkg.version;
       }
     } catch {

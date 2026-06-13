@@ -1,4 +1,4 @@
-# UltraCode Dokumentation
+# UltraCode AI Dokumentation
 
 > **Die umfassende Dokumentation für den besten Open-Source AI Code Assistent der Welt**
 
@@ -6,7 +6,7 @@
 
 ## 📚 Dokumentationsübersicht
 
-UltraCode kombiniert das Beste aus **OpenCode**, **Mistral Vibe** und **Claude Code** mit einem einzigartigen **AI-gesteuerten Versionierungs- und Release-Planungssystem**.
+UltraCode AI kombiniert das Beste aus **OpenCode**, **Mistral Vibe** und **Claude Code** mit einem einzigartigen **AI-gesteuerten Versionierungs- und Release-Planungssystem**.
 
 Diese Dokumentation ist in logische Abschnitte unterteilt, um Entwicklern, Nutzern und Contributors den besten Einstieg zu bieten.
 
@@ -92,7 +92,7 @@ docs/
 - **Bilder**: SVG oder PNG, in `/assets/` abgelegt
 
 ### Versionierung
-- **Dokumentationsversion**: Folgt der UltraCode-Version
+- **Dokumentationsversion**: Folgt der UltraCode AI-Version
 - **Änderungen**: Im [CHANGELOG.md](../CHANGELOG.md) dokumentiert
 - **Feedback**: Über GitHub Issues oder Discussions
 
@@ -146,6 +146,6 @@ rg "migration" docs/INTEGRATION/
 
 ## 📜 Lizenz
 
-Die UltraCode-Dokumentation steht unter der [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
+Die UltraCode AI-Dokumentation steht unter der [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
 
-© 2026 UltraCode Team
+© 2026 UltraCode AI Team

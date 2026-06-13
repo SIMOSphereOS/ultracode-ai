@@ -5,7 +5,7 @@
 
 import React from "react";
 import { Box, Text } from "ink";
-import { truncate } from "@ultracode/shared";
+import { truncate } from "ultracode-shared";
 import type { Theme } from "../themes/index.js";
 
 /** Kind of a transcript entry. */

@@ -14,11 +14,11 @@ import path from "node:path";
 import process from "node:process";
 import { promises as fs } from "node:fs";
 import type { Command } from "commander";
-import { ValidationError } from "@ultracode/shared";
+import { ValidationError } from "ultracode-shared";
 import type { CliContext } from "../context.js";
 import { authoringOf, withExtFacade } from "./ext-helpers.js";
 import { formatBlock, formatTestResult } from "./ext-format.js";
-import type { AuthoringFacade, AuthoringProposal, KnowledgeMaterial } from "@ultracode/core";
+import type { AuthoringFacade, AuthoringProposal, KnowledgeMaterial } from "ultracode-core";
 
 interface AgentMaterialOptions {
   file?: string;
@@ -84,7 +84,7 @@ function agentMethod(
   const fn = which === "create" ? authoring.createAgent : authoring.evolveAgent;
   if (typeof fn !== "function") {
     throw new ValidationError(
-      `Agent ${which} is not available in this build of @ultracode/core.`,
+      `Agent ${which} is not available in this build of ultracode-core.`,
     );
   }
   return fn.bind(authoring);

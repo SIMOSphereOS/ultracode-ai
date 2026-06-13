@@ -7,8 +7,8 @@
  * stage unit-testable in isolation.
  */
 
-import { AgentError, UltraCodeError, ValidationError, NoopLogger } from "@ultracode/shared";
-import type { AgentRunResult, Logger } from "@ultracode/shared";
+import { AgentError, UltraCodeError, ValidationError, NoopLogger } from "ultracode-shared";
+import type { AgentRunResult, Logger } from "ultracode-shared";
 import { isAbortError } from "./ExecutionEngine.js";
 
 /** Result of the `parse` stage. */

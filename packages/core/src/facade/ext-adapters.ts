@@ -12,7 +12,7 @@
 
 import { promises as fs } from "node:fs";
 
-import type { Logger } from "@ultracode/shared";
+import type { Logger } from "ultracode-shared";
 
 import type { BudgetPlanner } from "../budget/BudgetPlanner.js";
 import { ledgerFile } from "../budget/paths.js";

@@ -13,8 +13,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { serializeError } from "@ultracode/shared";
-import type { Logger } from "@ultracode/shared";
+import { serializeError } from "ultracode-shared";
+import type { Logger } from "ultracode-shared";
 
 /** One titled block of collected context, ready for ranking/compression. */
 export interface ContextSection {

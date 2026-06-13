@@ -28,7 +28,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
-import { NoopLogger, serializeError } from "@ultracode/shared";
+import { NoopLogger, serializeError } from "ultracode-shared";
 import type {
   ChatMessage,
   IEventBus,
@@ -36,7 +36,7 @@ import type {
   ISessionStore,
   Logger,
   SessionRecord,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 
 import { resolveHome } from "../config/paths.js";
 import { HeuristicTokenCounter } from "../tokens/TokenCounter.js";

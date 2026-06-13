@@ -32,7 +32,7 @@ All notable changes to the `ultracode` CLI package. Format: [Keep a Changelog](h
 ## [0.2.1] - 2026-06-11
 
 ### Fixed
-- CLI streaming callback now consumes real `CompletionChunk`s instead of the temporary ambient stub's `string` signature; the stub (`src/types/core-facade.d.ts`) was removed now that `@ultracode/core` type declarations are built.
+- CLI streaming callback now consumes real `CompletionChunk`s instead of the temporary ambient stub's `string` signature; the stub (`src/types/core-facade.d.ts`) was removed now that `ultracode-core` type declarations are built.
 
 ## [0.2.0] - 2026-06-11
 
@@ -43,7 +43,7 @@ All notable changes to the `ultracode` CLI package. Format: [Keep a Changelog](h
 - `--setup` interactive wizard with masked API-key input; persists provider/agent/theme via the config manager and writes API keys to `~/.ultracode/.env` (mode 0600).
 - Theme system with `dark`, `light` and `dracula` colour-token themes and a ThemeManager with guaranteed dark fallback.
 - Cross-platform path handling (`node:path`, `resolveHome` tilde expansion for shared constants, CRLF-tolerant file parsing).
-- Temporary ambient declaration for the not-yet-built `@ultracode/core` facade (`src/types/core-facade.d.ts`) and a lazy core loader so non-interactive startup never pays the Ink/React import cost.
+- Temporary ambient declaration for the not-yet-built `ultracode-core` facade (`src/types/core-facade.d.ts`) and a lazy core loader so non-interactive startup never pays the Ink/React import cost.
 - 160 offline, deterministic Vitest tests covering command routing, JSON output validity, streaming, abort signals, doctor edge cases (Node 18/20/22, missing git), 1 MB inputs, Unicode/emoji handling and Ink component behaviour via ink-testing-library.
 
 ## [0.1.0] - 2026-06-11

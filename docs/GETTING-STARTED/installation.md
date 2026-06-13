@@ -1,4 +1,4 @@
-# UltraCode Installation
+# UltraCode AI Installation
 
 > **Installation aus dem Quellcode (heute) und per npm (ab 1.3.0).**
 
@@ -13,7 +13,7 @@
 | **pnpm** | `pnpm@11.5.2` (Projekt-Standard) | `pnpm --version` |
 | **Git** | 2.30+ (für die AI-Versioning-Features; sonst optional) | `git --version` |
 
-UltraCode ist ein reines TypeScript-ESM-Monorepo ohne native Abhängigkeiten und läuft
+UltraCode AI ist ein reines TypeScript-ESM-Monorepo ohne native Abhängigkeiten und läuft
 plattformneutral auf Linux, macOS und Windows.
 
 ---
@@ -41,8 +41,8 @@ Die CLI lässt sich anschließend direkt über das gebaute Bundle aufrufen:
 node packages/cli/dist/index.js --help
 ```
 
-Nach `pnpm install` ist im Workspace auch der Bin-Name `ultracode` verfügbar (von pnpm
-verlinkt). In der übrigen Dokumentation steht `ultracode` stellvertretend für
+Nach `pnpm install` ist im Workspace auch der Bin-Name `ultracode-ai` verfügbar (von pnpm
+verlinkt). In der übrigen Dokumentation steht `ultracode-ai` stellvertretend für
 `node packages/cli/dist/index.js`.
 
 ---
@@ -54,16 +54,16 @@ verlinkt). In der übrigen Dokumentation steht `ultracode` stellvertretend für
 
 ```bash
 # Globale Installation
-npm install -g ultracode
+npm install -g ultracode-ai
 
 # Oder ohne globale Installation direkt ausführen
-npx ultracode --help
+npx ultracode-ai --help
 
 # Verifizieren
-ultracode --version
+ultracode-ai --version
 ```
 
-`pnpm` und `yarn` funktionieren analog (`pnpm add -g ultracode`, `yarn global add ultracode`).
+`pnpm` und `yarn` funktionieren analog (`pnpm add -g ultracode-ai`, `yarn global add ultracode-ai`).
 
 ---
 
@@ -77,16 +77,16 @@ ultracode --version
 
 ```bash
 # Version prüfen
-ultracode --version
+ultracode-ai --version
 
 # Hilfe anzeigen
-ultracode --help
+ultracode-ai --help
 
 # Offline-Umgebungsdiagnose (Node-Version, Git, Config-Verzeichnis, API-Keys maskiert)
-ultracode doctor
+ultracode-ai doctor
 ```
 
-`ultracode doctor` meldet eine `✓`/`✗`-Checkliste; bei kritischen Problemen (zu alte
+`ultracode-ai doctor` meldet eine `✓`/`✗`-Checkliste; bei kritischen Problemen (zu alte
 Node-Version, nicht beschreibbares Config-Verzeichnis, ungültige Config) endet es mit
 Exit-Code `1`. Details: [CLI-Referenz → `doctor`](../REFERENCE/cli-commands.md#ultracode-doctor).
 
@@ -94,8 +94,8 @@ Exit-Code `1`. Details: [CLI-Referenz → `doctor`](../REFERENCE/cli-commands.md
 
 ## Nächste Schritte
 
-- [Quick Start](./quick-start.md) — erste Schritte mit UltraCode
-- [Konfiguration](./configuration.md) — UltraCode einrichten
+- [Quick Start](./quick-start.md) — erste Schritte mit UltraCode AI
+- [Konfiguration](./configuration.md) — UltraCode AI einrichten
 - [Architektur](../DEVELOPMENT/architecture.md) — Systemdesign verstehen
 
 ---

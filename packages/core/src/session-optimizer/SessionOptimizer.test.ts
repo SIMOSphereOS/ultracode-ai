@@ -9,8 +9,8 @@ import type {
   Logger,
   SessionMeta,
   SessionRecord,
-} from "@ultracode/shared";
-import { NoopLogger } from "@ultracode/shared";
+} from "ultracode-shared";
+import { NoopLogger } from "ultracode-shared";
 import { HeuristicTokenCounter } from "../tokens/TokenCounter.js";
 import type { IBudgetGate } from "../budget/types.js";
 import { createSessionOptimizer } from "./SessionOptimizer.js";

@@ -11,8 +11,8 @@
 
 import { spawn } from "node:child_process";
 import { z } from "zod";
-import { ToolError } from "@ultracode/shared";
-import type { ToolContext, ToolDefinition } from "@ultracode/shared";
+import { ToolError } from "ultracode-shared";
+import type { ToolContext, ToolDefinition } from "ultracode-shared";
 import { BaseTool } from "../BaseTool.js";
 import type { ToolRunOutcome } from "../BaseTool.js";
 import { sanitizeEnv } from "../sanitizeEnv.js";

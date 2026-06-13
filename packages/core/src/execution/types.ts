@@ -3,11 +3,11 @@
  *
  * The execution engine must not import neighbouring core modules (tools,
  * providers, …) directly. Instead it depends on this narrow, locally defined
- * runner interface, built purely from `@ultracode/shared` contract types.
+ * runner interface, built purely from `ultracode-shared` contract types.
  * The integrator adapts the real `ToolRegistry`/`ToolExecutor` pair to it.
  */
 
-import type { ToolContext, ToolDefinition, ToolResult } from "@ultracode/shared";
+import type { ToolContext, ToolDefinition, ToolResult } from "ultracode-shared";
 
 /**
  * Narrow tool-execution boundary injected into the execution engine.

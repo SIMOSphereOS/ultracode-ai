@@ -10,8 +10,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { SessionError, generateId, serializeError } from "@ultracode/shared";
-import type { ChatMessage, ISessionStore, Logger, SessionMeta, SessionRecord } from "@ultracode/shared";
+import { SessionError, generateId, serializeError } from "ultracode-shared";
+import type { ChatMessage, ISessionStore, Logger, SessionMeta, SessionRecord } from "ultracode-shared";
 
 import { resolveHome } from "./paths.js";
 import {

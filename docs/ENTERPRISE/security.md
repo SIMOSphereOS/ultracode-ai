@@ -1,21 +1,21 @@
 # Sicherheitskonzept
 
-> ⚠️ **Vision / noch nicht implementiert.** Dieses Dokument beschreibt das angestrebte Sicherheitskonzept einer künftigen Enterprise-/Server-Variante (zentrale Authentifizierung, RBAC, Audit-Logs, Zertifizierungen). Diese Komponenten existieren im aktuellen Code **nicht** — UltraCode ist ein lokales Single-User-CLI. Die real implementierten Sicherheitsmaßnahmen (PathGuard gegen Pfad-Traversal/Symlinks, Credential-Bereinigung der Subprozess-Umgebung, Secret-Maskierung) sind im [Haupt-README](../../README.md) und in [`CONTRACTS.md`](../../packages/shared/CONTRACTS.md) beschrieben.
+> ⚠️ **Vision / noch nicht implementiert.** Dieses Dokument beschreibt das angestrebte Sicherheitskonzept einer künftigen Enterprise-/Server-Variante (zentrale Authentifizierung, RBAC, Audit-Logs, Zertifizierungen). Diese Komponenten existieren im aktuellen Code **nicht** — UltraCode AI ist ein lokales Single-User-CLI. Die real implementierten Sicherheitsmaßnahmen (PathGuard gegen Pfad-Traversal/Symlinks, Credential-Bereinigung der Subprozess-Umgebung, Secret-Maskierung) sind im [Haupt-README](../../README.md) und in [`CONTRACTS.md`](../../packages/shared/CONTRACTS.md) beschrieben.
 
-> **Umfassendes Sicherheitskonzept für UltraCode Enterprise - DSGVO, SOC 2, ISO 27001 konform** *(geplant)*
+> **Umfassendes Sicherheitskonzept für UltraCode AI Enterprise - DSGVO, SOC 2, ISO 27001 konform** *(geplant)*
 
 ---
 
 ## 🔒 Übersicht
 
-Sicherheit ist das oberste Gebot für UltraCode Enterprise. Dieses Dokument beschreibt das umfassende Sicherheitskonzept, das alle Aspekte der Datensicherheit, Zugriffskontrolle, Verschlüsselung und Compliance abdeckt.
+Sicherheit ist das oberste Gebot für UltraCode AI Enterprise. Dieses Dokument beschreibt das umfassende Sicherheitskonzept, das alle Aspekte der Datensicherheit, Zugriffskontrolle, Verschlüsselung und Compliance abdeckt.
 
 ---
 
 ## 📋 Sicherheitsarchitektur
 
 ```
-UltraCode Security Architecture
+UltraCode AI Security Architecture
 ├── Authentication Layer
 │   ├── Multi-Factor Authentication (MFA)
 │   ├── OAuth 2.0 / OpenID Connect
@@ -548,7 +548,7 @@ ddos:
 
 ### DSGVO (General Data Protection Regulation)
 
-**Umsetzung in UltraCode:**
+**Umsetzung in UltraCode AI:**
 
 ```yaml
 # config/compliance/gdpr.yml
@@ -712,4 +712,4 @@ graph TD
 - **Compliance-Fragen**: compliance@ultracode.ai
 - **Allgemeiner Support**: support@ultracode.ai
 
-© 2026 UltraCode Team
+© 2026 UltraCode AI Team

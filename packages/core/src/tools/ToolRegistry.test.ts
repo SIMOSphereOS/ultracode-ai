@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { ToolError } from "@ultracode/shared";
-import type { ITool, ToolDefinition } from "@ultracode/shared";
+import { ToolError } from "ultracode-shared";
+import type { ITool, ToolDefinition } from "ultracode-shared";
 import { ToolRegistry } from "./ToolRegistry.js";
 
 function fakeTool(name: string): ITool<Record<string, unknown>, unknown> {

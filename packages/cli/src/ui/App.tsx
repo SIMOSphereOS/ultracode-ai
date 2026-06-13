@@ -13,8 +13,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Text, useApp, useInput } from "ink";
-import { serializeError } from "@ultracode/shared";
-import type { CompletionChunk } from "@ultracode/shared";
+import { serializeError } from "ultracode-shared";
+import type { CompletionChunk } from "ultracode-shared";
 import type { UltraCodeFacade } from "../context.js";
 import { ThemeManager } from "../themes/index.js";
 import { redactConfig } from "../utils/text.js";

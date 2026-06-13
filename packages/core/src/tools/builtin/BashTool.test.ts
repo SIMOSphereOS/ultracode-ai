@@ -4,8 +4,8 @@ import { EventEmitter } from "node:events";
 import { promises as fs } from "node:fs";
 import type { ChildProcess } from "node:child_process";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { NoopLogger } from "@ultracode/shared";
-import type { ToolContext } from "@ultracode/shared";
+import { NoopLogger } from "ultracode-shared";
+import type { ToolContext } from "ultracode-shared";
 import { BashTool } from "./BashTool.js";
 
 const isPosix = process.platform !== "win32";

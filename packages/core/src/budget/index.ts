@@ -1,5 +1,5 @@
 /**
- * `@ultracode/core/budget` — deterministic, offline budget planning.
+ * `ultracode-core/budget` — deterministic, offline budget planning.
  *
  * Public surface:
  * - {@link BudgetPlanner} / {@link createBudgetPlanner} — cost estimation,

@@ -8,8 +8,8 @@
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { z } from "zod";
-import { ToolError, ToolPermissionDeniedError } from "@ultracode/shared";
-import type { ToolContext, ToolDefinition } from "@ultracode/shared";
+import { ToolError, ToolPermissionDeniedError } from "ultracode-shared";
+import type { ToolContext, ToolDefinition } from "ultracode-shared";
 import { BaseTool } from "../BaseTool.js";
 import type { ToolRunOutcome } from "../BaseTool.js";
 import { PathGuard } from "../PathGuard.js";

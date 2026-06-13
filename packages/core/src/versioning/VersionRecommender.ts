@@ -5,14 +5,14 @@
 
 import { clean, inc, major, prerelease, valid } from "semver";
 import type { ReleaseType } from "semver";
-import { VersioningError, clamp } from "@ultracode/shared";
+import { VersioningError, clamp } from "ultracode-shared";
 import type {
   BumpType,
   ChangeAnalysis,
   Logger,
   VersionSuggestion,
   VersioningConfig,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 
 /** Options influencing a single suggestion. */
 export interface SuggestOptions {

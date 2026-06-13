@@ -2,12 +2,12 @@
  * Core-local types for the token-optimization module.
  *
  * These types deliberately live in `core/tokens` and are **not** part of the
- * frozen `@ultracode/shared` 1.0 contract. They model a prompt as four
+ * frozen `ultracode-shared` 1.0 contract. They model a prompt as four
  * separately-measurable parts so the optimizer can report *where* tokens were
  * spent and saved.
  */
 
-import type { ChatMessage, ToolDefinition } from "@ultracode/shared";
+import type { ChatMessage, ToolDefinition } from "ultracode-shared";
 import type { TokenCounter } from "./TokenCounter.js";
 
 /**

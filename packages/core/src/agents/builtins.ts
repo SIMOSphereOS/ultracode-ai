@@ -7,7 +7,7 @@
  * resolution at a higher layer.
  */
 
-import type { AgentDefinition } from "@ultracode/shared";
+import type { AgentDefinition } from "ultracode-shared";
 
 /** System prompt of the `default` agent. */
 export const DEFAULT_SYSTEM_PROMPT = `You are UltraCode, an expert AI software engineering assistant operating inside the user's repository.

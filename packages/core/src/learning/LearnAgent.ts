@@ -14,8 +14,8 @@
 
 import os from "node:os";
 
-import { NoopLogger } from "@ultracode/shared";
-import type { IEventBus, ILLMProvider, Logger } from "@ultracode/shared";
+import { NoopLogger } from "ultracode-shared";
+import type { IEventBus, ILLMProvider, Logger } from "ultracode-shared";
 
 import { createCheckpointStore, defaultSqliteLoader } from "./checkpoint.js";
 import type { Checkpoint, CheckpointStore, SqliteLoader } from "./checkpoint.js";

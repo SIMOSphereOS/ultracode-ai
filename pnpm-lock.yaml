@@ -23,12 +23,6 @@ importers:
 
   packages/cli:
     dependencies:
-      '@ultracode/core':
-        specifier: workspace:^
-        version: link:../core
-      '@ultracode/shared':
-        specifier: workspace:^
-        version: link:../shared
       commander:
         specifier: ^12.1.0
         version: 12.1.0
@@ -38,6 +32,12 @@ importers:
       react:
         specifier: ^18.3.1
         version: 18.3.1
+      ultracode-core:
+        specifier: workspace:^
+        version: link:../core
+      ultracode-shared:
+        specifier: workspace:^
+        version: link:../shared
     devDependencies:
       '@types/react':
         specifier: ^18.3.0
@@ -48,15 +48,15 @@ importers:
 
   packages/core:
     dependencies:
-      '@ultracode/shared':
-        specifier: workspace:^
-        version: link:../shared
       semver:
         specifier: ^7.6.0
         version: 7.8.4
       smol-toml:
         specifier: ^1.3.0
         version: 1.6.1
+      ultracode-shared:
+        specifier: workspace:^
+        version: link:../shared
       zod:
         specifier: ^3.24.0
         version: 3.25.76

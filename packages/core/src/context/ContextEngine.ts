@@ -4,8 +4,8 @@
  * formatted, budgeted system-context string.
  */
 
-import { serializeError } from "@ultracode/shared";
-import type { Logger, UltraCodeConfig } from "@ultracode/shared";
+import { serializeError } from "ultracode-shared";
+import type { Logger, UltraCodeConfig } from "ultracode-shared";
 
 import { ContextCollector } from "./ContextCollector.js";
 import type { ContextSection } from "./ContextCollector.js";

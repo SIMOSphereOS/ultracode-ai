@@ -18,7 +18,7 @@ import {
   generateId,
   NoopLogger,
   MAX_TOOL_OUTPUT_CHARS,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import type {
   ChatMessage,
   CompletionChunk,
@@ -32,7 +32,7 @@ import type {
   ToolCallRequest,
   ToolContext,
   ToolResult,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import type { IToolRunner } from "./types.js";
 import type { OptimizeResult, PromptPayload } from "../tokens/index.js";
 

@@ -2,8 +2,8 @@ import { mkdir, mkdtemp, rm, utimes, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { NoopLogger } from "@ultracode/shared";
-import type { LogMeta, Logger } from "@ultracode/shared";
+import { NoopLogger } from "ultracode-shared";
+import type { LogMeta, Logger } from "ultracode-shared";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { ContextCollector } from "./ContextCollector.js";

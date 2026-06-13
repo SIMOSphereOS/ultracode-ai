@@ -2,7 +2,7 @@
  * Core-local types for the budget module.
  *
  * These types live in `core/budget` and are **not** part of the frozen
- * `@ultracode/shared` 1.0 contract. They model cost estimation, spend tracking,
+ * `ultracode-shared` 1.0 contract. They model cost estimation, spend tracking,
  * and budget-policy decisions for LLM-backed work (authoring, learning,
  * operations).
  *

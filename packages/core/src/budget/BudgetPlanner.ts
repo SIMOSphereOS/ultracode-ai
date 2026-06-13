@@ -31,7 +31,7 @@
  * ```
  */
 
-import type { IEventBus, Logger } from "@ultracode/shared";
+import type { IEventBus, Logger } from "ultracode-shared";
 
 import { HeuristicTokenCounter } from "../tokens/index.js";
 import type { TokenCounter } from "../tokens/index.js";

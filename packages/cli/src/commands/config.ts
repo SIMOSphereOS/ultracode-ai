@@ -12,7 +12,7 @@
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import type { Command } from "commander";
-import { ConfigError, isPlainObject } from "@ultracode/shared";
+import { ConfigError, isPlainObject } from "ultracode-shared";
 import type { CliContext, UltraCodeFacade } from "../context.js";
 import { safeDispose } from "../context.js";
 import { flattenLeaves, getAtPath, parseCliValue, redactConfig } from "../utils/text.js";
@@ -38,7 +38,7 @@ function requireManager(facade: UltraCodeFacade): NonNullable<UltraCodeFacade["c
   const manager = facade.configManager;
   if (!manager || typeof manager.set !== "function" || typeof manager.save !== "function") {
     throw new ConfigError(
-      "Modifying configuration requires the ConfigManager, which this build of @ultracode/core does not expose. " +
+      "Modifying configuration requires the ConfigManager, which this build of ultracode-core does not expose. " +
         "Edit ~/.ultracode/config.toml manually instead.",
     );
   }

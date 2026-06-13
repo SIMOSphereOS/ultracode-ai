@@ -2,8 +2,8 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { DEFAULT_CONFIG } from "@ultracode/shared";
-import type { LogMeta, Logger, UltraCodeConfig } from "@ultracode/shared";
+import { DEFAULT_CONFIG } from "ultracode-shared";
+import type { LogMeta, Logger, UltraCodeConfig } from "ultracode-shared";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { InMemorySessionStore } from "./InMemorySessionStore.js";

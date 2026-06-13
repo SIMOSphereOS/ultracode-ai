@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ProviderError } from "@ultracode/shared";
-import type { ChatMessage } from "@ultracode/shared";
+import { ProviderError } from "ultracode-shared";
+import type { ChatMessage } from "ultracode-shared";
 import {
   ANTHROPIC_BASE_URL,
   ANTHROPIC_VERSION,

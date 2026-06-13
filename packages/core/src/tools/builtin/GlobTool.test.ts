@@ -2,8 +2,8 @@ import os from "node:os";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { NoopLogger } from "@ultracode/shared";
-import type { ToolContext } from "@ultracode/shared";
+import { NoopLogger } from "ultracode-shared";
+import type { ToolContext } from "ultracode-shared";
 import { GlobTool } from "./GlobTool.js";
 import { walkFiles } from "./walk.js";
 

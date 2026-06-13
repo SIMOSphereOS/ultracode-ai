@@ -4,7 +4,7 @@
  * plain-text tables and optional ANSI colouring.
  */
 
-import { isPlainObject, truncate } from "@ultracode/shared";
+import { isPlainObject, truncate } from "ultracode-shared";
 
 /** Maximum rendered width of a single table cell, in characters. */
 export const MAX_CELL_WIDTH = 60;

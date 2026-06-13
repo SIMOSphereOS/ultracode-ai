@@ -1,4 +1,4 @@
-# `@ultracode/core/tokens` — Token Optimization
+# `ultracode-core/tokens` — Token Optimization
 
 Deterministic, **ML-free**, offline token optimization for LLM prompts. The
 module measures the *actual* before/after token counts of a prompt and reports

@@ -1,7 +1,7 @@
 /**
  * Core-local authoring events.
  *
- * As with the `tokens` module, the frozen `@ultracode/shared` `UltraCodeEvent`
+ * As with the `tokens` module, the frozen `ultracode-shared` `UltraCodeEvent`
  * union is not extended. Instead the authoring module defines its own event
  * types and a tiny non-throwing emitter that publishes them onto any provided
  * {@link IEventBus} via a structural cast, always falling back to `logger.info`.
@@ -9,7 +9,7 @@
  * stays untouched.
  */
 
-import type { IEventBus, Logger } from "@ultracode/shared";
+import type { IEventBus, Logger } from "ultracode-shared";
 
 /** Discriminator: a new skill was created. */
 export const SKILL_CREATED_EVENT = "skill.created" as const;

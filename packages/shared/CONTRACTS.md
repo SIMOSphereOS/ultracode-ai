@@ -1,4 +1,4 @@
-# `@ultracode/shared` — Contract Reference
+# `ultracode-shared` — Contract Reference
 
 This package is the **binding contract layer**. `core` and `cli` implement
 against these interfaces. Types are compile-time only; the small runtime surface

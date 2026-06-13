@@ -243,8 +243,8 @@ Jedes `todos`-Element hat `content` (Pflicht), optional `id` und `status` (`pend
 Die aktuell registrierten Tools lassen sich jederzeit live anzeigen:
 
 ```bash
-ultracode tools list
-ultracode tools list --json
+ultracode-ai tools list
+ultracode-ai tools list --json
 ```
 
 ---
@@ -262,4 +262,4 @@ ultracode tools list --json
 
 - [agents-reference.md](./agents-reference.md) – Tool-Beschränkungen pro Agent
 - [../REFERENCE/configuration-options.md](../REFERENCE/configuration-options.md) – `tools.*`-Konfigurationsschlüssel
-- [../REFERENCE/cli-commands.md](../REFERENCE/cli-commands.md) – `ultracode tools list`
+- [../REFERENCE/cli-commands.md](../REFERENCE/cli-commands.md) – `ultracode-ai tools list`

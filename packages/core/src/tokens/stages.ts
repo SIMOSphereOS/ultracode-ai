@@ -19,7 +19,7 @@
  *   assistant tool call from its `tool` answer.
  */
 
-import type { ChatMessage, ILLMProvider, ToolDefinition } from "@ultracode/shared";
+import type { ChatMessage, ILLMProvider, ToolDefinition } from "ultracode-shared";
 import type { OptimizeContext, OptimizerStage, PromptPayload } from "./types.js";
 import {
   hashBlock,

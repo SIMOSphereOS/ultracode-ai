@@ -1,5 +1,5 @@
 /**
- * `@ultracode/core/session-optimizer` — running, incremental, non-blocking
+ * `ultracode-core/session-optimizer` — running, incremental, non-blocking
  * session compaction (v1.2.0).
  *
  * Public surface:

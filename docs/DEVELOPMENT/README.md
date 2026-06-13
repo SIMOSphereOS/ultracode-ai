@@ -1,4 +1,4 @@
-# UltraCode Entwicklung
+# UltraCode AI Entwicklung
 
 > **Dokumentation für Entwickler, Contributors und System-Architekten**
 
@@ -6,7 +6,7 @@
 
 ## 🛠️ In diesem Abschnitt
 
-Dieser Abschnitt enthält **technische Dokumentation** für die Entwicklung und Erweiterung von UltraCode.
+Dieser Abschnitt enthält **technische Dokumentation** für die Entwicklung und Erweiterung von UltraCode AI.
 
 ```
 DEVELOPMENT/
@@ -33,7 +33,7 @@ DEVELOPMENT/
 
 ## 🏗️ Architektur-Übersicht
 
-UltraCode folgt einem **modularen Mikroarchitektur-Ansatz** mit klaren Verantwortlichkeiten:
+UltraCode AI folgt einem **modularen Mikroarchitektur-Ansatz** mit klaren Verantwortlichkeiten:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -332,7 +332,7 @@ perf: Performance-Verbesserungen
 
 ```bash
 # Debug-Modus aktivieren
-ULTRACODE_DEBUG=true ultracode
+ULTRACODE_DEBUG=true ultracode-ai
 
 # Mit Inspektor (Node.js)
 npm run dev --inspect
@@ -345,7 +345,7 @@ npm run dev --inspect
 
 ```bash
 # Profiling aktivieren
-ULTRACODE_PROFILING=true ultracode
+ULTRACODE_PROFILING=true ultracode-ai
 
 # Speicheranalyse
 node --max-old-space-size=8192 packages/cli/dist/index.js

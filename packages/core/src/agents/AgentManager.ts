@@ -8,7 +8,7 @@
  * `tools.perTool.task.maxConcurrent`, default 3).
  */
 
-import { AgentError, NoopLogger } from "@ultracode/shared";
+import { AgentError, NoopLogger } from "ultracode-shared";
 import type {
   AgentConfigEntry,
   AgentDefinition,
@@ -18,7 +18,7 @@ import type {
   Logger,
   ProviderId,
   UltraCodeConfig,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import type { IToolRunner } from "../execution/types.js";
 import { BaseAgent } from "./BaseAgent.js";
 import type { ContextCollector } from "./BaseAgent.js";

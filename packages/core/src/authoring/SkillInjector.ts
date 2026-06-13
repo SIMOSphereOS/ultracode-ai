@@ -11,8 +11,8 @@
  * failure is swallowed to `""`, so the agent's behaviour is exactly unchanged.
  */
 
-import { NoopLogger, serializeError } from "@ultracode/shared";
-import type { Logger } from "@ultracode/shared";
+import { NoopLogger, serializeError } from "ultracode-shared";
+import type { Logger } from "ultracode-shared";
 
 import type { ContextCollector } from "../agents/BaseAgent.js";
 import {

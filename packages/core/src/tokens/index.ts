@@ -1,5 +1,5 @@
 /**
- * `@ultracode/core/tokens` — deterministic, offline token optimization.
+ * `ultracode-core/tokens` — deterministic, offline token optimization.
  *
  * Public surface:
  * - {@link TokenCounter} / {@link HeuristicTokenCounter} — offline token

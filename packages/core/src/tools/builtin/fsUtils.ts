@@ -4,7 +4,7 @@
 
 import path from "node:path";
 import { promises as fs } from "node:fs";
-import { generateId } from "@ultracode/shared";
+import { generateId } from "ultracode-shared";
 
 /** Number of leading bytes inspected by {@link isBinaryFile}. */
 export const BINARY_SNIFF_BYTES = 8192;

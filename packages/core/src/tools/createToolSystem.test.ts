@@ -2,8 +2,8 @@ import os from "node:os";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG, EventBus, NoopLogger } from "@ultracode/shared";
-import type { ToolContext, UltraCodeConfig } from "@ultracode/shared";
+import { DEFAULT_CONFIG, EventBus, NoopLogger } from "ultracode-shared";
+import type { ToolContext, UltraCodeConfig } from "ultracode-shared";
 import { createToolSystem } from "./createToolSystem.js";
 
 let root: string;

@@ -1,6 +1,6 @@
-# Changelog — @ultracode/shared
+# Changelog — ultracode-shared
 
-All notable changes to the `@ultracode/shared` package. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer 2.0](https://semver.org/). Aligned to the monorepo `1.3.0` production-ready milestone.
+All notable changes to the `ultracode-shared` package. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer 2.0](https://semver.org/). Aligned to the monorepo `1.3.0` production-ready milestone.
 
 ## [Unreleased]
 

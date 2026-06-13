@@ -1,14 +1,14 @@
 # API Dokumentation
 
-> ⚠️ **Vision / noch nicht implementiert.** Dieses Dokument beschreibt eine geplante REST/WebSocket/JWT-API, die **nicht** Teil des aktuellen Codes ist. UltraCode ist heute ein lokales CLI-Tool (`packages/cli`) ohne HTTP-Server, ohne Cloud-Endpoint (`api.ultracode.ai` existiert nicht) und ohne Authentifizierungs-Layer. Bis diese Komponenten gebaut sind, ist nichts hier funktionsfähig. Verbindlich ist allein die [CLI-Referenz](./cli-commands.md).
+> ⚠️ **Vision / noch nicht implementiert.** Dieses Dokument beschreibt eine geplante REST/WebSocket/JWT-API, die **nicht** Teil des aktuellen Codes ist. UltraCode AI ist heute ein lokales CLI-Tool (`packages/cli`) ohne HTTP-Server, ohne Cloud-Endpoint (`api.ultracode.ai` existiert nicht) und ohne Authentifizierungs-Layer. Bis diese Komponenten gebaut sind, ist nichts hier funktionsfähig. Verbindlich ist allein die [CLI-Referenz](./cli-commands.md).
 
-> **Komplette REST & WebSocket API für UltraCode - OpenAPI 3.0 kompatibel** *(geplant)*
+> **Komplette REST & WebSocket API für UltraCode AI - OpenAPI 3.0 kompatibel** *(geplant)*
 
 ---
 
 ## 🚀 Übersicht
 
-Die UltraCode API bietet einen umfassenden Zugriff auf alle Funktionen von UltraCode. Sie ist RESTful, gut dokumentiert und folgt Best Practices für API-Design.
+Die UltraCode AI API bietet einen umfassenden Zugriff auf alle Funktionen von UltraCode AI. Sie ist RESTful, gut dokumentiert und folgt Best Practices für API-Design.
 
 ---
 
@@ -955,7 +955,7 @@ Die vollständige OpenAPI 3.0 Specification ist verfügbar unter:
 ```yaml
 openapi: 3.0.0
 info:
-  title: UltraCode API
+  title: UltraCode AI API
   version: 1.0.0
   description: The world's best AI coding assistant API
   license:
@@ -1082,4 +1082,4 @@ print(code)
 - **SDK-Anfragen**: sdk@ultracode.ai
 - **Allgemeiner Support**: support@ultracode.ai
 
-© 2026 UltraCode Team
+© 2026 UltraCode AI Team

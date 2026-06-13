@@ -15,14 +15,14 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { EventBus, NoopLogger, DEFAULT_CONFIG } from "@ultracode/shared";
+import { EventBus, NoopLogger, DEFAULT_CONFIG } from "ultracode-shared";
 import type {
   CompletionRequest,
   CompletionResult,
   ChatMessage,
   ILLMProvider,
   UltraCodeConfig,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { ExecutionEngine } from "./ExecutionEngine.js";
 import type { IToolRunner } from "./types.js";
 import { createToolSystem } from "../tools/createToolSystem.js";

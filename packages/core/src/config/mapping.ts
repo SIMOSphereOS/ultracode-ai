@@ -9,8 +9,8 @@
  */
 
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
-import { ConfigError, isPlainObject } from "@ultracode/shared";
-import type { DeepPartial, UltraCodeConfig } from "@ultracode/shared";
+import { ConfigError, isPlainObject } from "ultracode-shared";
+import type { DeepPartial, UltraCodeConfig } from "ultracode-shared";
 import {
   AGENT_ENTRY_SPEC,
   CONFIG_SPEC,

@@ -13,8 +13,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { serializeError } from "@ultracode/shared";
-import type { ISessionStore, Logger, UltraCodeConfig } from "@ultracode/shared";
+import { serializeError } from "ultracode-shared";
+import type { ISessionStore, Logger, UltraCodeConfig } from "ultracode-shared";
 
 import { InMemorySessionStore } from "./InMemorySessionStore.js";
 import { JsonSessionStore } from "./JsonSessionStore.js";

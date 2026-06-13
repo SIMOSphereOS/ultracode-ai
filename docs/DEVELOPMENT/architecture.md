@@ -1,4 +1,4 @@
-# UltraCode Architektur
+# UltraCode AI Architektur
 
 > **Technische Architektur-Dokumentation – Systemdesign und Komponenten**
 
@@ -6,7 +6,7 @@
 
 ## 📐 Architektur-Übersicht
 
-UltraCode folgt einem **modularen, layer-basierten Architekturansatz** mit klaren Verantwortlichkeiten und striktem **Separation of Concerns**.
+UltraCode AI folgt einem **modularen, layer-basierten Architekturansatz** mit klaren Verantwortlichkeiten und striktem **Separation of Concerns**.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -141,7 +141,7 @@ UltraCode folgt einem **modularen, layer-basierten Architekturansatz** mit klare
 
 ### 1. SOLID Prinzipien
 
-| **Prinzip** | **Anwendung in UltraCode** | **Beispiel** |
+| **Prinzip** | **Anwendung in UltraCode AI** | **Beispiel** |
 |-------------|---------------------------|--------------|
 | **Single Responsibility** | Jede Klasse/Modul hat genau eine Verantwortung | `ToolRegistry` verwaltet nur Tools |
 | **Open/Closed** | Erweitbar, aber geschlossen für Modifikation | Neue Tools können registriert werden |
@@ -495,7 +495,7 @@ ultracode/
 │   │   │   │   ├── project/           # Projekt-Tools
 │   │   │   │   │   ├── ProjectStatusTool.ts
 │   │   │   │   │   └── DependenciesTool.ts
-│   │   │   │   ├── ai/                # AI-Tools (UltraCode-spezifisch)
+│   │   │   │   ├── ai/                # AI-Tools (UltraCode AI-spezifisch)
 │   │   │   │   │   ├── versioning/
 │   │   │   │   │   │   ├── AnalyzeTool.ts
 │   │   │   │   │   │   ├── SuggestTool.ts
@@ -774,7 +774,7 @@ const heavyModule = await import('./heavy');
 
 ### 1. Microservices-Architektur
 
-Zukünftig könnte UltraCode in **Microservices** aufgeteilt werden:
+Zukünftig könnte UltraCode AI in **Microservices** aufgeteilt werden:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

@@ -28,13 +28,13 @@ import path from "node:path";
 
 import { inc, valid, clean } from "semver";
 import type { ReleaseType } from "semver";
-import { NoopLogger, serializeError } from "@ultracode/shared";
+import { NoopLogger, serializeError } from "ultracode-shared";
 import type {
   AgentDefinition,
   IEventBus,
   ILLMProvider,
   Logger,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 
 import { resolveHome } from "../config/paths.js";
 import { stringify as stringifyToml } from "smol-toml";

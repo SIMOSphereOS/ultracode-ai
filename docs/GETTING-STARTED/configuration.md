@@ -1,17 +1,17 @@
-# UltraCode Konfiguration
+# UltraCode AI Konfiguration
 
-> **Anpassung von UltraCode an deine Bedürfnisse**
+> **Anpassung von UltraCode AI an deine Bedürfnisse**
 
 ---
 
 ## 📁 Konfigurationsdateien
 
-UltraCode verwendet eine **hierarchische Konfiguration** mit folgenden Prioritäten (höchste zuerst):
+UltraCode AI verwendet eine **hierarchische Konfiguration** mit folgenden Prioritäten (höchste zuerst):
 
 ```
 1. Projekt-Konfiguration      → .vibe/config.toml (oder .ultracode/config.toml)
 2. Benutzer-Konfiguration     → ~/.ultracode/config.toml
-3. Standard-Konfiguration     → (im UltraCode-Paket eingebettet)
+3. Standard-Konfiguration     → (im UltraCode-AI-Paket eingebettet)
 ```
 
 ---
@@ -39,10 +39,10 @@ disabled = ["write_file", "bash"]
 
 ## 🔧 Erstanlauf-Konfiguration
 
-Beim ersten Start führt UltraCode dich durch die **interaktive Einrichtung**:
+Beim ersten Start führt UltraCode AI dich durch die **interaktive Einrichtung**:
 
 ```bash
-ultracode
+ultracode-ai
 ```
 
 **Schritte:**
@@ -131,7 +131,7 @@ models = ["llama3:70b", "mistral:7b"]
 
 ### 3. Agenten-Konfiguration
 
-UltraCode kommt mit **vordefinierten Agenten** und erlaubt **benutzerdefinierte Agenten**.
+UltraCode AI kommt mit **vordefinierten Agenten** und erlaubt **benutzerdefinierte Agenten**.
 
 ```toml
 [agents]
@@ -410,10 +410,10 @@ Du kannst die Konfiguration auch **interaktiv** oder per **CLI-Befehlen** änder
 
 ```bash
 # Setup-Assistent
-ultracode --setup
+ultracode-ai --setup
 
 # Konfiguration bearbeiten
-ultracode --config edit
+ultracode-ai --config edit
 ```
 
 ---
@@ -422,25 +422,25 @@ ultracode --config edit
 
 ```bash
 # Konfigurationswert setzen
-ultracode --config set core.default_agent build
-ultracode --config set active_model mistral-large
+ultracode-ai --config set core.default_agent build
+ultracode-ai --config set active_model mistral-large
 
 # Konfigurationswert abfragen
-ultracode --config get core.default_agent
+ultracode-ai --config get core.default_agent
 
 # Konfiguration zurücksetzen
-ultracode --config reset
+ultracode-ai --config reset
 
 # Konfiguration anzeigen
-ultracode --config show
+ultracode-ai --config show
 
 # Konfiguration validieren
-ultracode --config validate
+ultracode-ai --config validate
 ```
 
 ---
 
-### Slash-Kommandos in UltraCode
+### Slash-Kommandos in UltraCode AI
 
 ```
 # Konfiguration in der Session ändern
@@ -462,10 +462,10 @@ ultracode --config validate
 
 ```bash
 # Aktuelle Konfiguration speichern
-ultracode --config save
+ultracode-ai --config save
 
 # Konfiguration in Datei exportieren
-ultracode --config export backup.toml
+ultracode-ai --config export backup.toml
 ```
 
 ---
@@ -474,10 +474,10 @@ ultracode --config export backup.toml
 
 ```bash
 # Konfiguration aus Datei importieren
-ultracode --config import backup.toml
+ultracode-ai --config import backup.toml
 
 # Standard-Konfiguration wiederherstellen
-ultracode --config reset
+ultracode-ai --config reset
 ```
 
 ---
@@ -506,8 +506,8 @@ mistral_api_key = "sk-personal-..."
 
 **Verwendung:**
 ```bash
-ultracode --profile work
-ultracode --profile personal
+ultracode-ai --profile work
+ultracode-ai --profile personal
 ```
 
 ---
@@ -540,14 +540,14 @@ ultracode --profile personal
 
 ### 1. Umgebungsvariablen
 
-UltraCode liest auch **Umgebungsvariablen**:
+UltraCode AI liest auch **Umgebungsvariablen**:
 
 ```bash
 # API-Keys
 export MISTRAL_API_KEY=sk-...
 export ANTHROPIC_API_KEY=sk-...
 
-# UltraCode-spezifisch
+# UltraCode-AI-spezifisch
 export ULTRACODE_DEBUG=true
 export ULTRACODE_THEME=dracula
 
@@ -594,13 +594,13 @@ active_model = "{{ new Date().getHours() < 12 ? 'mistral-medium' : 'mistral-larg
 
 ```bash
 # Validierung
-ultracode --config validate
+ultracode-ai --config validate
 
 # Fehlende API-Keys prüfen
-ultracode --config check-keys
+ultracode-ai --config check-keys
 
 # Konfiguration auf Syntax prüfen
-ultracode --config lint
+ultracode-ai --config lint
 ```
 
 ---
@@ -614,7 +614,7 @@ ultracode --config lint
 **Lösung:**
 ```bash
 # Validierung
-ultracode --config validate
+ultracode-ai --config validate
 
 # Online-TOML-Validator
 https://www.toml-lint.com/
@@ -629,7 +629,7 @@ https://www.toml-lint.com/
 **Lösung:**
 ```bash
 # API-Key hinzufügen
-ultracode --setup
+ultracode-ai --setup
 
 # Oder in .env
  echo "MISTRAL_API_KEY=sk-..." >> ~/.ultracode/.env
@@ -644,10 +644,10 @@ ultracode --setup
 **Lösung:**
 ```bash
 # Verfügbare Modelle anzeigen
-ultracode --providers list-models
+ultracode-ai --providers list-models
 
 # Konfiguration anpassen
-ultracode --config set active_model mistral-large
+ultracode-ai --config set active_model mistral-large
 ```
 
 ---
@@ -659,10 +659,10 @@ ultracode --config set active_model mistral-large
 **Lösung:**
 ```bash
 # Verfügbare Tools anzeigen
-ultracode --tools list
+ultracode-ai --tools list
 
 # Tool aktivieren
-ultracode --config enable-tool xyz
+ultracode-ai --config enable-tool xyz
 ```
 
 ---

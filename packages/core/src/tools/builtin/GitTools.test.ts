@@ -3,8 +3,8 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { NoopLogger } from "@ultracode/shared";
-import type { ToolContext } from "@ultracode/shared";
+import { NoopLogger } from "ultracode-shared";
+import type { ToolContext } from "ultracode-shared";
 import { GitDiffTool, GitLogTool, GitStatusTool } from "./GitTools.js";
 
 const gitAvailable = spawnSync("git", ["--version"], { stdio: "ignore" }).status === 0;

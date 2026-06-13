@@ -1,11 +1,11 @@
-# UltraCode Versionierungs- und Release-Policy
+# UltraCode AI Versionierungs- und Release-Policy
 
 ## Grundsätze
 
 - **SemVer 2.0** für alle Module und das Gesamtsystem.
 - **Jedes Modul ist eigenständig versioniert** (`packages/*/package.json` + eigener `CHANGELOG.md`):
-  - `@ultracode/shared`
-  - `@ultracode/core`
+  - `ultracode-shared`
+  - `ultracode-core`
   - `ultracode` (CLI)
 - Das **Root-`CHANGELOG.md`** dokumentiert Releases des Gesamtsystems (Monorepo-Tag `vX.Y.Z`).
 
@@ -33,7 +33,7 @@ Der Git-Tag `vX.Y.Z` (Push) ist zugleich der Auslöser für die npm-Publikation.
 - Workflow: `.github/workflows/publish.yml`, getriggert auf `push` von `v*`-Tags.
 - Schritte: `pnpm install --frozen-lockfile` → `pnpm build` → `pnpm -r publish --no-git-checks --access public`.
 - Authentifizierung über das Secret `NODE_AUTH_TOKEN` (npm-Registry, via `actions/setup-node` `registry-url`).
-- Publizierte Pakete: `@ultracode/shared`, `@ultracode/core` (beide scoped, `publishConfig.access: public`)
+- Publizierte Pakete: `ultracode-shared`, `ultracode-core` (beide scoped, `publishConfig.access: public`)
   und `ultracode` (CLI, unscoped/öffentlich).
 - **Workspace-Auflösung:** `workspace:^`-Abhängigkeiten werden von pnpm beim Publish auf die realen
   veröffentlichten Versionen umgeschrieben; die Tarballs enthalten **keine** `workspace:*`-Spezifizierer.

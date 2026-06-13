@@ -12,7 +12,7 @@
  * `http://localhost:11434`. No API key is required.
  */
 
-import { ProviderError, generateId } from "@ultracode/shared";
+import { ProviderError, generateId } from "ultracode-shared";
 import type {
   ChatMessage,
   CompletionChunk,
@@ -22,7 +22,7 @@ import type {
   Logger,
   ProviderOptions,
   ToolCallRequest,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { BaseProvider } from "./BaseProvider.js";
 import type { ProviderRequestInit } from "./BaseProvider.js";
 import {

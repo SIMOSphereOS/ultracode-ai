@@ -25,7 +25,7 @@
  * HTTP is performed exclusively through the global `fetch`.
  */
 
-import { NoopLogger, ProviderError, sleep, truncate } from "@ultracode/shared";
+import { NoopLogger, ProviderError, sleep, truncate } from "ultracode-shared";
 import type {
   CompletionChunk,
   CompletionRequest,
@@ -34,7 +34,7 @@ import type {
   Logger,
   ProviderId,
   ProviderOptions,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { StreamIdleTimeoutError } from "./sse.js";
 
 /** Maximum delay (ms) we are willing to wait between retries. */

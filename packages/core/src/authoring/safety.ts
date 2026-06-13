@@ -10,7 +10,7 @@
  *    permitted to use.
  */
 
-import type { AgentDefinition } from "@ultracode/shared";
+import type { AgentDefinition } from "ultracode-shared";
 
 import { FORBIDDEN_PHRASES } from "./defaults.js";
 

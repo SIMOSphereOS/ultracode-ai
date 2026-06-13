@@ -10,7 +10,7 @@
 
 import path from "node:path";
 import { promises as fs } from "node:fs";
-import { ConfigError, USER_ENV_FILE } from "@ultracode/shared";
+import { ConfigError, USER_ENV_FILE } from "ultracode-shared";
 import type { CliContext } from "../context.js";
 import { safeDispose } from "../context.js";
 import { ThemeManager } from "../themes/index.js";

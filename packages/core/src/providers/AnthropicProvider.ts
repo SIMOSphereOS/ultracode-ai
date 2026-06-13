@@ -15,7 +15,7 @@
  *   emitted as soon as their block stops.
  */
 
-import { ProviderError } from "@ultracode/shared";
+import { ProviderError } from "ultracode-shared";
 import type {
   ChatMessage,
   CompletionChunk,
@@ -27,7 +27,7 @@ import type {
   TokenUsage,
   ToolCallRequest,
   ToolDefinition,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { BaseProvider } from "./BaseProvider.js";
 import type { ProviderRequestInit } from "./BaseProvider.js";
 import { asArray, asNumber, asRecord, asString, safeParseArgs } from "./openaiCompat.js";

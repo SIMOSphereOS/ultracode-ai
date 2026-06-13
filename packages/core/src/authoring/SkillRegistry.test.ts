@@ -2,7 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Logger } from "@ultracode/shared";
+import type { Logger } from "ultracode-shared";
 import { SkillRegistry } from "./SkillRegistry.js";
 import { AuthoringError } from "./errors.js";
 import { serializeFrontmatter } from "./frontmatter.js";

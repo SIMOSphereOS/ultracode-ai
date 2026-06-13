@@ -13,8 +13,8 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
-import { NoopLogger } from "@ultracode/shared";
-import type { Logger } from "@ultracode/shared";
+import { NoopLogger } from "ultracode-shared";
+import type { Logger } from "ultracode-shared";
 
 import { DEFAULT_CATALOG, DEFAULT_LOCALE, DEFAULT_SCHEDULE, SEED_SOURCES } from "./defaults.js";
 import { LearnError } from "./errors.js";

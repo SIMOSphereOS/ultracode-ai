@@ -9,7 +9,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_CONFIG } from "@ultracode/shared";
+import { DEFAULT_CONFIG } from "ultracode-shared";
 
 /* ------------------------------------------------------------------------- */
 /* Mocks                                                                      */

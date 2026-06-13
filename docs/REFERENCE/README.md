@@ -1,12 +1,12 @@
 # Referenzdokumentation
 
-> **Komplette technische Referenz für UltraCode - API, CLI, Slash Commands & Konfiguration**
+> **Komplette technische Referenz für UltraCode AI - API, CLI, Slash Commands & Konfiguration**
 
 ---
 
 ## 📚 Übersicht
 
-Die Referenzdokumentation bietet detaillierte Informationen zu allen technischen Aspekten von UltraCode. Hier finden Sie die vollständige API-Dokumentation, CLI-Kommandos, Slash-Commands und Konfigurationsoptionen.
+Die Referenzdokumentation bietet detaillierte Informationen zu allen technischen Aspekten von UltraCode AI. Hier finden Sie die vollständige API-Dokumentation, CLI-Kommandos, Slash-Commands und Konfigurationsoptionen.
 
 ---
 
@@ -31,9 +31,9 @@ Die Referenzdokumentation bietet detaillierte Informationen zu allen technischen
 - **Dokumentation**: OpenAPI 3.0 / Swagger
 
 ### CLI
-- **Installation**: aus dem Quellcode (`pnpm install && pnpm build`); `npm install -g ultracode` ab 1.3.0 (siehe [Installation](../GETTING-STARTED/installation.md))
-- **Hilfe**: `ultracode --help`
-- **Version**: `ultracode --version`
+- **Installation**: aus dem Quellcode (`pnpm install && pnpm build`); `npm install -g ultracode-ai` ab 1.3.0 (siehe [Installation](../GETTING-STARTED/installation.md))
+- **Hilfe**: `ultracode-ai --help`
+- **Version**: `ultracode-ai --version`
 
 ### Slash Commands
 - **Prefix**: `/` (Standard)
@@ -76,40 +76,40 @@ Die Referenzdokumentation bietet detaillierte Informationen zu allen technischen
 
 ```bash
 # Allgemein
-ultracode --help
-ultracode version
-ultracode update
+ultracode-ai --help
+ultracode-ai version
+ultracode-ai update
 
 # Authentication
-ultracode login
-ultracode logout
-ultracode whoami
+ultracode-ai login
+ultracode-ai logout
+ultracode-ai whoami
 
 # AI
-ultracode ask "Wie schreibe ich eine TypeScript-Funktion?"
-ultracode chat
-ultracode complete --file app.ts --line 42
+ultracode-ai ask "Wie schreibe ich eine TypeScript-Funktion?"
+ultracode-ai chat
+ultracode-ai complete --file app.ts --line 42
 
 # Code
-ultracode generate --type function --language typescript --name "UserService"
-ultracode analyze --file app.ts
-ultracode review --pull-request 123
+ultracode-ai generate --type function --language typescript --name "UserService"
+ultracode-ai analyze --file app.ts
+ultracode-ai review --pull-request 123
 
 # Versioning
-ultracode version analyze
-ultracode version suggest
-ultracode release plan
+ultracode-ai version analyze
+ultracode-ai version suggest
+ultracode-ai release plan
 
 # Verwaltung
-ultracode user list
-ultracode team list
-ultracode project list
+ultracode-ai user list
+ultracode-ai team list
+ultracode-ai project list
 ```
 
 ### CLI-Struktur
 
 ```
-ultracode
+ultracode-ai
 ├── auth
 │   ├── login
 │   ├── logout
@@ -246,7 +246,7 @@ Priorität (höchste zu niedrigste):
 4. Project Configuration (./.ultracode/config.yml)
 5. Team Configuration
 6. Organization Configuration
-7. Default Configuration (UltraCode Defaults)
+7. Default Configuration (UltraCode AI Defaults)
 ```
 
 ---
@@ -268,7 +268,7 @@ rg "POST /ai/complete" docs/REFERENCE/api.md -A 10
 rg "^### " docs/REFERENCE/cli-commands.md
 
 # Spezifisches Kommando finden
-rg "ultracode code" docs/REFERENCE/cli-commands.md -A 5
+rg "ultracode-ai code" docs/REFERENCE/cli-commands.md -A 5
 ```
 
 ### Slash Commands suchen
@@ -293,6 +293,6 @@ rg "/generate" docs/REFERENCE/slash-commands.md -A 10
 
 ## 📜 Lizenz
 
-Die UltraCode Referenzdokumentation steht unter der [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
+Die UltraCode AI Referenzdokumentation steht unter der [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
 
-© 2026 UltraCode Team
+© 2026 UltraCode AI Team

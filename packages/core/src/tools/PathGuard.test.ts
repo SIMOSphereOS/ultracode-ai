@@ -2,7 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ToolError } from "@ultracode/shared";
+import { ToolError } from "ultracode-shared";
 import { PathGuard, isPathInside, resolveHome, resolvePath } from "./PathGuard.js";
 
 let root: string;

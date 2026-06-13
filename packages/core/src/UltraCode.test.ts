@@ -9,8 +9,8 @@ import {
   ProviderError,
   SessionError,
   ValidationError,
-} from "@ultracode/shared";
-import type { AgentRunResult } from "@ultracode/shared";
+} from "ultracode-shared";
+import type { AgentRunResult } from "ultracode-shared";
 import type { AgentManager } from "./agents/AgentManager.js";
 import { createTaskTool } from "./UltraCode.js";
 import type {
@@ -29,7 +29,7 @@ import type {
   ToolResult,
   UltraCodeConfig,
   VersionSuggestion,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { createAgentManager } from "./agents/AgentManager.js";
 import type { IToolRunner } from "./execution/types.js";
 import { UltraCode } from "./UltraCode.js";

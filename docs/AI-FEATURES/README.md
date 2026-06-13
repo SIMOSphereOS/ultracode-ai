@@ -1,4 +1,4 @@
-# UltraCode AI-Features
+# UltraCode AI — AI-Features
 
 > **Einzigartige KI-gesteuerte Funktionen für intelligentes Development**
 
@@ -6,7 +6,7 @@
 
 ## 🤖 Übersicht
 
-UltraCode bietet **grundlegend neue AI-Features**, die kein anderes Tool bietet:
+UltraCode AI bietet **grundlegend neue AI-Features**, die kein anderes Tool bietet:
 
 ```
 AI-FEATURES/
@@ -19,9 +19,9 @@ AI-FEATURES/
 
 ## 🎯 Warum AI-Features?
 
-### Traditionelle Entwicklung vs. UltraCode
+### Traditionelle Entwicklung vs. UltraCode AI
 
-| **Traditionell** | **UltraCode mit AI** | **Vorteil** |
+| **Traditionell** | **UltraCode AI** | **Vorteil** |
 |------------------|----------------------|-------------|
 | Manuelle Versionierung | **AI schlägt Version vor** | Zeitersparnis, Konsistenz |
 | Manuelle Release-Planung | **AI erstellt Release-Plan** | Automatisierung, Risikoreduktion |
@@ -35,7 +35,7 @@ AI-FEATURES/
 
 ### [📊 AI-Versionierungssystem →](./versioning-system.md)
 
-**Das Herzstück von UltraCode** – ein **vollständig KI-gesteuertes Versionierungs- und Release-Management-System**.
+**Das Herzstück von UltraCode AI** – ein **vollständig KI-gesteuertes Versionierungs- und Release-Management-System**.
 
 **Enthält:**
 - **Change Analysis Engine** – Analyse von Code-Änderungen
@@ -69,10 +69,10 @@ AI-FEATURES/
 **Beispiel:**
 ```bash
 # Release-Plan für die nächsten 3 Monate
-ultracode release plan --target-date 2026-09-01
+ultracode-ai release plan --target-date 2026-09-01
 
 # Plan für spezifische Features
-ultracode release plan --features feat/user-auth,feat/api-v2
+ultracode-ai release plan --features feat/user-auth,feat/api-v2
 ```
 
 ---
@@ -93,17 +93,17 @@ ultracode release plan --features feat/user-auth,feat/api-v2
 **Beispiel:**
 ```bash
 # Alle Quality Gates ausführen
-ultracode quality check --strict
+ultracode-ai quality check --strict
 
 # Spezifische Gates ausführen
-ultracode quality check --gates code-review,test-coverage,security
+ultracode-ai quality check --gates code-review,test-coverage,security
 ```
 
 ---
 
 ## 🎯 AI-Versionierung im Vergleich
 
-### UltraCode vs. Andere Tools
+### UltraCode AI vs. Andere Tools
 
 | **Feature** | **Semantic Release** | **Standard CI/CD** | **GitHub Actions** | **UltraCode AI** |
 |-------------|----------------------|-------------------|-------------------|------------------|
@@ -124,22 +124,22 @@ ultracode quality check --gates code-review,test-coverage,security
 
 ```bash
 # 1. Änderungen analysieren
-ultracode version analyze --since last-release
+ultracode-ai version analyze --since last-release
 
 # 2. Version vorschlagen lassen
-ultracode version suggest
+ultracode-ai version suggest
 
 # 3. Release-Plan erstellen
-ultracode release plan --version 2.0.0 --target-date 2026-12-01
+ultracode-ai release plan --version 2.0.0 --target-date 2026-12-01
 
 # 4. Quality Gates durchführen
-ultracode quality check --strict
+ultracode-ai quality check --strict
 
 # 5. Release vorbereiten
-ultracode release prepare --version 2.0.0
+ultracode-ai release prepare --version 2.0.0
 
 # 6. Release veröffentlichen
-ultracode release publish --version 2.0.0 --channel stable --auto
+ultracode-ai release publish --version 2.0.0 --channel stable --auto
 ```
 
 ---
@@ -150,7 +150,7 @@ ultracode release publish --version 2.0.0 --channel stable --auto
 > "Analysiere alle Änderungen seit v1.0.0"
 > version_analyze(since="v1.0.0")
 
-> "Welche Version schlägt UltraCode vor?"
+> "Welche Version schlägt UltraCode AI vor?"
 > version_suggest()
 # → "Basierend auf 23 Commits mit neuen Features und Bugfixes: v1.1.0 (minor bump)"
 
@@ -182,25 +182,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup UltraCode
-        run: npm install -g ultracode
+      - name: Setup UltraCode AI
+        run: npm install -g ultracode-ai
       
       - name: Analyze Changes
-        run: ultracode version analyze --since last-release
+        run: ultracode-ai version analyze --since last-release
       
       - name: Suggest Version
         id: suggest
         run: |
-          VERSION=$(ultracode version suggest --format json | jq -r '.version')
+          VERSION=$(ultracode-ai version suggest --format json | jq -r '.version')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
       
       - name: Run Quality Gates
-        run: ultracode quality check --strict
+        run: ultracode-ai quality check --strict
       
       - name: Create Release
         if: steps.suggest.outputs.version
         run: |
-          ultracode release publish \
+          ultracode-ai release publish \
             --version ${{ steps.suggest.outputs.version }} \
             --auto \
             --github-token ${{ secrets.GITHUB_TOKEN }}
@@ -208,7 +208,7 @@ jobs:
 
 ---
 
-## 🔧 Integration mit UltraCode
+## 🔧 Integration mit UltraCode AI
 
 ### Slash-Kommandos
 
@@ -236,7 +236,7 @@ Alle AI-Tools beginnen mit **ai_**, **version_**, **release_**, oder **quality_*
 
 ## 🛠️ Erweiterbarkeit
 
-Das AI-System von UltraCode ist **vollständig erweiterbar**:
+Das AI-System von UltraCode AI ist **vollständig erweiterbar**:
 
 ### 1. Benutzerdefinierte Versionierungsstrategien
 
@@ -350,10 +350,10 @@ export class MyReleasePlanner extends BaseReleasePlanner {
 
 4. **AI-Features in der Praxis testen:**
    ```bash
-   ultracode version analyze
-   ultracode version suggest
-   ultracode quality check --strict
-   ultracode release plan --version 2.0.0
+   ultracode-ai version analyze
+   ultracode-ai version suggest
+   ultracode-ai quality check --strict
+   ultracode-ai release plan --version 2.0.0
    ```
 
 ---
@@ -362,7 +362,7 @@ export class MyReleasePlanner extends BaseReleasePlanner {
 
 - **Discord:** [#ai-features Channel](https://discord.gg/ultracode)
 - **GitHub Issues:** [AI Label](https://github.com/AndreasSchwan-SIMO/UltraCode/labels/ai)
-- **Dokumentation:** [UltraCode Docs](https://ultracode.ai/docs)
+- **Dokumentation:** [UltraCode AI Docs](https://ultracode.ai/docs)
 
 ---
 

@@ -6,14 +6,14 @@ import {
   NoopLogger,
   ValidationError,
   sleep,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import type {
   ITool,
   ToolContext,
   ToolDefinition,
   ToolPermission,
   UltraCodeConfig,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { ToolRegistry } from "./ToolRegistry.js";
 import { ToolExecutor } from "./ToolExecutor.js";
 

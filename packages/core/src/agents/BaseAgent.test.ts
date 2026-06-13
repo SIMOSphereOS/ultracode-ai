@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AgentError, NoopLogger, ProviderError } from "@ultracode/shared";
+import { AgentError, NoopLogger, ProviderError } from "ultracode-shared";
 import type {
   AgentDefinition,
   CompletionRequest,
@@ -11,7 +11,7 @@ import type {
   ToolDefinition,
   ToolResult,
   ToolCallRequest,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import type { IToolRunner } from "../execution/types.js";
 import { BaseAgent } from "./BaseAgent.js";
 import { BUILT_IN_AGENTS } from "./builtins.js";

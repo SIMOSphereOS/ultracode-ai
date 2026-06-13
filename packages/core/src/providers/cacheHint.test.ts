@@ -10,7 +10,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { CompletionRequest, ToolDefinition } from "@ultracode/shared";
+import type { CompletionRequest, ToolDefinition } from "ultracode-shared";
 import { AnthropicProvider } from "./AnthropicProvider.js";
 import { OpenAIProvider } from "./OpenAIProvider.js";
 import { jsonResponse, stubFetchSequence, testOptions } from "./testkit.test.js";

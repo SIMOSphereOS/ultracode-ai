@@ -16,7 +16,7 @@
 
 import path from "node:path";
 import { promises as fs } from "node:fs";
-import { ToolError } from "@ultracode/shared";
+import { ToolError } from "ultracode-shared";
 import { resolveHome } from "../config/paths.js";
 
 // Integration note: `resolveHome` is consolidated in `../config/paths.js` and

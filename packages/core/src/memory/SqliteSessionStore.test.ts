@@ -2,8 +2,8 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { SessionError } from "@ultracode/shared";
-import type { ChatMessage, LogMeta, Logger } from "@ultracode/shared";
+import { SessionError } from "ultracode-shared";
+import type { ChatMessage, LogMeta, Logger } from "ultracode-shared";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {

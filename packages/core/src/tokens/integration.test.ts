@@ -9,7 +9,7 @@ import type {
   CompletionResult,
   ILLMProvider,
   ToolDefinition,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { ExecutionEngine } from "../execution/ExecutionEngine.js";
 import type { IToolRunner, ITokenOptimizer } from "../execution/index.js";
 import { createDefaultOptimizer } from "./TokenOptimizer.js";

@@ -1,6 +1,6 @@
 /**
  * Centralised default values and magic constants for the
- * `@ultracode/core/session-optimizer` subsystem.
+ * `ultracode-core/session-optimizer` subsystem.
  *
  * Every hard-coded threshold, limit, size, model name, prompt, regular
  * expression and seed value used by the optimizer lives here as a single

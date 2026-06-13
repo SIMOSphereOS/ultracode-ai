@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { AgentError, ProviderError, ValidationError } from "@ultracode/shared";
-import type { AgentRunResult } from "@ultracode/shared";
+import { AgentError, ProviderError, ValidationError } from "ultracode-shared";
+import type { AgentRunResult } from "ultracode-shared";
 import { QueryPipeline } from "./QueryPipeline.js";
 import type { ParsedQuery } from "./QueryPipeline.js";
 

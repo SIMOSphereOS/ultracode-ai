@@ -1,5 +1,5 @@
 /**
- * The `UltraCode` facade — the single high-level entry point of `@ultracode/core`.
+ * The `UltraCode` facade — the single high-level entry point of `ultracode-core`.
  *
  * `UltraCode.create()` wires all core modules together via their factory
  * contracts (config, providers, tools, memory, context, versioning). The
@@ -21,7 +21,7 @@ import {
   ValidationError,
   serializeError,
   ENV_PREFIX,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import type {
   AgentDefinition,
   AgentRunResult,
@@ -43,7 +43,7 @@ import type {
   ToolResult,
   UltraCodeConfig,
   VersionSuggestion,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import os from "node:os";
 import { AgentManager, createAgentManager } from "./agents/AgentManager.js";
 import type { BaseAgentRunInput, ContextCollector } from "./agents/BaseAgent.js";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ProviderError } from "@ultracode/shared";
+import { ProviderError } from "ultracode-shared";
 import { AnthropicProvider } from "./AnthropicProvider.js";
 import { LocalProvider } from "./LocalProvider.js";
 import { MistralProvider } from "./MistralProvider.js";

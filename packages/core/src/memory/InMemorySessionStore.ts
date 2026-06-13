@@ -5,8 +5,8 @@
  * fallback. All data is lost when the process exits.
  */
 
-import { SessionError, generateId } from "@ultracode/shared";
-import type { ChatMessage, ISessionStore, SessionMeta, SessionRecord } from "@ultracode/shared";
+import { SessionError, generateId } from "ultracode-shared";
+import type { ChatMessage, ISessionStore, SessionMeta, SessionRecord } from "ultracode-shared";
 
 import {
   DEFAULT_SESSION_TITLE,

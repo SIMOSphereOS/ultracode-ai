@@ -1,4 +1,4 @@
-# UltraCode Quality Gates
+# UltraCode AI Quality Gates
 
 > Freigabeprüfung vor dem Release: fünf gewichtete Gates ergeben einen Gesamtscore von 0–100 und ein klares Pass/Fail.
 
@@ -9,16 +9,16 @@ Das `QualityGateSystem` (in `packages/core/src/versioning/QualityGateSystem.ts`)
 ## Befehl
 
 ```bash
-ultracode quality
-ultracode quality --json
+ultracode-ai quality
+ultracode-ai quality --json
 ```
 
-`ultracode quality` setzt bei nicht bestandenen Gates `process.exitCode = 1` und ist damit **CI-freundlich** — die Pipeline bricht von selbst ab. `--json` liefert den `QualityReport`.
+`ultracode-ai quality` setzt bei nicht bestandenen Gates `process.exitCode = 1` und ist damit **CI-freundlich** — die Pipeline bricht von selbst ab. `--json` liefert den `QualityReport`.
 
 ```yaml
 # CI-Schritt (plattformunabhängig)
 - name: Quality Gates
-  run: ultracode quality
+  run: ultracode-ai quality
 ```
 
 ---
@@ -142,7 +142,7 @@ Ein bestandener Bericht beginnt mit `✓ PASSED`.
 ## Programmatische Nutzung
 
 ```typescript
-import { QualityGateSystem } from "@ultracode/core";
+import { QualityGateSystem } from "ultracode-core";
 
 const gates = new QualityGateSystem({ cwd: process.cwd(), logger, config: versioningConfig });
 const report = await gates.check({

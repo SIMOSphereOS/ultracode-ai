@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ProviderError } from "@ultracode/shared";
+import { ProviderError } from "ultracode-shared";
 import type {
   CompletionChunk,
   CompletionRequest,
   CompletionResult,
   ProviderOptions,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { BaseProvider, isRetryableStatus, parseRetryAfter } from "./BaseProvider.js";
 import { LocalProvider } from "./LocalProvider.js";
 import { StreamIdleTimeoutError } from "./sse.js";

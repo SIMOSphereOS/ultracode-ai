@@ -2,14 +2,14 @@
  * Core-local contracts for the Skill-/Agent-Creator (Modul B).
  *
  * These types are intentionally defined *here* in `core` rather than in the
- * frozen `@ultracode/shared` 1.0 contract layer: the authoring subsystem is
+ * frozen `ultracode-shared` 1.0 contract layer: the authoring subsystem is
  * new and may still evolve. Cross-module dependencies (budget gate, LLM
  * provider) are consumed through narrow, constructor-injected interfaces so
  * that sibling modules (budget = Modul A, learning = Modul C) never need to be
  * imported directly.
  */
 
-import type { AgentDefinition } from "@ultracode/shared";
+import type { AgentDefinition } from "ultracode-shared";
 
 /* ------------------------------------------------------------------------- *
  * Skill model

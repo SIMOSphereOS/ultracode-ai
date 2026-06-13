@@ -1,6 +1,6 @@
-# Changelog — @ultracode/core
+# Changelog — ultracode-core
 
-All notable changes to the `@ultracode/core` package. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer 2.0](https://semver.org/). Aligned to the monorepo `1.3.0` production-ready milestone.
+All notable changes to the `ultracode-core` package. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer 2.0](https://semver.org/). Aligned to the monorepo `1.3.0` production-ready milestone.
 
 ## [Unreleased]
 
@@ -118,7 +118,7 @@ All notable changes to the `@ultracode/core` package. Format: [Keep a Changelog]
 ## [0.2.1] - 2026-06-11
 
 ### Fixed
-- Wired the standalone module packages into a working end-to-end system: added the `@ultracode/core` package barrel, routed provider API keys through the config loader's in-memory `providers.apiKeys` store (env fallback), and deferred LLM provider construction so read-only commands (`tools`/`agents list`, `config show`, `doctor`, `version`) run fully offline without an API key.
+- Wired the standalone module packages into a working end-to-end system: added the `ultracode-core` package barrel, routed provider API keys through the config loader's in-memory `providers.apiKeys` store (env fallback), and deferred LLM provider construction so read-only commands (`tools`/`agents list`, `config show`, `doctor`, `version`) run fully offline without an API key.
 
 ### Changed
 - Exposed the stateful `ConfigManager` on the `UltraCode` facade as `configManager`, registered a `task` tool delegating to bounded subagents (`AgentManager.delegate`, depth <= 2), forwarded `core.maxTokens` into completion requests, and consolidated the duplicated `resolveHome` helpers onto a single implementation.

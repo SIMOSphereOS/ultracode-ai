@@ -3,11 +3,11 @@
  *
  * Per the cross-cutting error convention, new modules raise their own
  * {@link UltraCodeError} subclasses carrying a stable `code`. The shared
- * package is frozen, so these live here rather than in `@ultracode/shared`.
+ * package is frozen, so these live here rather than in `ultracode-shared`.
  */
 
-import { UltraCodeError } from "@ultracode/shared";
-import type { UltraCodeErrorOptions } from "@ultracode/shared";
+import { UltraCodeError } from "ultracode-shared";
+import type { UltraCodeErrorOptions } from "ultracode-shared";
 
 /**
  * Raised when a learning operation cannot proceed: unknown source, corrupt

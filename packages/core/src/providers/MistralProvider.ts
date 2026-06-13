@@ -5,7 +5,7 @@
  * tools/tool_calls, so all wire logic lives in {@link OpenAICompatProvider}.
  */
 
-import type { Logger, ProviderOptions } from "@ultracode/shared";
+import type { Logger, ProviderOptions } from "ultracode-shared";
 import { OpenAICompatProvider } from "./openaiCompat.js";
 
 /** Default Mistral API base URL. */

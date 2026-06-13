@@ -12,8 +12,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { NoopLogger, serializeError } from "@ultracode/shared";
-import type { Logger } from "@ultracode/shared";
+import { NoopLogger, serializeError } from "ultracode-shared";
+import type { Logger } from "ultracode-shared";
 
 import { resolveHome } from "../config/paths.js";
 import { RESERVED_SEGMENTS, SAFE_SEGMENT, SKILLS_ROOT } from "./defaults.js";

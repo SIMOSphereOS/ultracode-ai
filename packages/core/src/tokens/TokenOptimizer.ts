@@ -9,8 +9,8 @@
  * `saved` rather than being silently clamped.
  */
 
-import type { Logger } from "@ultracode/shared";
-import { NoopLogger } from "@ultracode/shared";
+import type { Logger } from "ultracode-shared";
+import { NoopLogger } from "ultracode-shared";
 import type { OptimizeContext, OptimizerStage, PromptPayload, TokenStats } from "./types.js";
 import type { TokenCounter } from "./TokenCounter.js";
 import { HeuristicTokenCounter } from "./TokenCounter.js";

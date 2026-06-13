@@ -11,7 +11,7 @@
  * @packageDocumentation
  */
 
-import type { ILLMProvider } from "@ultracode/shared";
+import type { ILLMProvider } from "ultracode-shared";
 
 /* ------------------------------------------------------------------------- *
  * Cross-module injection contracts (mirrors of budget / authoring surfaces)  *

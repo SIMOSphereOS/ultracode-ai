@@ -14,11 +14,11 @@ import path from "node:path";
 import process from "node:process";
 import { promises as fs } from "node:fs";
 import type { Command } from "commander";
-import { ValidationError } from "@ultracode/shared";
+import { ValidationError } from "ultracode-shared";
 import type { CliContext } from "../context.js";
 import { authoringOf, withExtFacade } from "./ext-helpers.js";
 import { formatBlock, formatSkillList, formatTestResult } from "./ext-format.js";
-import type { AuthoringProposal, KnowledgeMaterial } from "@ultracode/core";
+import type { AuthoringProposal, KnowledgeMaterial } from "ultracode-core";
 
 interface JsonOption {
   json?: boolean;

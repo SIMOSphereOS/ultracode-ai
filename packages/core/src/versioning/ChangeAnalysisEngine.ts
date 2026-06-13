@@ -6,7 +6,7 @@
  * security findings for a git revision range.
  */
 
-import { VersioningError } from "@ultracode/shared";
+import { VersioningError } from "ultracode-shared";
 import type {
   BreakingChange,
   ChangeAnalysis,
@@ -14,7 +14,7 @@ import type {
   FileChange,
   Logger,
   SecurityFinding,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { GitClient } from "./GitClient.js";
 import type { GitRunner } from "./GitClient.js";
 import { hasBreakingFooter, parseConventionalSubject } from "./conventional.js";

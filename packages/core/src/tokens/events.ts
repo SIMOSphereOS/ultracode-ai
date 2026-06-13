@@ -1,7 +1,7 @@
 /**
  * Core-local token-optimization reporting event.
  *
- * The frozen `@ultracode/shared` `UltraCodeEvent` union is 1.0 and not
+ * The frozen `ultracode-shared` `UltraCodeEvent` union is 1.0 and not
  * extended here. Instead we define a *separate*, core-local event type and a
  * tiny emitter that publishes it onto any provided {@link IEventBus} via a
  * loosely-typed cast, falling back to `logger.info` when no bus is available.
@@ -9,7 +9,7 @@
  * shared union is untouched, so nothing existing breaks.
  */
 
-import type { IEventBus, Logger } from "@ultracode/shared";
+import type { IEventBus, Logger } from "ultracode-shared";
 import type { OptimizeResult } from "./TokenOptimizer.js";
 import { TOKENS_OPTIMIZED_EVENT } from "./defaults.js";
 

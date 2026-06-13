@@ -9,8 +9,8 @@ import type {
   QualityReport,
   ReleasePlan,
   VersionSuggestion,
-} from "@ultracode/shared";
-import { truncate } from "@ultracode/shared";
+} from "ultracode-shared";
+import { truncate } from "ultracode-shared";
 
 /** Cap applied to free-form blocks (changelog drafts etc.). */
 const MAX_BLOCK_CHARS = 10_000;

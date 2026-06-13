@@ -2,7 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { VersioningError } from "@ultracode/shared";
+import { VersioningError } from "ultracode-shared";
 import { GitClient, defaultGitRunner } from "./GitClient.js";
 import type { GitCommandResult, GitRunner } from "./GitClient.js";
 

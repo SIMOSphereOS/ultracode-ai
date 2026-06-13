@@ -27,9 +27,9 @@ const REPO_URL = "git+https://github.com/AndreasSchwan-SIMO/UltraCode.git";
 
 describe("packaging invariants", () => {
   const publishable: Array<{ dir: string; name: string; scoped: boolean }> = [
-    { dir: "shared", name: "@ultracode/shared", scoped: true },
-    { dir: "core", name: "@ultracode/core", scoped: true },
-    { dir: "cli", name: "ultracode", scoped: false },
+    { dir: "shared", name: "ultracode-shared", scoped: false },
+    { dir: "core", name: "ultracode-core", scoped: false },
+    { dir: "cli", name: "ultracode-ai", scoped: false },
   ];
 
   for (const { dir, name, scoped } of publishable) {
@@ -85,7 +85,7 @@ describe("packaging invariants", () => {
       it("uses only the workspace:^ protocol for internal deps (no bare workspace:*)", () => {
         const deps = (manifest.dependencies ?? {}) as Record<string, string>;
         for (const [depName, range] of Object.entries(deps)) {
-          if (depName.startsWith("@ultracode/")) {
+          if (depName.startsWith("ultracode-")) {
             // workspace:^ is rewritten to a real version by pnpm at publish
             // time; a bare workspace:* would leak into the tarball on older
             // tooling, so we forbid it explicitly.
@@ -96,9 +96,9 @@ describe("packaging invariants", () => {
     });
   }
 
-  it("CLI exposes the ultracode bin", () => {
+  it("CLI exposes the ultracode-ai bin", () => {
     const cli = readManifest("cli");
-    expect(cli.bin).toEqual({ ultracode: "./dist/index.js" });
+    expect(cli.bin).toEqual({ "ultracode-ai": "./dist/index.js" });
   });
 
   it("package LICENSE copies match the root LICENSE byte-for-byte", () => {

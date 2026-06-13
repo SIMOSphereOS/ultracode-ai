@@ -7,8 +7,8 @@
  * `createSessionStore` — falls back to the JSON store.
  */
 
-import { SessionError, generateId } from "@ultracode/shared";
-import type { ChatMessage, ISessionStore, Logger, SessionMeta, SessionRecord } from "@ultracode/shared";
+import { SessionError, generateId } from "ultracode-shared";
+import type { ChatMessage, ISessionStore, Logger, SessionMeta, SessionRecord } from "ultracode-shared";
 
 import {
   DEFAULT_SESSION_TITLE,

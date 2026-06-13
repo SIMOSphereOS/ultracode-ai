@@ -8,7 +8,7 @@
  */
 
 import type { Command } from "commander";
-import type { CompletionChunk } from "@ultracode/shared";
+import type { CompletionChunk } from "ultracode-shared";
 import type { CliContext } from "../context.js";
 import { safeDispose } from "../context.js";
 

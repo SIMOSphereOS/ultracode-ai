@@ -9,8 +9,8 @@
  */
 
 import { z } from "zod";
-import { ConfigError } from "@ultracode/shared";
-import type { ProvidersConfig, UltraCodeConfig } from "@ultracode/shared";
+import { ConfigError } from "ultracode-shared";
+import type { ProvidersConfig, UltraCodeConfig } from "ultracode-shared";
 
 /** Themes accepted by the UI (plus `"custom"` with a `[ui.colors]` palette). */
 export const KNOWN_THEMES = [

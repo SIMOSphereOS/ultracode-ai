@@ -1,14 +1,14 @@
-# UltraCode Plug-in Entwicklung
+# UltraCode AI Plug-in Entwicklung
 
-> ⚠️ **Vision / noch nicht implementiert.** Es gibt im aktuellen Code **kein** Plug-in-System (kein `packages/core/src/plugin`, kein Plug-in-Loader, kein `examples/plugins`-Verzeichnis). Diese Anleitung beschreibt die angestrebte Plug-in-Architektur und ist Roadmap. Erweiterbar ist UltraCode heute über die [Skill-](../REFERENCE/cli-commands.md#ultracode-skills) und [Agenten-Authoring-Kommandos](../REFERENCE/cli-commands.md#ultracode-agents-authoring).
+> ⚠️ **Vision / noch nicht implementiert.** Es gibt im aktuellen Code **kein** Plug-in-System (kein `packages/core/src/plugin`, kein Plug-in-Loader, kein `examples/plugins`-Verzeichnis). Diese Anleitung beschreibt die angestrebte Plug-in-Architektur und ist Roadmap. Erweiterbar ist UltraCode AI heute über die [Skill-](../REFERENCE/cli-commands.md#ultracode-skills) und [Agenten-Authoring-Kommandos](../REFERENCE/cli-commands.md#ultracode-agents-authoring).
 
-> **Anleitung zur Erstellung eigener Plug-ins für UltraCode** *(geplant)*
+> **Anleitung zur Erstellung eigener Plug-ins für UltraCode AI** *(geplant)*
 
 ---
 
 ## 🎯 Übersicht
 
-UltraCode bietet ein **erweiterbares Plug-in-System**, mit dem du:
+UltraCode AI bietet ein **erweiterbares Plug-in-System**, mit dem du:
 - **Eigene Tools** hinzufügen kannst
 - **Neue Agenten** erstellen kannst
 - **Benutzerdefinierte Kommandos** registrieren kannst
@@ -84,13 +84,13 @@ my-ultracode-plugin/
 {
   "name": "my-ultracode-plugin",
   "version": "1.0.0",
-  "description": "Mein erstes UltraCode Plug-in",
+  "description": "Mein erstes UltraCode AI Plug-in",
   "main": "plugin.ts",
   "ultracode": {
     "plugin": {
       "name": "my-plugin",
       "version": "1.0.0",
-      "description": "Mein erstes UltraCode Plug-in",
+      "description": "Mein erstes UltraCode AI Plug-in",
       "author": "Dein Name",
       "license": "MIT",
       "homepage": "https://github.com/username/my-ultracode-plugin"
@@ -100,7 +100,7 @@ my-ultracode-plugin/
   "author": "Dein Name",
   "license": "MIT",
   "dependencies": {
-    "@ultracode/core": "^1.0.0"
+    "ultracode-core": "^1.0.0"
   }
 }
 ```
@@ -112,14 +112,14 @@ my-ultracode-plugin/
 ```typescript
 // my-ultracode-plugin/plugin.ts
 
-import type { IPlugin, PluginMetadata, PluginContext } from '@ultracode/core';
+import type { IPlugin, PluginMetadata, PluginContext } from 'ultracode-core';
 import { MyTool } from './tools/MyTool';
 import { myAgentConfig } from './agents/MyAgent';
 
 export const metadata: PluginMetadata = {
   name: 'my-plugin',
   version: '1.0.0',
-  description: 'Mein erstes UltraCode Plug-in',
+  description: 'Mein erstes UltraCode AI Plug-in',
   author: 'Dein Name',
   license: 'MIT',
   homepage: 'https://github.com/username/my-ultracode-plugin',
@@ -167,8 +167,8 @@ export default new MyPlugin();
 ```typescript
 // my-ultracode-plugin/tools/MyTool.ts
 
-import { BaseTool } from '@ultracode/core';
-import type { ToolSchema } from '@ultracode/core';
+import { BaseTool } from 'ultracode-core';
+import type { ToolSchema } from 'ultracode-core';
 
 export class MyTool extends BaseTool {
   constructor() {
@@ -210,7 +210,7 @@ export class MyTool extends BaseTool {
 ```typescript
 // my-ultracode-plugin/agents/MyAgent.ts
 
-import type { AgentConfig } from '@ultracode/core';
+import type { AgentConfig } from 'ultracode-core';
 
 export const myAgentConfig: AgentConfig = {
   id: 'my_agent',
@@ -240,8 +240,8 @@ export const myAgentConfig: AgentConfig = {
 cd my-ultracode-plugin
 npm link
 
-# UltraCode starten
-ultracode
+# UltraCode AI starten
+ultracode-ai
 
 # Tool testen
 > my_tool(input="Hello", count=3)
@@ -283,11 +283,11 @@ npm publish
 
 ### 3. Plug-in registrieren (optional)
 
-Füge dein Plug-in zum **UltraCode Plug-in Registry** hinzu:
+Füge dein Plug-in zum **UltraCode AI Plug-in Registry** hinzu:
 
 ```bash
-# Plug-in bei UltraCode registrieren
-ultracode --plugin-registry add my-ultracode-plugin https://github.com/username/my-ultracode-plugin
+# Plug-in bei UltraCode AI registrieren
+ultracode-ai --plugin-registry add my-ultracode-plugin https://github.com/username/my-ultracode-plugin
 ```
 
 ---
@@ -299,7 +299,7 @@ ultracode --plugin-registry add my-ultracode-plugin https://github.com/username/
 **Zweck:** Neue Tools hinzufügen
 
 ```typescript
-import { BaseTool } from '@ultracode/core';
+import { BaseTool } from 'ultracode-core';
 
 export class MySearchTool extends BaseTool {
   constructor() {
@@ -331,7 +331,7 @@ export class MySearchTool extends BaseTool {
 **Zweck:** Neue Agenten erstellen
 
 ```typescript
-import type { AgentConfig } from '@ultracode/core';
+import type { AgentConfig } from 'ultracode-core';
 
 export const mySpecializedAgent: AgentConfig = {
   id: 'code-review-expert',
@@ -354,7 +354,7 @@ export const mySpecializedAgent: AgentConfig = {
 **Zweck:** Neue Slash-Commands hinzufügen
 
 ```typescript
-import type { ICommand, CommandContext } from '@ultracode/core';
+import type { ICommand, CommandContext } from 'ultracode-core';
 
 export class MyCommand implements ICommand {
   readonly name = 'my-command';
@@ -387,7 +387,7 @@ context.commandRegistry.register(new MyCommand());
 **Zweck:** MCP-Server integrieren
 
 ```typescript
-import type { MCPServerConfig } from '@ultracode/core';
+import type { MCPServerConfig } from 'ultracode-core';
 
 export const myMCPServer: MCPServerConfig = {
   name: 'my-mcp-server',
@@ -409,7 +409,7 @@ await context.mcpRegistry.register(myMCPServer);
 **Zweck:** UI-Erweiterungen
 
 ```typescript
-import type { UIExtension, UIContext } from '@ultracode/core';
+import type { UIExtension, UIContext } from 'ultracode-core';
 
 export class MyUIExtension implements UIExtension {
   readonly name = 'my-ui';
@@ -493,7 +493,7 @@ export class MyUIExtension implements UIExtension {
 
 ### 3. Plug-in-Isolation
 
-UltraCode bietet **Isolation für Plug-ins**:
+UltraCode AI bietet **Isolation für Plug-ins**:
 
 - **Sandboxing:** Plug-ins laufen in isolierten Kontexten
 - **Fehlerisolation:** Plug-in-Fehler beeinflussen nicht das Hauptsystem
@@ -566,7 +566,7 @@ context.apiRouter.post('/my-endpoint', async (req, res) => {
 
 ```typescript
 // github-plugin/tools/GitHubTool.ts
-import { BaseTool } from '@ultracode/core';
+import { BaseTool } from 'ultracode-core';
 
 export class GitHubTool extends BaseTool {
   constructor() {
@@ -609,7 +609,7 @@ export class GitHubTool extends BaseTool {
 
 ```typescript
 // code-quality-plugin/agents/CodeQualityAgent.ts
-import type { AgentConfig } from '@ultracode/core';
+import type { AgentConfig } from 'ultracode-core';
 
 export const codeQualityAgent: AgentConfig = {
   id: 'code-quality-expert',
@@ -632,9 +632,9 @@ export const codeQualityAgent: AgentConfig = {
 ### 1. README.md
 
 ```markdown
-# My UltraCode Plugin
+# My UltraCode AI Plugin
 
-Mein erstes UltraCode Plug-in mit benutzerdefinierten Tools und Agenten.
+Mein erstes UltraCode AI Plug-in mit benutzerdefinierten Tools und Agenten.
 
 ## Features
 
@@ -708,15 +708,15 @@ Permission is hereby granted...
 
 ### Plug-in registrieren
 
-Füge dein Plug-in zum **offiziellen UltraCode Plug-in Registry** hinzu:
+Füge dein Plug-in zum **offiziellen UltraCode AI Plug-in Registry** hinzu:
 
 ```bash
-ultracode --plugin-registry add <name> <url>
+ultracode-ai --plugin-registry add <name> <url>
 ```
 
 ### Plug-in-Dokumentation
 
-Dokumentiere dein Plug-in im **UltraCode Docs**:
+Dokumentiere dein Plug-in im **UltraCode AI Docs**:
 
 ```markdown
 # Plug-ins
@@ -743,7 +743,7 @@ Dokumentiere dein Plug-in im **UltraCode Docs**:
 
 ## 🔗 Nützliche Links
 
-- UltraCode Plug-in API → *(geplant; `packages/core/src/plugin` existiert noch nicht)*
+- UltraCode AI Plug-in API → *(geplant; `packages/core/src/plugin` existiert noch nicht)*
 - Beispiel-Plug-ins → *(geplant; `examples/plugins` existiert noch nicht)*
 - [Plug-in-Registry →](https://ultracode.ai/plugins)
 - [Discord #plugins →](https://discord.gg/ultracode)

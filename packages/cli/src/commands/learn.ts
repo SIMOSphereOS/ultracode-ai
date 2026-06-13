@@ -13,12 +13,12 @@
 
 import process from "node:process";
 import type { Command } from "commander";
-import { ValidationError } from "@ultracode/shared";
+import { ValidationError } from "ultracode-shared";
 import type { CliContext } from "../context.js";
 import { budgetOf, learningOf, withExtFacade } from "./ext-helpers.js";
 import type { ExtendedFacade } from "./ext-helpers.js";
 import { formatLearnReport, formatSourceList } from "./ext-format.js";
-import type { BudgetDecision, CostEstimate } from "@ultracode/core";
+import type { BudgetDecision, CostEstimate } from "ultracode-core";
 
 interface JsonOption {
   json?: boolean;

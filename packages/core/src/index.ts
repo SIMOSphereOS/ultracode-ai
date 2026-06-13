@@ -1,5 +1,5 @@
 /**
- * `@ultracode/core` — package root barrel.
+ * `ultracode-core` — package root barrel.
  *
  * Re-exports the high-level {@link UltraCode} facade together with the public
  * factory contracts and key types of every core module (config, providers,

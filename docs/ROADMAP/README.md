@@ -1,12 +1,12 @@
 # Roadmap
 
-> **UltraCode Entwicklungsplan - Der Weg zum besten AI-Coding-Assistenten der Welt**
+> **UltraCode AI Entwicklungsplan - Der Weg zum besten AI-Coding-Assistenten der Welt**
 
 ---
 
 ## 🚀 Vision
 
-UltraCode soll der **beste Open-Source AI-Coding-Assistent der Welt** werden. Durch die Kombination der Stärken von **OpenCode**, **Mistral Vibe** und **Claude Code** mit unserem einzigartigen **AI-gesteuerten Versionierungs- und Release-Planungssystem** schaffen wir ein Tool, das Entwickler produktiver, Teams effizienter und Projekte erfolgreicher macht.
+UltraCode AI soll der **beste Open-Source AI-Coding-Assistent der Welt** werden. Durch die Kombination der Stärken von **OpenCode**, **Mistral Vibe** und **Claude Code** mit unserem einzigartigen **AI-gesteuerten Versionierungs- und Release-Planungssystem** schaffen wir ein Tool, das Entwickler produktiver, Teams effizienter und Projekte erfolgreicher macht.
 
 ---
 
@@ -28,7 +28,7 @@ UltraCode soll der **beste Open-Source AI-Coding-Assistent der Welt** werden. Du
 ### 📊 Gesamtfortschritt: 35% (Phase 1 abgeschlossen, Phase 2-5 in Planung)
 
 ```
-UltraCode Development Phases
+UltraCode AI Development Phases
 ├── Phase 1: Foundation (100%) ✅
 │   ├── Core System
 │   ├── Architecture
@@ -166,7 +166,7 @@ UltraCode Development Phases
 2. **Code beitragen**: Implementieren Sie Features aus der Roadmap
 3. **Feedback geben**: Testen Sie und melden Sie Issues
 4. **Tests schreiben**: Hilf mit, die Testabdeckung zu verbessern
-5. **Evangelism**: Erzählen Sie anderen von UltraCode
+5. **Evangelism**: Erzählen Sie anderen von UltraCode AI
 
 ### Offene Aufgaben
 
@@ -191,6 +191,6 @@ UltraCode Development Phases
 
 ## 📜 Lizenz
 
-© 2026 UltraCode Team. Alle Rechte vorbehalten.
+© 2026 UltraCode AI Team. Alle Rechte vorbehalten.
 
 Dieser Roadmap unterliegt der [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).

@@ -1,15 +1,15 @@
-# UltraCode Kernsystem
+# UltraCode AI Kernsystem
 
-> **Detaillierte Doku des Pakets `@ultracode/core` – anhand des tatsaechlichen Codes in `packages/core/src`**
+> **Detaillierte Doku des Pakets `ultracode-core` – anhand des tatsaechlichen Codes in `packages/core/src`**
 
 ---
 
 ## Ueberblick
 
-`@ultracode/core` (aktuell **0.2.4**) ist die Business-Logik-Schicht des
+`ultracode-core` (aktuell **0.2.4**) ist die Business-Logik-Schicht des
 TS-ESM-pnpm-Monorepos. Sie implementiert gegen die bindenden Vertraege aus
-[`@ultracode/shared`](../../packages/shared/CONTRACTS.md) (0.2.1) und wird von
-`ultracode` (CLI, 0.2.1) konsumiert. Alle Komponenten sind plattformneutral
+[`ultracode-shared`](../../packages/shared/CONTRACTS.md) (0.2.1) und wird von
+`ultracode-ai` (CLI, 0.2.1) konsumiert. Alle Komponenten sind plattformneutral
 (Linux/macOS/Windows) und werden ueber Dependency Injection verdrahtet — es gibt
 keine globalen Singletons.
 
@@ -228,7 +228,7 @@ jeder Fehlerfall wird als `ok: false`-Result gemeldet. Ablauf in Reihenfolge:
 8. Optional: `tool.executed`-Event auf dem `IEventBus`.
 
 ```typescript
-type ToolPermission = "ask" | "always" | "never";   // aus @ultracode/shared
+type ToolPermission = "ask" | "always" | "never";   // aus ultracode-shared
 export const DEFAULT_TOOL_TIMEOUT_SECONDS = 30;
 ```
 
@@ -752,4 +752,4 @@ Alle Kommandos laufen plattformneutral (Linux/macOS/Windows).
 - [AI-Versionierung →](./ai-versioning.md) – ChangeAnalysis, VersionRecommender, ReleasePlanning, QualityGates
 - [Tools-Referenz →](./tools-reference.md) – Tools im Detail
 - [Agenten-Referenz →](./agents-reference.md) – Agenten im Detail
-- [Contract Reference (`@ultracode/shared`)](../../packages/shared/CONTRACTS.md) – die bindenden Interfaces
+- [Contract Reference (`ultracode-shared`)](../../packages/shared/CONTRACTS.md) – die bindenden Interfaces

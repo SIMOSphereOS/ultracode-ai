@@ -6,8 +6,8 @@
  * base class, the streaming parsers and the {@link createProvider} factory.
  */
 
-import { ProviderError } from "@ultracode/shared";
-import type { ILLMProvider, Logger, ProviderId, ProviderOptions } from "@ultracode/shared";
+import { ProviderError } from "ultracode-shared";
+import type { ILLMProvider, Logger, ProviderId, ProviderOptions } from "ultracode-shared";
 import { AnthropicProvider } from "./AnthropicProvider.js";
 import { LocalProvider } from "./LocalProvider.js";
 import { MistralProvider } from "./MistralProvider.js";

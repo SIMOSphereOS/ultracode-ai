@@ -3,7 +3,7 @@ import path from "node:path";
 import { EventEmitter } from "node:events";
 import { promises as fs } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ConfigError, DEFAULT_CONFIG } from "@ultracode/shared";
+import { ConfigError, DEFAULT_CONFIG } from "ultracode-shared";
 import type { CliContext, UltraCodeFacade } from "../context.js";
 import { createTerminalIO, runSetup, writeApiKey, type SetupIO } from "./setup.js";
 

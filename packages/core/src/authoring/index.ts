@@ -1,5 +1,5 @@
 /**
- * `@ultracode/core/authoring` — the Skill-/Agent-Creator (Modul B).
+ * `ultracode-core/authoring` — the Skill-/Agent-Creator (Modul B).
  *
  * Public surface:
  * - {@link Authoring} / {@link createAuthoring} — the authoring engine and its

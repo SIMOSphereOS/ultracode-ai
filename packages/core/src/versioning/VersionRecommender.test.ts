@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG, VersioningError } from "@ultracode/shared";
-import type { ChangeAnalysis, CommitInfo, VersioningConfig } from "@ultracode/shared";
+import { DEFAULT_CONFIG, VersioningError } from "ultracode-shared";
+import type { ChangeAnalysis, CommitInfo, VersioningConfig } from "ultracode-shared";
 import { VersionRecommender } from "./VersionRecommender.js";
 
 function commit(partial: Partial<CommitInfo>): CommitInfo {

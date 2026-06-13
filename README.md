@@ -1,4 +1,4 @@
-# UltraCode
+# UltraCode AI
 
 > **Open-Source AI Code Assistant für das Terminal — mit KI-gestützter Versionierung und Release-Planung.**
 
@@ -8,14 +8,14 @@
 [![Node](https://img.shields.io/badge/node-%3E%3D22.13-339933.svg)](#installation)
 [![pnpm](https://img.shields.io/badge/pnpm-11.5.2-f69220.svg)](#installation)
 
-UltraCode kombiniert einen agentischen Coding-Assistenten (mehrere LLM-Provider, eine
+UltraCode AI kombiniert einen agentischen Coding-Assistenten (mehrere LLM-Provider, eine
 sandboxed Tool-Schicht, persistente Sessions) mit einem Alleinstellungsmerkmal, das andere
 Coding-Tools nicht haben: einem **KI-gestützten Versionierungs- und Release-System**, das
 aus Git-Diffs und Commits einen SemVer-Bump vorschlägt, einen Changelog-Entwurf erstellt und
 Quality-Gates für ein Release prüft.
 
-> **Reifegrad — ehrlich:** UltraCode steht beim ersten produktionsreifen Release `1.3.0`
-> (`@ultracode/core`, `ultracode` CLI und `@ultracode/shared` zu diesem Meilenstein auf
+> **Reifegrad — ehrlich:** UltraCode AI steht beim ersten produktionsreifen Release `1.3.0`
+> (`ultracode-core`, `ultracode-ai` CLI und `ultracode-shared` zu diesem Meilenstein auf
 > `1.3.0` angeglichen). CLI-, Core- und Versionierungs-Fundament sind implementiert und getestet
 > (1426 Tests, ~93 % Statements / ~86 % Branches Coverage) und laufen in CI auf Linux, macOS und Windows (Node 22/24).
 > Desktop-App und IDE-Plugins aus der Architektur-Vision sind **noch nicht** Teil dieses
@@ -27,7 +27,7 @@ Quality-Gates für ein Release prüft.
 
 ### KI-gestützte Versionierung & Release-Planung (USP)
 
-Das Herzstück von UltraCode. Vier zusammenarbeitende Engines im Paket `@ultracode/core`
+Das Herzstück von UltraCode AI. Vier zusammenarbeitende Engines im Paket `ultracode-core`
 (`createVersioningSystem`):
 
 - **`ChangeAnalysisEngine`** — analysiert Datei-Änderungen (numstat / name-status inkl.
@@ -76,13 +76,13 @@ Repository vorliegt.
 
 ## Architektur (Kurzüberblick)
 
-UltraCode ist ein **TypeScript-ESM-Monorepo** (pnpm-Workspaces) aus drei Paketen:
+UltraCode AI ist ein **TypeScript-ESM-Monorepo** (pnpm-Workspaces) aus drei Paketen:
 
 | Paket | Version | Rolle |
 |---|---|---|
-| [`@ultracode/shared`](./packages/shared) | 1.3.0 | Bindender **Kontrakt-Layer**: Typen, Interfaces, Fehlerklassen, `EventBus`, `logger`, Utils. Siehe [`CONTRACTS.md`](./packages/shared/CONTRACTS.md). |
-| [`@ultracode/core`](./packages/core) | 1.3.0 | **Business-Logik**: Config, Provider, Tools, Memory, Context, Execution-Engine, Agenten und das AI-Versioning-System. Fassade: `UltraCode`. |
-| [`ultracode`](./packages/cli) | 1.3.0 | **CLI** (Commander + React/Ink): Kommandos, interaktive UI, Themes. |
+| [`ultracode-shared`](./packages/shared) | 1.3.0 | Bindender **Kontrakt-Layer**: Typen, Interfaces, Fehlerklassen, `EventBus`, `logger`, Utils. Siehe [`CONTRACTS.md`](./packages/shared/CONTRACTS.md). |
+| [`ultracode-core`](./packages/core) | 1.3.0 | **Business-Logik**: Config, Provider, Tools, Memory, Context, Execution-Engine, Agenten und das AI-Versioning-System. Fassade: `UltraCode`. |
+| [`ultracode-ai`](./packages/cli) | 1.3.0 | **CLI** (Commander + React/Ink): Kommandos, interaktive UI, Themes. |
 
 Abhängigkeitsrichtung: `cli → core → shared`. `core` und `cli` implementieren gegen die
 Interfaces aus `shared`; Implementierungsdetails lecken nie nach oben.
@@ -114,8 +114,8 @@ Die CLI lässt sich anschließend direkt über das gebaute Bundle aufrufen:
 node packages/cli/dist/index.js --help
 ```
 
-Nach `pnpm install` ist im Workspace auch der Bin-Name `ultracode` verfügbar (über
-pnpm verknüpft). In den Beispielen unten steht `ultracode` stellvertretend für
+Nach `pnpm install` ist im Workspace auch der Bin-Name `ultracode-ai` verfügbar (über
+pnpm verknüpft). In den Beispielen unten steht `ultracode-ai` stellvertretend für
 `node packages/cli/dist/index.js`.
 
 ---
@@ -126,21 +126,21 @@ pnpm verknüpft). In den Beispielen unten steht `ultracode` stellvertretend für
 
 ```bash
 # Interaktiver Setup-Wizard (Provider + API-Key)
-ultracode --setup
+ultracode-ai --setup
 
 # Umgebung offline prüfen: Node-Version, Git, Config-Verzeichnis, API-Keys (maskiert)
-ultracode doctor
-ultracode doctor --json
+ultracode-ai doctor
+ultracode-ai doctor --json
 ```
 
 ### Einen Prompt ausführen
 
 ```bash
 # Einmaliger, nicht-interaktiver Lauf (Text wird gestreamt)
-ultracode run -p "Erkläre die Funktion in src/index.ts"
+ultracode-ai run -p "Erkläre die Funktion in src/index.ts"
 
 # Mit bestimmtem Agenten und maschinenlesbarer Ausgabe
-ultracode run -p "Refactor README" --agent build --json
+ultracode-ai run -p "Refactor README" --agent build --json
 ```
 
 ### Interaktiver Modus
@@ -148,37 +148,37 @@ ultracode run -p "Refactor README" --agent build --json
 Ohne Subkommando startet — in einem echten TTY — die interaktive React/Ink-Oberfläche:
 
 ```bash
-ultracode
+ultracode-ai
 ```
 
-In einer nicht-interaktiven Umgebung (kein TTY) gibt UltraCode stattdessen einen Hinweis
+In einer nicht-interaktiven Umgebung (kein TTY) gibt UltraCode AI stattdessen einen Hinweis
 auf `run -p` aus.
 
 ### Tools & Agenten inspizieren
 
 ```bash
-ultracode tools list
-ultracode agents list
-ultracode tools list --json
+ultracode-ai tools list
+ultracode-ai agents list
+ultracode-ai tools list --json
 ```
 
 ### AI-Versionierung & Release
 
 ```bash
 # Änderungen im Working-Tree / Commit-Range analysieren
-ultracode version analyze
-ultracode version analyze "v1.2.0..HEAD"
+ultracode-ai version analyze
+ultracode-ai version analyze "v1.2.0..HEAD"
 
 # Nächste Version nach SemVer vorschlagen
-ultracode version suggest
+ultracode-ai version suggest
 
 # Release-Plan (Changelog-Entwurf, Milestones, Risiko) entwerfen
-ultracode release plan
-ultracode release plan 1.3.0
+ultracode-ai release plan
+ultracode-ai release plan 1.3.0
 
 # Release-Quality-Gates prüfen (Exit-Code 1, wenn Gates fehlschlagen — CI-tauglich)
-ultracode quality
-ultracode quality --json
+ultracode-ai quality
+ultracode-ai quality --json
 ```
 
 Alle Versionierungs-Subkommandos unterstützen `--json`.
@@ -186,41 +186,41 @@ Alle Versionierungs-Subkommandos unterstützen `--json`.
 ### Konfiguration
 
 ```bash
-ultracode config show                 # aufgelöste Config (Secrets maskiert)
-ultracode config get core.activeModel # einzelner Wert per dotted path
-ultracode config set ui.theme dracula # Wert setzen, in User-Layer persistieren
-ultracode config validate             # Config validieren
-ultracode config export config.json   # als JSON exportieren (oder stdout)
-ultracode config import config.json   # Overrides importieren
+ultracode-ai config show                 # aufgelöste Config (Secrets maskiert)
+ultracode-ai config get core.activeModel # einzelner Wert per dotted path
+ultracode-ai config set ui.theme dracula # Wert setzen, in User-Layer persistieren
+ultracode-ai config validate             # Config validieren
+ultracode-ai config export config.json   # als JSON exportieren (oder stdout)
+ultracode-ai config import config.json   # Overrides importieren
 ```
 
 ### Kostenkontrolle, Skills, Agenten & Lernen
 
 ```bash
 # Budget: Spend-Status, Plan (Cap / Approval-Threshold) und Ledger-Historie
-ultracode budget show                 # aktueller Spend, Cap, Rest (Alias: budget status)
-ultracode budget plan --cap 50 --threshold 5
-ultracode budget set budget.json      # Plan aus JSON-Datei laden + persistieren
-ultracode budget history --limit 20
+ultracode-ai budget show                 # aktueller Spend, Cap, Rest (Alias: budget status)
+ultracode-ai budget plan --cap 50 --threshold 5
+ultracode-ai budget set budget.json      # Plan aus JSON-Datei laden + persistieren
+ultracode-ai budget history --limit 20
 
 # Skills authoring: auflisten, anzeigen, aus Wissensmaterial erzeugen/upgraden/testen
-ultracode skills list [catalog]
-ultracode skills show <name>
-ultracode skills create --topic "…" --catalog "…" --summary "…" [--yes]
-ultracode skills upgrade --file material.json [--yes]
-ultracode skills test --file material.json
+ultracode-ai skills list [catalog]
+ultracode-ai skills show <name>
+ultracode-ai skills create --topic "…" --catalog "…" --summary "…" [--yes]
+ultracode-ai skills upgrade --file material.json [--yes]
+ultracode-ai skills test --file material.json
 
 # Agenten authoring (zusätzlich zu `agents list`): aus Wissensmaterial erzeugen/evolvieren/testen
-ultracode agents create --topic "…" --summary "…" [--yes]
-ultracode agents evolve --file material.json [--yes]
-ultracode agents test --file material.json
+ultracode-ai agents create --topic "…" --summary "…" [--yes]
+ultracode-ai agents evolve --file material.json [--yes]
+ultracode-ai agents test --file material.json
 
 # Lernen aus Dokumentationsquellen (zeigt erst einen Kostenreport)
-ultracode learn sources list
-ultracode learn sources add <url> [--catalog …] [--schedule on-demand|annual|<cron>] [--scope …] [--locale …]
-ultracode learn sources remove <id>
-ultracode learn run [sourceId] [--yes]
-ultracode learn schedule
+ultracode-ai learn sources list
+ultracode-ai learn sources add <url> [--catalog …] [--schedule on-demand|annual|<cron>] [--scope …] [--locale …]
+ultracode-ai learn sources remove <id>
+ultracode-ai learn run [sourceId] [--yes]
+ultracode-ai learn schedule
 ```
 
 Diese Kommandos unterstützen ebenfalls `--json`. `create`/`upgrade`/`evolve`/`run` geben ohne
@@ -230,7 +230,7 @@ Diese Kommandos unterstützen ebenfalls `--json`. `create`/`upgrade`/`evolve`/`r
 
 ## Konfiguration (Kurzüberblick)
 
-UltraCode liest seine Konfiguration aus mehreren Layern, die in dieser Reihenfolge
+UltraCode AI liest seine Konfiguration aus mehreren Layern, die in dieser Reihenfolge
 gemerged werden (späterer Layer gewinnt):
 
 ```
@@ -261,7 +261,7 @@ Umgebung oder aus `~/.ultracode/.env` gelesen:
 | `OPENAI_API_KEY` | OpenAI |
 | `ULTRACODE_API_KEY` | generischer Fallback |
 
-`local` (Ollama) benötigt keinen Key. `ultracode config show` und `doctor` maskieren
+`local` (Ollama) benötigt keinen Key. `ultracode-ai config show` und `doctor` maskieren
 Secrets grundsätzlich.
 
 Vollständige Optionen:
@@ -338,4 +338,4 @@ Ausführliche Richtlinien: [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## Lizenz
 
-[MIT](./LICENSE) © 2026 UltraCode Team / SIMO GmbH
+[MIT](./LICENSE) © 2026 UltraCode AI Team / SIMO GmbH

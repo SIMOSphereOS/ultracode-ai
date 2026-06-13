@@ -1,14 +1,14 @@
 # Enterprise Features
 
-> ⚠️ **Vision / noch nicht implementiert.** Die in diesem Abschnitt beschriebenen Enterprise-Funktionen (Multi-User-Self-Hosting, Team-Kollaboration, zentrales Security-/Compliance-Backend) sind **Roadmap**, kein heute auslieferbarer Code. UltraCode ist aktuell ein lokales Single-User-CLI. Es gibt keinen Server, keine Benutzerverwaltung und keine SaaS-Komponente. Verbindlich ist der tatsächliche Funktionsumfang im [Haupt-README](../../README.md) und in der [CLI-Referenz](../REFERENCE/cli-commands.md).
+> ⚠️ **Vision / noch nicht implementiert.** Die in diesem Abschnitt beschriebenen Enterprise-Funktionen (Multi-User-Self-Hosting, Team-Kollaboration, zentrales Security-/Compliance-Backend) sind **Roadmap**, kein heute auslieferbarer Code. UltraCode AI ist aktuell ein lokales Single-User-CLI. Es gibt keinen Server, keine Benutzerverwaltung und keine SaaS-Komponente. Verbindlich ist der tatsächliche Funktionsumfang im [Haupt-README](../../README.md) und in der [CLI-Referenz](../REFERENCE/cli-commands.md).
 
-> **Unternehmensfunktionen für UltraCode - Skalierbar, Sicher, Kollaborativ** *(geplant)*
+> **Unternehmensfunktionen für UltraCode AI - Skalierbar, Sicher, Kollaborativ** *(geplant)*
 
 ---
 
 ## 🏢 Übersicht
 
-UltraCode bietet umfassende Enterprise-Features für Teams und Unternehmen, die eine professionelle, skalierbare und sichere AI-Coding-Lösung benötigen. Dieser Abschnitt deckt alle Aspekte für den unternehmerischen Einsatz ab.
+UltraCode AI bietet umfassende Enterprise-Features für Teams und Unternehmen, die eine professionelle, skalierbare und sichere AI-Coding-Lösung benötigen. Dieser Abschnitt deckt alle Aspekte für den unternehmerischen Einsatz ab.
 
 ---
 
@@ -25,7 +25,7 @@ UltraCode bietet umfassende Enterprise-Features für Teams und Unternehmen, die 
 ## 🎯 Enterprise-Vorteile
 
 ### ✅ Selbsthosting
-- **Volle Kontrolle**: Hosten Sie UltraCode in Ihrer eigenen Infrastruktur
+- **Volle Kontrolle**: Hosten Sie UltraCode AI in Ihrer eigenen Infrastruktur
 - **Datenhoheit**: Alle Daten bleiben in Ihrem Netzwerk
 - **Skalierbarkeit**: Von kleinen Teams bis zu großen Unternehmen
 - **Kosteneffizienz**: Keine Abonnementkosten für Cloud-Dienste
@@ -47,7 +47,7 @@ UltraCode bietet umfassende Enterprise-Features für Teams und Unternehmen, die 
 ## 🏗️ Architektur-Übersicht
 
 ```
-Enterprise UltraCode Deployment
+Enterprise UltraCode AI Deployment
 ├── Self-Hosted Components
 │   ├── Core Server (TypeScript/Python)
 │   ├── AI Service (LLM Integration)
@@ -110,14 +110,14 @@ security:
 
 ```bash
 # Team erstellen
-ultracode team create "Dev Team A" --members @alice,@bob,@charlie
+ultracode-ai team create "Dev Team A" --members @alice,@bob,@charlie
 
 # Projekt zuweisen
-ultracode project create "New Product" --team "Dev Team A"
+ultracode-ai project create "New Product" --team "Dev Team A"
 
 # Rollen zuweisen
-ultracode user @alice assign admin
-ultracode user @bob assign developer
+ultracode-ai user @alice assign admin
+ultracode-ai user @bob assign developer
 ```
 
 ---
@@ -158,6 +158,6 @@ ultracode user @bob assign developer
 
 ## 📜 Lizenz
 
-Enterprise-Features unterliegen der [UltraCode Enterprise License](../LICENSE-ENTERPRISE.md).
+Enterprise-Features unterliegen der [UltraCode AI Enterprise License](../LICENSE-ENTERPRISE.md).
 
-© 2026 UltraCode Team
+© 2026 UltraCode AI Team

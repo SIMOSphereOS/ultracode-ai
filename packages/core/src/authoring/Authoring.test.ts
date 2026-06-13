@@ -2,14 +2,14 @@ import os from "node:os";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { EventBus } from "@ultracode/shared";
+import { EventBus } from "ultracode-shared";
 import type {
   AgentDefinition,
   CompletionChunk,
   CompletionRequest,
   CompletionResult,
   ILLMProvider,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { Authoring, createAuthoring } from "./Authoring.js";
 import { INITIAL_SKILL_VERSION } from "./defaults.js";
 import { AuthoringError } from "./errors.js";

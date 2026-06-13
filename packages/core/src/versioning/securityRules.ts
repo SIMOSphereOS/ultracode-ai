@@ -6,7 +6,7 @@
  * by one severity step to reduce false positives.
  */
 
-import type { SecurityFinding } from "@ultracode/shared";
+import type { SecurityFinding } from "ultracode-shared";
 
 /** Severity levels, re-exported for convenience. */
 export type SecuritySeverity = SecurityFinding["severity"];

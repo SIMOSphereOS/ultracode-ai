@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NoopLogger, ProviderError } from "@ultracode/shared";
+import { NoopLogger, ProviderError } from "ultracode-shared";
 import type {
   ChangeAnalysis,
   CommitInfo,
@@ -7,7 +7,7 @@ import type {
   CompletionRequest,
   CompletionResult,
   ILLMProvider,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { ReleasePlanningEngine } from "./ReleasePlanningEngine.js";
 
 const logger = new NoopLogger();

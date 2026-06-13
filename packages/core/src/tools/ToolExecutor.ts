@@ -26,7 +26,7 @@ import {
   isPlainObject,
   serializeError,
   truncate,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import type {
   IEventBus,
   Logger,
@@ -34,7 +34,7 @@ import type {
   ToolPermission,
   ToolResult,
   UltraCodeConfig,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import type { ToolRegistry } from "./ToolRegistry.js";
 
 /** Default per-tool execution timeout, in seconds. */

@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
-import type { Logger, ProviderOptions } from "@ultracode/shared";
+import type { Logger, ProviderOptions } from "ultracode-shared";
 
 /** Build a `ReadableStream<Uint8Array>` from string/byte chunks. */
 export function streamFromChunks(chunks: ReadonlyArray<string | Uint8Array>): ReadableStream<Uint8Array> {

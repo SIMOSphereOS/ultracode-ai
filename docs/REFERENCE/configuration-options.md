@@ -22,10 +22,10 @@ Pfade mit `~` werden plattformübergreifend zum jeweiligen Home-Verzeichnis aufg
 ### Inspektion
 
 ```bash
-ultracode config show        # aufgelöste Werte (Secrets maskiert)
-ultracode config get core.activeModel
-ultracode config set core.temperature 0.3
-ultracode config validate
+ultracode-ai config show        # aufgelöste Werte (Secrets maskiert)
+ultracode-ai config get core.activeModel
+ultracode-ai config set core.temperature 0.3
+ultracode-ai config validate
 ```
 
 ---

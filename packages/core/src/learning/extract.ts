@@ -16,7 +16,7 @@
 
 import { createHash } from "node:crypto";
 
-import type { ILLMProvider } from "@ultracode/shared";
+import type { ILLMProvider } from "ultracode-shared";
 import type { KnowledgeMaterial, RoutingShare } from "./types.js";
 import {
   CHARS_PER_TOKEN,

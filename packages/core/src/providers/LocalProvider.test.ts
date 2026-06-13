@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ProviderError } from "@ultracode/shared";
+import { ProviderError } from "ultracode-shared";
 import { LocalProvider, OLLAMA_BASE_URL } from "./LocalProvider.js";
 import {
   captureLogger,

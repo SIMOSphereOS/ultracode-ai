@@ -12,7 +12,7 @@ import {
   DEFAULT_CONFIG,
   EventBus,
   NoopLogger,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import type {
   ChatMessage,
   CompletionRequest,
@@ -22,7 +22,7 @@ import type {
   SessionMeta,
   SessionRecord,
   UltraCodeConfig,
-} from "@ultracode/shared";
+} from "ultracode-shared";
 import { UltraCode } from "../UltraCode.js";
 import type { UltraCodeParts, VersioningFacade } from "../UltraCode.js";
 import { createAgentManager } from "../agents/AgentManager.js";
