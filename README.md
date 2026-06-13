@@ -14,10 +14,10 @@ Coding-Tools nicht haben: einem **KI-gestützten Versionierungs- und Release-Sys
 aus Git-Diffs und Commits einen SemVer-Bump vorschlägt, einen Changelog-Entwurf erstellt und
 Quality-Gates für ein Release prüft.
 
-> **Reifegrad — ehrlich:** UltraCode ist auf dem Weg zum 1.3.0-Release (aktuell `@ultracode/core` `1.2.0`,
-> `ultracode` CLI `1.1.0`, `@ultracode/shared` `1.0.1`; jedes Paket eigenständig
-> versioniert). CLI-, Core- und Versionierungs-Fundament sind implementiert und getestet
-> (1347 Tests, ~93 % Statements / ~86 % Branches Coverage) und laufen in CI auf Linux, macOS und Windows (Node 22/24).
+> **Reifegrad — ehrlich:** UltraCode steht beim ersten produktionsreifen Release `1.3.0`
+> (`@ultracode/core`, `ultracode` CLI und `@ultracode/shared` zu diesem Meilenstein auf
+> `1.3.0` angeglichen). CLI-, Core- und Versionierungs-Fundament sind implementiert und getestet
+> (1426 Tests, ~93 % Statements / ~86 % Branches Coverage) und laufen in CI auf Linux, macOS und Windows (Node 22/24).
 > Desktop-App und IDE-Plugins aus der Architektur-Vision sind **noch nicht** Teil dieses
 > Repos. Was hier dokumentiert ist, spiegelt den tatsächlichen Code wider.
 
@@ -80,9 +80,9 @@ UltraCode ist ein **TypeScript-ESM-Monorepo** (pnpm-Workspaces) aus drei Paketen
 
 | Paket | Version | Rolle |
 |---|---|---|
-| [`@ultracode/shared`](./packages/shared) | 1.0.1 | Bindender **Kontrakt-Layer**: Typen, Interfaces, Fehlerklassen, `EventBus`, `logger`, Utils. Siehe [`CONTRACTS.md`](./packages/shared/CONTRACTS.md). |
-| [`@ultracode/core`](./packages/core) | 1.2.0 | **Business-Logik**: Config, Provider, Tools, Memory, Context, Execution-Engine, Agenten und das AI-Versioning-System. Fassade: `UltraCode`. |
-| [`ultracode`](./packages/cli) | 1.1.0 | **CLI** (Commander + React/Ink): Kommandos, interaktive UI, Themes. |
+| [`@ultracode/shared`](./packages/shared) | 1.3.0 | Bindender **Kontrakt-Layer**: Typen, Interfaces, Fehlerklassen, `EventBus`, `logger`, Utils. Siehe [`CONTRACTS.md`](./packages/shared/CONTRACTS.md). |
+| [`@ultracode/core`](./packages/core) | 1.3.0 | **Business-Logik**: Config, Provider, Tools, Memory, Context, Execution-Engine, Agenten und das AI-Versioning-System. Fassade: `UltraCode`. |
+| [`ultracode`](./packages/cli) | 1.3.0 | **CLI** (Commander + React/Ink): Kommandos, interaktive UI, Themes. |
 
 Abhängigkeitsrichtung: `cli → core → shared`. `core` und `cli` implementieren gegen die
 Interfaces aus `shared`; Implementierungsdetails lecken nie nach oben.

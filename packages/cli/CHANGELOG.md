@@ -1,8 +1,17 @@
 # Changelog — ultracode (CLI)
 
-All notable changes to the `ultracode` CLI package. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer 2.0](https://semver.org/). Versioned independently from the monorepo release.
+All notable changes to the `ultracode` CLI package. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer 2.0](https://semver.org/). Aligned to the monorepo `1.3.0` production-ready milestone.
 
 ## [Unreleased]
+
+## [1.3.0] - 2026-06-13
+
+### Changed
+- **`doctor`** enforces the real supported runtime: `MIN_NODE_MAJOR=22` / `MIN_NODE_MINOR=13` (matching `engines.node >= 22.13.0`) instead of the prior Node 20 floor; the corresponding docs are corrected to `>= 22.13`.
+- The CLI entry suppresses only the noisy `node:sqlite` `ExperimentalWarning` (all other warnings pass through), and guards top-level auto-run behind an `isMainModule()` check so the module is importable in tests.
+
+### Packaging
+- Added `files`, `repository`, `homepage`, `bugs`, `prepublishOnly` and a package `README`/`LICENSE`; internal deps use `workspace:^` for correct publish-time replacement. Published via the new monorepo `publish.yml` on `v*` tags.
 
 ## [1.1.0] - 2026-06-12
 

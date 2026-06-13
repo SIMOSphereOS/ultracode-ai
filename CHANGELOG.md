@@ -5,6 +5,48 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-06-13
+
+First production-ready release. Closes the confirmed P1 hardening backlog from the
+production-readiness audit plus security quick-wins. All packages aligned to `1.3.0`
+(`@ultracode/core`, `ultracode` CLI, `@ultracode/shared`). Test baseline 1347 → 1426,
+typecheck clean, coverage ~93 % statements / ~86 % branches (now a hard CI gate at 85/85/80).
+
+### Added
+- **npm publish pipeline**: `.github/workflows/publish.yml` publishes all packages via
+  `pnpm -r publish` on `v*` tags, with `publishConfig.access: public`, per-package
+  `README`/`LICENSE`, `files`/`repository`/`prepublishOnly` metadata and `workspace:^` ranges.
+- **Configurable streaming idle/body timeout** in every provider — a stalled provider
+  stream now aborts after the configured window instead of wedging the run forever.
+- **Agent-loop no-progress detection**: identical consecutive tool batches terminate with a
+  distinct `no_progress` result instead of silently burning the turn budget; `finishReason`
+  (incl. `length` truncation) now propagates and warns.
+- **Coverage threshold gate** (`vitest.config.ts`: lines/statements ≥ 85, branches ≥ 80).
+- Safe-by-default protected extensions and read-deny lists on the `read`/`write_file`/`edit`
+  tools (`.env`, `.pem`, `.key`, `id_rsa`, `.npmrc`, `.git/config`), opt-out via per-tool override.
+
+### Changed
+- **Versioning USP** now derives the current version from the latest SemVer git tag or
+  `package.json` instead of bumping from a hardcoded `0.0.0`.
+- `SqliteSessionStore` runs `PRAGMA journal_mode=WAL` + `busy_timeout` and wraps appends in a
+  `BEGIN IMMEDIATE` transaction — fixes `SQLITE_BUSY` and lost-update races between two terminals.
+- The persisted `SessionOptimizer` pipeline (incremental/LLM summary + pinned facts) is now
+  actually consumed at replay (`buildWorkingSetPersisted`) — was previously dead code.
+- `doctor` enforces Node `>= 22.13` (matches `engines`) and suppresses the noisy `node:sqlite`
+  experimental warning.
+- Documentation honesty pass: aspirational REST-API / Enterprise / install-channel docs are
+  clearly bannered or rewritten, the GitHub org corrected, the real tool count (14) restored,
+  and the `budget`/`skills`/`learn`/`agents-authoring` commands documented.
+
+### Security
+- `sanitizeEnv` now strips the most common cloud/secret variables it previously leaked into
+  the model-readable bash channel (`AWS_SECRET_ACCESS_KEY`, `*_PRIVATE_KEY`, `SECRET_KEY`,
+  bare `API_KEY`, Vault `SECRET_ID`) via a token-boundary model, without over-matching benign vars.
+- SSRF DNS-rebinding protection (`nodeDnsLookupAll`, `allowPrivate: false`) is now wired into
+  the production documentation crawler in both construction sites.
+- Versioning git invocations reject leading-dash refspecs and insert `--` separators,
+  closing an argument-injection / arbitrary-file-write vector.
+
 ## [1.2.0] - 2026-06-12
 
 ### Added
