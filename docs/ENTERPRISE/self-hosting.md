@@ -49,7 +49,7 @@ UltraCode AI kann vollständig in Ihrer eigenen Infrastruktur gehostet werden. D
 #### 1. Repository klonen
 
 ```bash
-git clone https://github.com/AndreasSchwan-SIMO/UltraCode.git
+git clone https://github.com/AndreasSchwan-SIMO/ultracode-ai.git
 cd ultracode
 ```
 

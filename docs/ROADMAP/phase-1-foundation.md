@@ -913,7 +913,7 @@ packages/
 
 - **Phase 1 Fragen**: phase1@ultracode.ai
 - **Allgemeiner Support**: support@ultracode.ai
-- **GitHub Discussions**: [https://github.com/AndreasSchwan-SIMO/UltraCode/discussions](https://github.com/AndreasSchwan-SIMO/UltraCode/discussions)
+- **GitHub Discussions**: [https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions](https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions)
 
 ---
 

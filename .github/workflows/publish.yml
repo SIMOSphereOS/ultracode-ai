@@ -4,10 +4,9 @@ on:
   push:
     tags: ["v*"]
 
-# Minimal permissions: read the checkout, write provenance/id-token for npm.
+# Minimal permissions: read-only checkout (npm auth via NODE_AUTH_TOKEN).
 permissions:
   contents: read
-  id-token: write
 
 concurrency:
   group: publish-${{ github.ref }}
@@ -42,7 +41,7 @@ jobs:
       # pnpm rewrites workspace:^ protocol specifiers to the real published
       # versions at publish time, so the released tarballs contain no
       # "workspace:*"/"workspace:^" ranges. Manual verification:
-      #   pnpm -r --filter ultracode pack  → inspect package.json in the tarball.
+      #   pnpm -r --filter ultracode-ai pack  → inspect package.json in the tarball.
       - name: Publish to npm
         run: pnpm -r publish --no-git-checks --access public
         env:

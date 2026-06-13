@@ -25,7 +25,7 @@ Linux, macOS und Windows verifiziert.
 
 ```bash
 # Repository klonen
-git clone https://github.com/AndreasSchwan-SIMO/UltraCode.git
+git clone https://github.com/AndreasSchwan-SIMO/ultracode-ai.git
 cd UltraCode
 
 # Abhängigkeiten installieren

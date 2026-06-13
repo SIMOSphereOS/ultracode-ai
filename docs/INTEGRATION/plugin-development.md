@@ -747,4 +747,4 @@ Dokumentiere dein Plug-in im **UltraCode AI Docs**:
 - Beispiel-Plug-ins → *(geplant; `examples/plugins` existiert noch nicht)*
 - [Plug-in-Registry →](https://ultracode.ai/plugins)
 - [Discord #plugins →](https://discord.gg/ultracode)
-- [GitHub Issues →](https://github.com/AndreasSchwan-SIMO/UltraCode/issues) (Label: `plugin`)
+- [GitHub Issues →](https://github.com/AndreasSchwan-SIMO/ultracode-ai/issues) (Label: `plugin`)

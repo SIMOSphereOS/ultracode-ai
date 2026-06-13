@@ -23,7 +23,7 @@ function readManifest(pkgDir: string): Record<string, unknown> {
   return JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>;
 }
 
-const REPO_URL = "git+https://github.com/AndreasSchwan-SIMO/UltraCode.git";
+const REPO_URL = "git+https://github.com/AndreasSchwan-SIMO/ultracode-ai.git";
 
 describe("packaging invariants", () => {
   const publishable: Array<{ dir: string; name: string; scoped: boolean }> = [
@@ -62,10 +62,10 @@ describe("packaging invariants", () => {
         expect(repo.url).toBe(REPO_URL);
         expect(repo.directory).toBe(`packages/${dir}`);
         expect(manifest.homepage).toBe(
-          "https://github.com/AndreasSchwan-SIMO/UltraCode#readme",
+          "https://github.com/AndreasSchwan-SIMO/ultracode-ai#readme",
         );
         expect(manifest.bugs).toEqual({
-          url: "https://github.com/AndreasSchwan-SIMO/UltraCode/issues",
+          url: "https://github.com/AndreasSchwan-SIMO/ultracode-ai/issues",
         });
       });
 

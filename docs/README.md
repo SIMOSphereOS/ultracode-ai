@@ -138,7 +138,7 @@ rg "migration" docs/INTEGRATION/
 
 ## 📞 Support & Feedback
 
-- **GitHub Discussions**: [https://github.com/AndreasSchwan-SIMO/UltraCode/discussions](https://github.com/AndreasSchwan-SIMO/UltraCode/discussions)
+- **GitHub Discussions**: [https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions](https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions)
 - **Discord**: [https://discord.gg/ultracode](https://discord.gg/ultracode)
 - **E-Mail**: support@ultracode.ai
 

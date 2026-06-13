@@ -164,7 +164,7 @@ UltraCode AI folgt einem **modularen Mikroarchitektur-Ansatz** mit klaren Verant
 
 ```bash
 # Repository klonen
-git clone https://github.com/AndreasSchwan-SIMO/UltraCode.git
+git clone https://github.com/AndreasSchwan-SIMO/ultracode-ai.git
 cd ultracode
 
 # Abhängigkeiten installieren
@@ -357,7 +357,7 @@ node --max-old-space-size=8192 packages/cli/dist/index.js
 
 ### Erste Schritte
 
-1. **Issue finden**: [GitHub Issues](https://github.com/AndreasSchwan-SIMO/UltraCode/issues)
+1. **Issue finden**: [GitHub Issues](https://github.com/AndreasSchwan-SIMO/ultracode-ai/issues)
 2. **Forken**: Repository forkern
 3. **Branch erstellen**: `git checkout -b feat/mein-feature`
 4. **Änderungen commiten**: Conventional Commits verwenden
@@ -381,9 +381,9 @@ Suche nach Issues mit diesen Labels:
 
 ## 📚 Wichtige Links
 
-- **Main Repository**: [https://github.com/AndreasSchwan-SIMO/UltraCode](https://github.com/AndreasSchwan-SIMO/UltraCode)
-- **Issues**: [https://github.com/AndreasSchwan-SIMO/UltraCode/issues](https://github.com/AndreasSchwan-SIMO/UltraCode/issues)
-- **Discussions**: [https://github.com/AndreasSchwan-SIMO/UltraCode/discussions](https://github.com/AndreasSchwan-SIMO/UltraCode/discussions)
+- **Main Repository**: [https://github.com/AndreasSchwan-SIMO/ultracode-ai](https://github.com/AndreasSchwan-SIMO/ultracode-ai)
+- **Issues**: [https://github.com/AndreasSchwan-SIMO/ultracode-ai/issues](https://github.com/AndreasSchwan-SIMO/ultracode-ai/issues)
+- **Discussions**: [https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions](https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions)
 - **Discord**: [https://discord.gg/ultracode](https://discord.gg/ultracode)
 - **Website**: [https://ultracode.ai](https://ultracode.ai)
 

@@ -287,7 +287,7 @@ rg "/generate" docs/REFERENCE/slash-commands.md -A 10
 - **API-Fragen**: api@ultracode.ai
 - **CLI-Fragen**: cli@ultracode.ai
 - **Allgemeiner Support**: support@ultracode.ai
-- **GitHub Discussions**: [https://github.com/AndreasSchwan-SIMO/UltraCode/discussions](https://github.com/AndreasSchwan-SIMO/UltraCode/discussions)
+- **GitHub Discussions**: [https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions](https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions)
 
 ---
 

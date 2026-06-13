@@ -288,7 +288,7 @@ Führe ein **Migrations-Log**, um Unterschiede zu dokumentieren:
 ## 📞 Support bei Migration
 
 - **Discord:** [#migration Channel](https://discord.gg/ultracode)
-- **GitHub Issues:** [Migration Label](https://github.com/AndreasSchwan-SIMO/UltraCode/labels/migration)
+- **GitHub Issues:** [Migration Label](https://github.com/AndreasSchwan-SIMO/ultracode-ai/labels/migration)
 - **E-Mail:** migration@ultracode.ai
 
 ---
