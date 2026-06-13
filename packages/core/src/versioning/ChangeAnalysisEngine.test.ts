@@ -188,6 +188,59 @@ describe("ChangeAnalysisEngine (real git repos)", () => {
     expect(apiDiff[0]?.location).toBe("api.ts");
   });
 
+  it("flags every exported symbol of a deleted .ts file as removed", async () => {
+    const dir = await makeRepo();
+    await writeFile(
+      path.join(dir, "gone.ts"),
+      "export function alpha(): number { return 1; }\nexport const beta = 2;\n",
+      "utf8",
+    );
+    await writeFile(path.join(dir, "keep.ts"), "export const stay = 1;\n", "utf8");
+    await commitAll(dir, "feat: initial api");
+    await git(dir, "tag", "v1.0.0");
+    await rm(path.join(dir, "gone.ts"));
+    await commitAll(dir, "feat: drop module");
+
+    const analysis = await engineFor(dir).analyze();
+    const deleted = analysis.files.find((f) => f.path === "gone.ts");
+    expect(deleted?.status).toBe("deleted");
+    const apiDiff = analysis.breakingChanges.filter((b) => b.source === "api-diff");
+    const removed = apiDiff.map((b) => b.description);
+    expect(removed.some((d) => d.includes('"alpha"') && d.includes("gone.ts"))).toBe(true);
+    expect(removed.some((d) => d.includes('"beta"') && d.includes("gone.ts"))).toBe(true);
+    // the surviving file's export must not be flagged
+    expect(removed.some((d) => d.includes('"stay"'))).toBe(false);
+  });
+
+  it("flags an export dropped during a rename as an api-diff breaking change", async () => {
+    const dir = await makeRepo();
+    const original = [
+      "export function keepMe(): number { return 1; }",
+      "export const dropMe = 42;",
+      "// padding to make git detect a rename rather than add+delete",
+      ...Array.from({ length: 20 }, (_, i) => `// stable line ${i}`),
+    ].join("\n");
+    await writeFile(path.join(dir, "old-api.ts"), `${original}\n`, "utf8");
+    await commitAll(dir, "feat: initial api");
+    await git(dir, "tag", "v1.0.0");
+    const renamed = [
+      "export function keepMe(): number { return 1; }",
+      "// padding to make git detect a rename rather than add+delete",
+      ...Array.from({ length: 20 }, (_, i) => `// stable line ${i}`),
+    ].join("\n");
+    await rm(path.join(dir, "old-api.ts"));
+    await writeFile(path.join(dir, "new-api.ts"), `${renamed}\n`, "utf8");
+    await commitAll(dir, "refactor: rename and slim api");
+
+    const analysis = await engineFor(dir).analyze();
+    const renamedFile = analysis.files.find((f) => f.status === "renamed");
+    expect(renamedFile?.path).toBe("new-api.ts");
+    const apiDiff = analysis.breakingChanges.filter((b) => b.source === "api-diff");
+    expect(apiDiff).toHaveLength(1);
+    expect(apiDiff[0]?.description).toContain('"dropMe"');
+    expect(apiDiff[0]?.location).toBe("new-api.ts");
+  });
+
   it("finds hardcoded secrets and dampens findings in test files", async () => {
     const dir = await makeRepo();
     const fakeAwsKey = ["AKIA", "ABCDEFGHIJKLMNOP"].join("");
@@ -364,5 +417,61 @@ describe("extractExportedNames", () => {
     expect(extractExportedNames("").size).toBe(0);
     expect(extractExportedNames("export {").size).toBe(0);
     expect(extractExportedNames("export }{ nonsense").size).toBe(0);
+  });
+
+  it("captures every name in a comma-separated declarator export", () => {
+    const names = extractExportedNames("export const a = 1, b = 2, c = 3;");
+    expect(names.has("a")).toBe(true);
+    expect(names.has("b")).toBe(true);
+    expect(names.has("c")).toBe(true);
+  });
+
+  it("ignores commas inside initializers when splitting declarators", () => {
+    const source = [
+      "export const first = fn(1, 2, 3),",
+      "  second = [4, 5, 6],",
+      "  third = { x: 1, y: 2 };",
+    ].join("\n");
+    const names = extractExportedNames(source);
+    expect(names.has("first")).toBe(true);
+    expect(names.has("second")).toBe(true);
+    expect(names.has("third")).toBe(true);
+    // values inside the initializers must not be mistaken for binding names
+    expect(names.has("x")).toBe(false);
+    expect(names.has("y")).toBe(false);
+  });
+
+  it("ignores commas inside generic type arguments when splitting declarators", () => {
+    // A top-level comma inside `<…>` must not be read as a declarator boundary,
+    // otherwise the type argument (`number`, `B`) leaks in as a phantom export.
+    const map = extractExportedNames("export const m = new Map<string, number>(), n = 1;");
+    expect([...map].sort()).toEqual(["m", "n"]);
+
+    const call = extractExportedNames("export const x = foo<A, B>(), y = 2;");
+    expect([...call].sort()).toEqual(["x", "y"]);
+
+    const annotation = extractExportedNames("export const a: Record<string, number> = {}, b = 1;");
+    expect([...annotation].sort()).toEqual(["a", "b"]);
+
+    // a single generic declarator without a trailing binding stays a single name
+    const single = extractExportedNames("export const m = new Map<string, number>();");
+    expect([...single]).toEqual(["m"]);
+  });
+
+  it("still splits call/array/object declarators alongside the generic fix", () => {
+    expect([...extractExportedNames("export const a = f(1, 2), b = 2;")].sort()).toEqual(["a", "b"]);
+    expect([...extractExportedNames("export const a = [1, 2], b = 3;")].sort()).toEqual(["a", "b"]);
+    expect([...extractExportedNames("export const a = { x: 1, y: 2 }, b = 3;")].sort()).toEqual([
+      "a",
+      "b",
+    ]);
+  });
+
+  it("records export default under the name \"default\"", () => {
+    expect(extractExportedNames("export default function () {}").has("default")).toBe(true);
+    expect(extractExportedNames("const x = 1;\nexport default x;").has("default")).toBe(true);
+    expect(extractExportedNames("export default class Foo {}").has("default")).toBe(true);
+    // no default export → no synthetic "default" name
+    expect(extractExportedNames("export const y = 1;").has("default")).toBe(false);
   });
 });

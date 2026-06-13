@@ -20,6 +20,8 @@ import { DEFAULT_CATALOG, DEFAULT_LOCALE, DEFAULT_SCHEDULE, SEED_SOURCES } from 
 import { LearnError } from "./errors.js";
 import { learningDir, sourcesFile } from "./paths.js";
 import type { LearnSource } from "./types.js";
+import { normalizeUrl } from "./url.js";
+import { isFetchAllowed } from "./urlGuard.js";
 
 export { SEED_SOURCES } from "./defaults.js";
 
@@ -151,6 +153,36 @@ function validateSource(s: LearnSource): void {
   }
   if (typeof s.catalog !== "string" || s.catalog.length === 0) {
     throw new LearnError("Source catalog is required", { details: { id: s.id } });
+  }
+  validateSourceUrl(s);
+}
+
+/**
+ * Validate a source's URL at ADD time (before it enters the persisted library),
+ * mirroring the SSRF/scheme policy the crawler later enforces at fetch time.
+ *
+ * Two layers, both synchronous:
+ * 1. **Scheme** — {@link normalizeUrl} returns `null` for non-`http(s)` /
+ *    unparseable URLs (e.g. `file://`, `ftp://`).
+ * 2. **SSRF literals** — {@link isFetchAllowed} (sync, no DNS) rejects host
+ *    literals in loopback/private/link-local/metadata ranges. The source URL is
+ *    its own scoping anchor (`sourceUrl: s.url`), so host-scoping always passes
+ *    and only the scheme + private-IP-literal layers apply here; full
+ *    host-scoping / DNS-rebinding checks still run at fetch time.
+ *
+ * @throws {LearnError} when the URL is not `http(s)` or targets a blocked host.
+ */
+function validateSourceUrl(s: LearnSource): void {
+  if (normalizeUrl(s.url, undefined, s.localeDefault ?? DEFAULT_LOCALE) === null) {
+    throw new LearnError("Source url must be an absolute http(s) URL", {
+      details: { id: s.id, url: s.url },
+    });
+  }
+  const decision = isFetchAllowed(s.url, { sourceUrl: s.url });
+  if (!decision.ok) {
+    throw new LearnError(`Source url is not allowed (SSRF guard): ${decision.reason}`, {
+      details: { id: s.id, url: s.url, reason: decision.reason },
+    });
   }
 }
 

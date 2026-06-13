@@ -257,6 +257,22 @@ class SessionOptimizerImpl implements SessionOptimizer {
     }
   }
 
+  /** {@inheritDoc SessionOptimizer.forget} */
+  async forget(sessionId: string): Promise<void> {
+    const file = this.sidecarFile(sessionId);
+    try {
+      // `force: true` makes a missing sidecar a no-op (idempotent cleanup).
+      await fs.rm(file, { force: true });
+    } catch (err) {
+      // Non-fatal: an orphaned sidecar is harmless and the next pass will
+      // overwrite it if the id is ever reused. Never throw to the caller.
+      this.logger.warn("session-optimizer.forget-failed", {
+        file,
+        error: serializeError(err),
+      });
+    }
+  }
+
   /** Build a working set from already-deduped messages and a sidecar state. */
   private buildWorkingSetFrom(record: SessionRecord, state: SessionOptState): WorkingSet {
     const messages = Array.isArray(record.messages) ? record.messages : [];
@@ -456,9 +472,16 @@ export function dedupMessages(messages: ChatMessage[]): ChatMessage[] {
   const out: ChatMessage[] = [];
   for (const msg of messages) {
     const content = msg.content ?? "";
+    // Messages that request tool calls anchor their downstream tool-result
+    // messages (matched by toolCallId): collapsing such an assistant turn to a
+    // back-reference would drop its `toolCalls` and orphan those results on
+    // replay. Never dedup a message carrying non-empty toolCalls.
+    const carriesToolCalls =
+      Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0;
     // Only dedup substantial tool/assistant payloads; never collapse short or
     // user turns (they carry intent).
     const dedupable =
+      !carriesToolCalls &&
       (msg.role === "tool" || msg.role === "assistant") &&
       content.length >= DEDUP_MIN_CONTENT_CHARS;
     if (!dedupable) {

@@ -24,4 +24,9 @@ export class OpenAIProvider extends OpenAICompatProvider {
     // Ask OpenAI to emit a final usage chunk on streamed completions.
     return stream ? { stream_options: { include_usage: true } } : {};
   }
+
+  protected override supportsPromptCacheKey(): boolean {
+    // `prompt_cache_key` is an OpenAI-only field; Mistral (same base) omits it.
+    return true;
+  }
 }

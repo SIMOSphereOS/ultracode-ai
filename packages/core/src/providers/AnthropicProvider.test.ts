@@ -5,6 +5,7 @@ import {
   ANTHROPIC_BASE_URL,
   ANTHROPIC_VERSION,
   AnthropicProvider,
+  isRetryableAnthropicErrorType,
   mapAnthropicStopReason,
   toAnthropicMessages,
   toAnthropicTools,
@@ -76,6 +77,15 @@ describe("mapAnthropicStopReason / tools", () => {
     expect(mapAnthropicStopReason("max_tokens", false)).toBe("length");
     expect(mapAnthropicStopReason("weird", false)).toBe("error");
     expect(mapAnthropicStopReason(undefined, true)).toBe("tool_calls");
+  });
+
+  it("classifies mid-stream error types as retryable / non-retryable", () => {
+    for (const t of ["overloaded_error", "api_error", "rate_limit_error"]) {
+      expect(isRetryableAnthropicErrorType(t)).toBe(true);
+    }
+    for (const t of ["invalid_request_error", "authentication_error", "permission_error", undefined]) {
+      expect(isRetryableAnthropicErrorType(t)).toBe(false);
+    }
   });
 
   it("maps tools onto input_schema", () => {
@@ -218,7 +228,7 @@ describe("AnthropicProvider.stream", () => {
     expect(logs.some((l) => l.level === "warn")).toBe(true);
   });
 
-  it("surfaces explicit error events as ProviderError", async () => {
+  it("surfaces an overloaded_error mid-stream event as a RETRYABLE ProviderError", async () => {
     stubFetchSequence(
       streamResponse([anthropicEvent("error", { error: { type: "overloaded_error", message: "busy" } })]),
     );
@@ -226,6 +236,41 @@ describe("AnthropicProvider.stream", () => {
     const err = await collect(provider.stream({ messages: [], model: "m" })).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ProviderError);
     expect((err as ProviderError).message).toMatch(/busy/);
+    // overloaded_error is the streamed form of a 529 → retryable so the run can
+    // restart the turn (a partial response may already have streamed).
+    expect((err as ProviderError).retryable).toBe(true);
+  });
+
+  it("surfaces an invalid_request mid-stream event as a NON-retryable ProviderError", async () => {
+    stubFetchSequence(
+      streamResponse([
+        anthropicEvent("error", { error: { type: "invalid_request_error", message: "bad tools" } }),
+      ]),
+    );
+    const provider = new AnthropicProvider(testOptions());
+    const err = await collect(provider.stream({ messages: [], model: "m" })).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ProviderError);
+    expect((err as ProviderError).retryable).toBe(false);
+  });
+
+  it("flags the terminal chunk incomplete when the stream ends without message_delta/message_stop", async () => {
+    // Body ends after some text but before any terminal event (dropped conn).
+    stubFetchSequence(
+      streamResponse([
+        anthropicEvent("message_start", { message: { usage: { input_tokens: 5 } } }),
+        anthropicEvent("content_block_start", { index: 0, content_block: { type: "text" } }),
+        anthropicEvent("content_block_delta", { index: 0, delta: { type: "text_delta", text: "partial" } }),
+      ]),
+    );
+    const provider = new AnthropicProvider(testOptions());
+    const chunks = await collect(provider.stream({ messages: [], model: "m" }));
+    expect(chunks[0]).toEqual({ type: "text", text: "partial" });
+    expect(chunks.at(-1)).toEqual({
+      type: "done",
+      usage: { inputTokens: 5, outputTokens: 0 },
+      incomplete: true,
+      finishReason: "error",
+    });
   });
 
   it("rejects with abort ProviderError when aborted mid-stream", async () => {

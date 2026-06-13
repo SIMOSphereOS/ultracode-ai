@@ -91,6 +91,39 @@ describe("LocalProvider.complete", () => {
   });
 });
 
+describe("LocalProvider tool-result correlation (tool_name)", () => {
+  const reply = (): Response => jsonResponse({ message: { content: "" }, done: true });
+
+  function toolMessageWire(mock: ReturnType<typeof vi.fn>): Record<string, unknown> {
+    const [, init] = mock.mock.calls[0] as [string, { body: string }];
+    const body = JSON.parse(init.body) as { messages: Record<string, unknown>[] };
+    const toolMsg = body.messages.find((m) => m.role === "tool");
+    if (toolMsg === undefined) throw new Error("no tool message in wire body");
+    return toolMsg;
+  }
+
+  it("uses an explicit tool name when present", async () => {
+    const mock = stubFetchSequence(reply());
+    const provider = new LocalProvider(testOptions());
+    await provider.complete({
+      messages: [{ role: "tool", content: "result", toolCallId: "call_7", name: "read_file" }],
+      model: "m",
+    });
+    expect(toolMessageWire(mock).tool_name).toBe("read_file");
+  });
+
+  it("falls back to a stable name derived from toolCallId when name is absent", async () => {
+    const mock = stubFetchSequence(reply());
+    const provider = new LocalProvider(testOptions());
+    await provider.complete({
+      messages: [{ role: "tool", content: "result", toolCallId: "call_7" }],
+      model: "m",
+    });
+    // Correlation must NOT be dropped: a deterministic tool_name is emitted.
+    expect(toolMessageWire(mock).tool_name).toBe("tool_call_7");
+  });
+});
+
 describe("LocalProvider.stream (NDJSON)", () => {
   it("parses NDJSON chunks into text, tool_call and done with usage", async () => {
     stubFetchSequence(
@@ -132,6 +165,19 @@ describe("LocalProvider.stream (NDJSON)", () => {
     expect(chunks[0]).toEqual({ type: "text", text: "a" });
     expect(chunks.at(-1)).toEqual({ type: "done", usage: { inputTokens: 1, outputTokens: 1 } });
     expect(logs.some((l) => l.level === "warn")).toBe(true);
+  });
+
+  it("flags the terminal chunk incomplete when the NDJSON stream ends without done:true", async () => {
+    stubFetchSequence(streamResponse([ndjson({ message: { content: "partial" }, done: false })]));
+    const provider = new LocalProvider(testOptions());
+    const chunks = await collect(provider.stream({ messages: [], model: "m" }));
+    expect(chunks[0]).toEqual({ type: "text", text: "partial" });
+    expect(chunks.at(-1)).toEqual({
+      type: "done",
+      usage: { inputTokens: 0, outputTokens: 0 },
+      incomplete: true,
+      finishReason: "error",
+    });
   });
 
   it("surfaces in-band Ollama errors as ProviderError", async () => {

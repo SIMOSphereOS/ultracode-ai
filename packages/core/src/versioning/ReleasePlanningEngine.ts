@@ -110,8 +110,24 @@ export class ReleasePlanningEngine {
     const date = this.now().toISOString().slice(0, 10);
     const lines: string[] = [`## [${version}] - ${date}`];
 
-    const added = analysis.commits.filter((c) => c.type === "feat").map(changelogEntry);
-    const fixed = analysis.commits.filter((c) => c.type === "fix").map(changelogEntry);
+    // A breaking feat/fix would otherwise appear twice: once under Added/Fixed
+    // and again under Changed/Breaking. Dedupe on the parsed description (the
+    // changelog entry text uses the parsed description, not the raw subject) so
+    // each breaking commit is listed exactly once, under Changed.
+    const breakingDescriptions = new Set<string>(
+      analysis.commits
+        .filter((c) => c.breaking)
+        .map((c) => parseConventionalSubject(c.subject).description.trim() || c.subject),
+    );
+    const notBreaking = (c: CommitInfo): boolean =>
+      !breakingDescriptions.has(parseConventionalSubject(c.subject).description.trim() || c.subject);
+
+    const added = analysis.commits
+      .filter((c) => c.type === "feat" && notBreaking(c))
+      .map(changelogEntry);
+    const fixed = analysis.commits
+      .filter((c) => c.type === "fix" && notBreaking(c))
+      .map(changelogEntry);
     const changed = [
       ...analysis.breakingChanges.map((b) =>
         b.location !== undefined

@@ -31,6 +31,7 @@ import type {
 import { BaseProvider } from "./BaseProvider.js";
 import type { ProviderRequestInit } from "./BaseProvider.js";
 import { asArray, asNumber, asRecord, asString, safeParseArgs } from "./openaiCompat.js";
+import type { TerminalCompletionChunk } from "./sse.js";
 import { parseSSEJson } from "./sse.js";
 
 /** Default Anthropic API base URL. */
@@ -145,6 +146,27 @@ export function mapAnthropicStopReason(reason: string | undefined, hasToolCalls:
       return "length";
     default:
       return "error";
+  }
+}
+
+/**
+ * Classify an Anthropic error `type` (from a top-level error response or a
+ * mid-stream `error` event) as retryable or not.
+ *
+ * Retryable (transient backend pressure): `overloaded_error` (the streamed
+ * form of an HTTP 529), `api_error`, `rate_limit_error`. Non-retryable (client
+ * fault): `invalid_request_error`, `authentication_error`, `permission_error`,
+ * `not_found_error`. Unknown/absent types default to non-retryable so a genuine
+ * client bug is not retried in a tight loop. Exposed for focused tests.
+ */
+export function isRetryableAnthropicErrorType(type: string | undefined): boolean {
+  switch (type) {
+    case "overloaded_error":
+    case "api_error":
+    case "rate_limit_error":
+      return true;
+    default:
+      return false;
   }
 }
 
@@ -264,6 +286,15 @@ export class AnthropicProvider extends BaseProvider {
     const usage: TokenUsage = { inputTokens: 0, outputTokens: 0 };
     /** Tool-use blocks currently being assembled, keyed by content-block index. */
     const pendingToolUse = new Map<number, { id: string; name: string; json: string }>();
+    /**
+     * Whether a proper terminal signal was observed (`message_delta` carrying
+     * the final `stop_reason`/usage, or `message_stop`). Its absence at
+     * end-of-stream means the body was cut off mid-turn.
+     */
+    let sawTerminal = false;
+    /** Best-known finish reason, taken from the terminal `message_delta`. */
+    let finishReason: FinishReason | undefined;
+    let hadToolCalls = false;
 
     try {
       for await (const evt of parseSSEJson(body, this.logger, req.signal, this.streamIdleTimeoutMs())) {
@@ -308,6 +339,7 @@ export class AnthropicProvider extends BaseProvider {
             const slot = pendingToolUse.get(index);
             if (slot !== undefined) {
               pendingToolUse.delete(index);
+              hadToolCalls = true;
               yield {
                 type: "tool_call",
                 toolCall: {
@@ -320,26 +352,56 @@ export class AnthropicProvider extends BaseProvider {
             break;
           }
           case "message_delta": {
+            sawTerminal = true;
             const u = parseAnthropicUsage(root.usage);
             if (u.inputTokens !== undefined) usage.inputTokens = u.inputTokens;
             if (u.outputTokens !== undefined) usage.outputTokens = u.outputTokens;
+            const stopReason = asString(asRecord(root.delta)?.stop_reason);
+            if (stopReason !== undefined) {
+              finishReason = mapAnthropicStopReason(stopReason, hadToolCalls);
+            }
+            break;
+          }
+          case "message_stop": {
+            sawTerminal = true;
             break;
           }
           case "error": {
             const err = asRecord(root.error);
+            // Mid-stream error events carry an `error.type`. Transient backend
+            // conditions (overloaded_error / 529, api_error, rate_limit_error)
+            // are retryable; client-fault types (invalid_request,
+            // authentication) are not. NOTE: a retry restarts the whole turn —
+            // a partial assistant response may already have streamed to the
+            // consumer before this event arrived, so the caller must treat the
+            // retried turn as a fresh generation rather than a continuation.
             throw new ProviderError(
               `${this.name} stream error: ${asString(err?.message) ?? "unknown error"}`,
-              { provider: this.name, retryable: false, details: { error: err } },
+              {
+                provider: this.name,
+                retryable: isRetryableAnthropicErrorType(asString(err?.type)),
+                details: { error: err },
+              },
             );
           }
           default:
-            break; // ping / message_stop / unknown events
+            break; // ping / unknown events
         }
       }
     } catch (err) {
       throw this.toProviderError(err, `Streaming from ${this.name} failed`, req.signal);
     }
-    yield { type: "done", usage };
+    // A stream that ended without a terminal `message_delta`/`message_stop` was
+    // cut off mid-turn: flag the terminal chunk `incomplete` and carry the
+    // best-known finishReason rather than implying a clean stop with this usage.
+    const done: TerminalCompletionChunk = { type: "done", usage };
+    if (!sawTerminal) {
+      // Clean completion stays byte-identical (`{ type, usage }`); only the
+      // cut-off path annotates the terminal chunk.
+      done.incomplete = true;
+      done.finishReason = finishReason ?? (hadToolCalls ? "tool_calls" : "error");
+    }
+    yield done;
   }
 
   public async listModels(): Promise<string[]> {

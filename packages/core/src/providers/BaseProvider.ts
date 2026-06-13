@@ -320,6 +320,64 @@ export abstract class BaseProvider implements ILLMProvider {
     return this.options.timeoutMs;
   }
 
+  /**
+   * Reusable streaming-consumer-isolation utility: drive a provider chunk stream
+   * into a consumer callback, isolating the consumer from the streaming run.
+   *
+   * NOT YET WIRED INTO PRODUCTION: as of v1.3.0 this helper is exercised only by
+   * the provider tests; no production stream-consumption path calls it. The live
+   * `onChunk` consumer site currently lives in the agent/UltraCode layer (see
+   * `UltraCodeRunOptions.onChunk` → `BaseAgentRunInput.onChunk`), which does its
+   * own iteration and does NOT route through here — so the consumer-isolation
+   * invariant below is provided by this utility but is NOT currently enforced on
+   * the live path. Readers must not assume the protection is active in
+   * production today.
+   *
+   * TODO(1.3.x): wire `consumeStream` into the real agent/UltraCode consumer
+   * site so the isolation invariant is actually enforced on the hot path.
+   *
+   * Streaming robustness invariant (what this utility provides when used): a
+   * throw from the consumer callback (e.g. a UI sink that fails to render a
+   * chunk) MUST NOT abort the provider stream — doing so would discard
+   * already-fetched tokens, leak the body and surface a spurious provider
+   * failure for what is really a downstream bug. Each `onChunk` invocation is
+   * wrapped in try/catch; a consumer error is redirected to `logger.warn` (and
+   * the optional `onConsumerError` sink) and swallowed, so iteration — and the
+   * generator's `finally` cleanup (reader cancel/release) — continues to
+   * completion. Errors raised by the *stream itself* are NOT swallowed: they
+   * propagate so retry/abort policy still applies.
+   *
+   * Returns the terminal `"done"` chunk (carrying usage) when one was observed,
+   * else `undefined`.
+   */
+  protected async consumeStream(
+    stream: AsyncIterable<CompletionChunk>,
+    onChunk: (chunk: CompletionChunk) => void,
+    onConsumerError?: (err: unknown, chunk: CompletionChunk) => void,
+  ): Promise<CompletionChunk | undefined> {
+    let done: CompletionChunk | undefined;
+    for await (const chunk of stream) {
+      if (chunk.type === "done") done = chunk;
+      try {
+        onChunk(chunk);
+      } catch (err) {
+        // Consumer fault: redirect, never abort the provider run.
+        this.logger.warn(`${this.name} stream consumer threw; chunk delivered, error swallowed`, {
+          error: err instanceof Error ? err.message : String(err),
+          chunkType: chunk.type,
+        });
+        if (onConsumerError !== undefined) {
+          try {
+            onConsumerError(err, chunk);
+          } catch {
+            /* a faulty error sink must not break the stream either */
+          }
+        }
+      }
+    }
+    return done;
+  }
+
   /** Require a readable body on a streaming response. */
   protected requireBody(response: Response, url: string): ReadableStream<Uint8Array> {
     if (response.body === null) {

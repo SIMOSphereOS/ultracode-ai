@@ -78,6 +78,59 @@ describe("SourceLibrary", () => {
     await expect(lib.add({ id: "a", url: "", catalog: "c" } as LearnSource)).rejects.toBeInstanceOf(LearnError);
   });
 
+  it("accepts a normal https URL at add time", async () => {
+    const lib = new SourceLibrary(home);
+    const src: LearnSource = {
+      id: "ok",
+      url: "https://docs.example.com/guide",
+      type: "web-docs",
+      catalog: "ok",
+      schedule: "on-demand",
+      localeDefault: "de-de",
+    };
+    await expect(lib.add(src)).resolves.toBeUndefined();
+    expect(await lib.get("ok")).toMatchObject({ id: "ok", url: "https://docs.example.com/guide" });
+  });
+
+  it("rejects a non-http(s) (file://) URL at add time, before it enters the library", async () => {
+    const lib = new SourceLibrary(home);
+    const src = {
+      id: "evil-file",
+      url: "file:///etc/passwd",
+      type: "web-docs",
+      catalog: "evil",
+      schedule: "on-demand",
+      localeDefault: "de-de",
+    } as LearnSource;
+    await expect(lib.add(src)).rejects.toBeInstanceOf(LearnError);
+    // The rejected source must NOT have been persisted.
+    expect(await lib.get("evil-file")).toBeNull();
+  });
+
+  it("rejects a private-host (SSRF) URL at add time", async () => {
+    const lib = new SourceLibrary(home);
+    const loopback = {
+      id: "ssrf-loopback",
+      url: "http://127.0.0.1/admin",
+      type: "web-docs",
+      catalog: "evil",
+      schedule: "on-demand",
+      localeDefault: "de-de",
+    } as LearnSource;
+    const metadata = {
+      id: "ssrf-metadata",
+      url: "http://169.254.169.254/latest/meta-data/",
+      type: "web-docs",
+      catalog: "evil",
+      schedule: "on-demand",
+      localeDefault: "de-de",
+    } as LearnSource;
+    await expect(lib.add(loopback)).rejects.toBeInstanceOf(LearnError);
+    await expect(lib.add(metadata)).rejects.toBeInstanceOf(LearnError);
+    expect(await lib.get("ssrf-loopback")).toBeNull();
+    expect(await lib.get("ssrf-metadata")).toBeNull();
+  });
+
   it("throws LearnError on corrupt TOML", async () => {
     await mkdir(learningDir(home), { recursive: true });
     await writeFile(sourcesFile(home), "this is = = not toml [[[", "utf8");

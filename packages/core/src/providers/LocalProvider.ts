@@ -33,6 +33,7 @@ import {
   safeParseArgs,
   toOpenAITools,
 } from "./openaiCompat.js";
+import type { TerminalCompletionChunk } from "./sse.js";
 import { parseNDJSON } from "./sse.js";
 
 /** Default Ollama endpoint. */
@@ -47,7 +48,15 @@ function toOllamaMessages(messages: ChatMessage[]): Record<string, unknown>[] {
         function: { name: tc.name, arguments: tc.arguments },
       }));
     }
-    if (m.role === "tool" && m.name !== undefined) wire.tool_name = m.name;
+    // Ollama correlates a tool result back to its call via `tool_name`. The
+    // contract addresses tool results by `toolCallId`, and `name` is optional —
+    // when it is absent we must NOT drop the correlation. Fall back to a stable
+    // name derived from `toolCallId` (deterministic across the turn) so the
+    // model can still match the result to the originating call.
+    if (m.role === "tool") {
+      const toolName = m.name ?? (m.toolCallId !== undefined ? `tool_${m.toolCallId}` : undefined);
+      if (toolName !== undefined) wire.tool_name = toolName;
+    }
     return wire;
   });
 }
@@ -153,6 +162,9 @@ export class LocalProvider extends BaseProvider {
 
     let inputTokens = 0;
     let outputTokens = 0;
+    /** Whether Ollama's terminal `done: true` line was observed. */
+    let sawDone = false;
+    let hadToolCalls = false;
     try {
       for await (const line of parseNDJSON(body, this.logger, req.signal, this.streamIdleTimeoutMs())) {
         const root = asRecord(line);
@@ -168,9 +180,11 @@ export class LocalProvider extends BaseProvider {
         const text = asString(message?.content);
         if (text !== undefined && text !== "") yield { type: "text", text };
         for (const toolCall of parseOllamaToolCalls(message?.tool_calls, this.logger)) {
+          hadToolCalls = true;
           yield { type: "tool_call", toolCall };
         }
         if (root.done === true) {
+          sawDone = true;
           inputTokens = asNumber(root.prompt_eval_count) ?? inputTokens;
           outputTokens = asNumber(root.eval_count) ?? outputTokens;
         }
@@ -178,7 +192,17 @@ export class LocalProvider extends BaseProvider {
     } catch (err) {
       throw this.toProviderError(err, `Streaming from ${this.name} failed`, req.signal);
     }
-    yield { type: "done", usage: { inputTokens, outputTokens } };
+    // A stream that ended without Ollama's terminal `done: true` line was cut
+    // off mid-turn: flag the terminal chunk `incomplete` and carry the
+    // best-known finishReason instead of implying a clean stop with zero usage.
+    const done: TerminalCompletionChunk = { type: "done", usage: { inputTokens, outputTokens } };
+    if (!sawDone) {
+      // Clean completion stays byte-identical (`{ type, usage }`); only the
+      // cut-off path annotates the terminal chunk.
+      done.incomplete = true;
+      done.finishReason = hadToolCalls ? "tool_calls" : "error";
+    }
+    yield done;
   }
 
   public async listModels(): Promise<string[]> {

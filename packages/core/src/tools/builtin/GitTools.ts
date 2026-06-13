@@ -15,11 +15,20 @@ import { ToolError } from "@ultracode/shared";
 import type { ToolContext, ToolDefinition } from "@ultracode/shared";
 import { BaseTool } from "../BaseTool.js";
 import type { ToolRunOutcome } from "../BaseTool.js";
+import { sanitizeEnv } from "../sanitizeEnv.js";
 
 /** Options shared by the git tools. */
 export interface GitToolOptions {
   /** Git executable. Default `"git"` (resolved via PATH). Test hook. */
   gitPath?: string;
+  /**
+   * Additional exact environment-variable names (case-insensitive) to strip
+   * from the child environment, on top of the built-in credential patterns.
+   * Mirrors {@link BashTool}'s `secretEnvKeys`: production wiring feeds the
+   * configured provider API-key variable names (`config.providers.apiKeys` and
+   * their `ULTRACODE_`-prefixed aliases).
+   */
+  secretEnvKeys?: readonly string[];
 }
 
 /** Result of a raw git invocation. */
@@ -34,10 +43,11 @@ async function runGit(
   args: readonly string[],
   cwd: string,
   toolName: string,
+  env: Record<string, string | undefined>,
   signal?: AbortSignal,
 ): Promise<GitRunResult> {
   return new Promise<GitRunResult>((resolve, reject) => {
-    const child = spawn(gitPath, args as string[], { cwd, windowsHide: true });
+    const child = spawn(gitPath, args as string[], { cwd, env, windowsHide: true });
     let stdout = "";
     let stderr = "";
     child.stdout.on("data", (c: Buffer) => {
@@ -129,10 +139,13 @@ export class GitStatusTool extends BaseTool<typeof statusSchema, GitStatusOutput
   };
   protected readonly schema = statusSchema;
   private readonly gitPath: string;
+  /** Extra exact secret variable names (upper-cased) to strip from child env. */
+  private readonly secretEnvKeys: ReadonlySet<string>;
 
   constructor(options: GitToolOptions = {}) {
     super();
     this.gitPath = options.gitPath ?? "git";
+    this.secretEnvKeys = new Set((options.secretEnvKeys ?? []).map((k) => k.toUpperCase()));
   }
 
   protected async run(
@@ -145,6 +158,7 @@ export class GitStatusTool extends BaseTool<typeof statusSchema, GitStatusOutput
       ["status", "--porcelain=v1", "--branch"],
       ctx.cwd,
       this.definition.name,
+      sanitizeEnv(ctx.env, this.secretEnvKeys),
       ctx.signal,
     );
 
@@ -202,10 +216,13 @@ export class GitDiffTool extends BaseTool<typeof diffSchema, GitDiffOutput> {
   };
   protected readonly schema = diffSchema;
   private readonly gitPath: string;
+  /** Extra exact secret variable names (upper-cased) to strip from child env. */
+  private readonly secretEnvKeys: ReadonlySet<string>;
 
   constructor(options: GitToolOptions = {}) {
     super();
     this.gitPath = options.gitPath ?? "git";
+    this.secretEnvKeys = new Set((options.secretEnvKeys ?? []).map((k) => k.toUpperCase()));
   }
 
   protected async run(
@@ -222,6 +239,7 @@ export class GitDiffTool extends BaseTool<typeof diffSchema, GitDiffOutput> {
       argv,
       ctx.cwd,
       this.definition.name,
+      sanitizeEnv(ctx.env, this.secretEnvKeys),
       ctx.signal,
     );
     return { output: { diff: stdout } };
@@ -271,10 +289,13 @@ export class GitLogTool extends BaseTool<typeof logSchema, GitLogOutput> {
   };
   protected readonly schema = logSchema;
   private readonly gitPath: string;
+  /** Extra exact secret variable names (upper-cased) to strip from child env. */
+  private readonly secretEnvKeys: ReadonlySet<string>;
 
   constructor(options: GitToolOptions = {}) {
     super();
     this.gitPath = options.gitPath ?? "git";
+    this.secretEnvKeys = new Set((options.secretEnvKeys ?? []).map((k) => k.toUpperCase()));
   }
 
   protected async run(
@@ -293,6 +314,7 @@ export class GitLogTool extends BaseTool<typeof logSchema, GitLogOutput> {
       ],
       ctx.cwd,
       this.definition.name,
+      sanitizeEnv(ctx.env, this.secretEnvKeys),
       ctx.signal,
     );
 

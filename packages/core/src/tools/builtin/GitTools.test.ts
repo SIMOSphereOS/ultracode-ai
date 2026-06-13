@@ -8,6 +8,7 @@ import type { ToolContext } from "@ultracode/shared";
 import { GitDiffTool, GitLogTool, GitStatusTool } from "./GitTools.js";
 
 const gitAvailable = spawnSync("git", ["--version"], { stdio: "ignore" }).status === 0;
+const isPosix = process.platform !== "win32";
 
 let root: string;
 
@@ -117,6 +118,111 @@ describe.runIf(gitAvailable)("Git tools (git available)", () => {
     const tool = new GitLogTool();
     const result = await tool.execute(tool.validate({}), ctx());
     expect(result.ok).toBe(false);
+  });
+});
+
+// These tests use a POSIX `#!/bin/sh` wrapper as the fake git executable, so
+// they only run on non-Windows platforms.
+describe.runIf(isPosix)("Git tools (env sanitization)", () => {
+  // SEC: git subprocesses must NOT inherit raw credentials from the environment
+  // they are handed — the same choke point BashTool enforces via sanitizeEnv.
+  // We point gitPath at a fake "git" that dumps its received env to a file, then
+  // assert the secret variable never reached the child.
+  it("strips credentials from the env handed to the git spawn", async () => {
+    const dumpFile = path.join(root, "git-env-dump.json");
+    const fakeGit = path.join(root, "fake-git.mjs");
+    // The fake git ignores its args and writes its inherited env, then exits 0
+    // with the porcelain header git_status expects.
+    await fs.writeFile(
+      fakeGit,
+      [
+        "import { writeFileSync } from 'node:fs';",
+        `writeFileSync(${JSON.stringify(dumpFile)}, JSON.stringify(process.env));`,
+        "process.stdout.write('## main\\n');",
+        "process.exit(0);",
+      ].join("\n"),
+    );
+    // GitStatusTool passes fixed args to the executable, so we cannot pass the
+    // fake script as a git arg. Instead point gitPath at a POSIX shell wrapper
+    // that execs node on the fake script (the git args are irrelevant to the
+    // env dump). The wrapper inherits the same — sanitized — env as the child.
+    const wrapper = path.join(root, "git-wrapper.sh");
+    await fs.writeFile(
+      wrapper,
+      `#!/bin/sh\nexec "${process.execPath}" "${fakeGit}"\n`,
+      { mode: 0o755 },
+    );
+
+    const secret = "uc-git-secret-should-not-leak-98765";
+    process.env.ANTHROPIC_API_KEY = secret;
+    process.env.SOME_GIT_TOKEN = "git-tok-also-secret";
+    process.env.UC_GIT_BENIGN = "git-visible-value";
+    try {
+      const status = new GitStatusTool({ gitPath: wrapper });
+      const result = await status.execute(
+        status.validate({}),
+        // Hand the tool the real process.env, as the engine default does.
+        ctx({ env: process.env as Record<string, string | undefined> }),
+      );
+      expect(result.ok).toBe(true);
+
+      const dumped = JSON.parse(await fs.readFile(dumpFile, "utf8")) as Record<
+        string,
+        string
+      >;
+      // Secrets (pattern-matched) must be absent from the git child env…
+      expect(dumped.ANTHROPIC_API_KEY).toBeUndefined();
+      expect(dumped.SOME_GIT_TOKEN).toBeUndefined();
+      expect(Object.values(dumped)).not.toContain(secret);
+      // …while benign variables survive.
+      expect(dumped.UC_GIT_BENIGN).toBe("git-visible-value");
+    } finally {
+      delete process.env.ANTHROPIC_API_KEY;
+      delete process.env.SOME_GIT_TOKEN;
+      delete process.env.UC_GIT_BENIGN;
+    }
+  });
+
+  it("honours extra secretEnvKeys for the git spawn", async () => {
+    const dumpFile = path.join(root, "git-env-dump2.json");
+    const fakeGit = path.join(root, "fake-git2.mjs");
+    await fs.writeFile(
+      fakeGit,
+      [
+        "import { writeFileSync } from 'node:fs';",
+        `writeFileSync(${JSON.stringify(dumpFile)}, JSON.stringify(process.env));`,
+        "process.stdout.write('## main\\n');",
+        "process.exit(0);",
+      ].join("\n"),
+    );
+    const wrapper = path.join(root, "git-wrapper2.sh");
+    await fs.writeFile(
+      wrapper,
+      `#!/bin/sh\nexec "${process.execPath}" "${fakeGit}"\n`,
+      { mode: 0o755 },
+    );
+
+    const status = new GitStatusTool({
+      gitPath: wrapper,
+      // A benign-looking name only the explicit denylist would strip.
+      secretEnvKeys: ["MY_CUSTOM_PROVIDER_VAR"],
+    });
+    const result = await status.execute(
+      status.validate({}),
+      ctx({
+        env: {
+          MY_CUSTOM_PROVIDER_VAR: "must-not-leak",
+          PLAIN_VAR: "kept",
+        },
+      }),
+    );
+    expect(result.ok).toBe(true);
+    const dumped = JSON.parse(await fs.readFile(dumpFile, "utf8")) as Record<
+      string,
+      string
+    >;
+    expect(dumped.MY_CUSTOM_PROVIDER_VAR).toBeUndefined();
+    expect(dumped.PLAIN_VAR).toBe("kept");
   });
 });
 
