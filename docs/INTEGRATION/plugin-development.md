@@ -1,6 +1,8 @@
 # UltraCode Plug-in Entwicklung
 
-> **Anleitung zur Erstellung eigener Plug-ins für UltraCode**
+> ⚠️ **Vision / noch nicht implementiert.** Es gibt im aktuellen Code **kein** Plug-in-System (kein `packages/core/src/plugin`, kein Plug-in-Loader, kein `examples/plugins`-Verzeichnis). Diese Anleitung beschreibt die angestrebte Plug-in-Architektur und ist Roadmap. Erweiterbar ist UltraCode heute über die [Skill-](../REFERENCE/cli-commands.md#ultracode-skills) und [Agenten-Authoring-Kommandos](../REFERENCE/cli-commands.md#ultracode-agents-authoring).
+
+> **Anleitung zur Erstellung eigener Plug-ins für UltraCode** *(geplant)*
 
 ---
 
@@ -741,8 +743,8 @@ Dokumentiere dein Plug-in im **UltraCode Docs**:
 
 ## 🔗 Nützliche Links
 
-- [UltraCode Plug-in API →](https://github.com/ultracode-ai/ultracode/tree/main/packages/core/src/plugin)
-- [Beispiel-Plug-ins →](https://github.com/ultracode-ai/ultracode/tree/main/examples/plugins)
+- UltraCode Plug-in API → *(geplant; `packages/core/src/plugin` existiert noch nicht)*
+- Beispiel-Plug-ins → *(geplant; `examples/plugins` existiert noch nicht)*
 - [Plug-in-Registry →](https://ultracode.ai/plugins)
 - [Discord #plugins →](https://discord.gg/ultracode)
-- [GitHub Issues →](https://github.com/ultracode-ai/ultracode/issues) (Label: `plugin`)
+- [GitHub Issues →](https://github.com/AndreasSchwan-SIMO/UltraCode/issues) (Label: `plugin`)

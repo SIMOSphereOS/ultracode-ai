@@ -5,9 +5,10 @@
  * Rejects binary files (NUL-byte heuristic) and files above the size limit.
  */
 
+import path from "node:path";
 import { promises as fs } from "node:fs";
 import { z } from "zod";
-import { ToolError } from "@ultracode/shared";
+import { ToolError, ToolPermissionDeniedError } from "@ultracode/shared";
 import type { ToolContext, ToolDefinition } from "@ultracode/shared";
 import { BaseTool } from "../BaseTool.js";
 import type { ToolRunOutcome } from "../BaseTool.js";
@@ -46,6 +47,13 @@ export interface ReadToolOptions {
   allowedDirs?: readonly string[];
   /** Maximum file size in bytes. Default {@link DEFAULT_MAX_READ_BYTES}. */
   maxFileBytes?: number;
+  /**
+   * File extensions (e.g. `[".env", ".pem"]`), exact dotfile/basenames
+   * (`"id_rsa"`, `".npmrc"`) or path-suffix segments (`".git/config"`) whose
+   * contents must never be returned to the model (read exfiltration guard).
+   * Case-insensitive. Matching files are refused with a permission-denied error.
+   */
+  readDeny?: readonly string[];
 }
 
 /** Reads text files with offset/limit, binary detection and a size limit. */
@@ -69,6 +77,7 @@ export class ReadTool extends BaseTool<typeof schema, ReadToolOutput> {
 
   private readonly guard: PathGuard;
   private readonly maxFileBytes: number;
+  private readonly readDeny: string[];
 
   constructor(options: ReadToolOptions = {}) {
     super();
@@ -77,6 +86,24 @@ export class ReadTool extends BaseTool<typeof schema, ReadToolOutput> {
       typeof options.maxFileBytes === "number" && options.maxFileBytes > 0
         ? options.maxFileBytes
         : DEFAULT_MAX_READ_BYTES;
+    this.readDeny = (options.readDeny ?? []).map((e) => e.toLowerCase());
+  }
+
+  /**
+   * Whether reading `target` is denied by the read-deny list. Mirrors
+   * {@link WriteFileTool}'s protected-extension matching: an entry matches the
+   * file extension, the exact basename (dotfiles included), or — for entries
+   * containing a separator (e.g. `.git/config`) — a path suffix.
+   */
+  private isDenied(target: string): boolean {
+    if (this.readDeny.length === 0) return false;
+    const normalized = target.replace(/\\/g, "/").toLowerCase();
+    const base = path.basename(normalized);
+    const ext = path.extname(base); // "" for dotfiles like ".env"
+    return this.readDeny.some((entry) => {
+      if (entry.includes("/")) return normalized === entry || normalized.endsWith(`/${entry}`);
+      return entry === ext || entry === base;
+    });
   }
 
   protected async run(
@@ -84,7 +111,29 @@ export class ReadTool extends BaseTool<typeof schema, ReadToolOutput> {
     ctx: ToolContext,
   ): Promise<ToolRunOutcome<ReadToolOutput>> {
     this.throwIfAborted(ctx);
+    if (this.isDenied(args.file_path)) {
+      throw new ToolPermissionDeniedError(
+        `Reading "${args.file_path}" is blocked by read_deny`,
+        {
+          toolName: this.definition.name,
+          details: { path: args.file_path, readDeny: this.readDeny },
+        },
+      );
+    }
+
     const resolved = await this.guard.resolve(ctx.cwd, args.file_path, this.definition.name);
+
+    // Re-check on the fully resolved path: catches symlinks/relative forms whose
+    // basename only reveals the denied name after resolution.
+    if (this.isDenied(resolved)) {
+      throw new ToolPermissionDeniedError(
+        `Reading "${args.file_path}" is blocked by read_deny`,
+        {
+          toolName: this.definition.name,
+          details: { path: resolved, readDeny: this.readDeny },
+        },
+      );
+    }
 
     let stat;
     try {

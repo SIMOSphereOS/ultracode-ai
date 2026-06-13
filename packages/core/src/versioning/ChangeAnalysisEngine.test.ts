@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { NoopLogger, VersioningError } from "@ultracode/shared";
 import { ChangeAnalysisEngine, extractExportedNames } from "./ChangeAnalysisEngine.js";
 import { defaultGitRunner } from "./GitClient.js";
+import type { GitRunner } from "./GitClient.js";
 
 const logger = new NoopLogger();
 
@@ -222,6 +223,56 @@ describe("ChangeAnalysisEngine (real git repos)", () => {
     await writeFile(path.join(dir, "a.txt"), "a\n", "utf8");
     await commitAll(dir, "chore: first");
     await expect(engineFor(dir).analyze("no-such-tag..HEAD")).rejects.toThrow(VersioningError);
+  });
+
+  it("rejects argument-injection ranges that begin with '-' (no git invocation)", async () => {
+    const dir = await makeRepo();
+    await writeFile(path.join(dir, "a.txt"), "a\n", "utf8");
+    await commitAll(dir, "chore: first");
+    // Crafted ranges must never reach git: --output= would let `git log` write
+    // an arbitrary file; -foo would be parsed as an unknown option.
+    for (const evil of ["--output=/tmp/x", "-foo", "--output=/tmp/x..HEAD", "-foo..HEAD"]) {
+      await expect(engineFor(dir).analyze(evil)).rejects.toThrow(VersioningError);
+      await expect(engineFor(dir).analyze(evil)).rejects.toThrow(/must not begin with "-"/);
+    }
+  });
+
+  it("rejects a leading-dash head even when the base is benign", async () => {
+    const dir = await makeRepo();
+    await writeFile(path.join(dir, "a.txt"), "a\n", "utf8");
+    await commitAll(dir, "chore: first");
+    await git(dir, "tag", "v1.0.0");
+    await expect(engineFor(dir).analyze("v1.0.0..--output=/tmp/x")).rejects.toThrow(
+      /head .*must not begin with "-"/,
+    );
+  });
+
+  it("inserts a literal '--' separator before pathspecs in log and diff invocations", async () => {
+    const calls: string[][] = [];
+    const runner: GitRunner = async (args) => {
+      calls.push([...args]);
+      const a = [...args];
+      if (a[0] === "rev-parse" && a.includes("--is-inside-work-tree")) {
+        return { exitCode: 0, stdout: "true\n", stderr: "" };
+      }
+      if (a[0] === "rev-parse" && a.includes("HEAD")) return { exitCode: 0, stdout: "", stderr: "" };
+      if (a[0] === "describe") return { exitCode: 0, stdout: "v1.0.0\n", stderr: "" };
+      // log / diff / show: empty results are enough to drive the analysis.
+      return { exitCode: 0, stdout: "", stderr: "" };
+    };
+    const engine = new ChangeAnalysisEngine({ cwd: "/anywhere", logger, runner });
+    await engine.analyze("v1.0.0..HEAD");
+
+    const logCall = calls.find((c) => c[0] === "log");
+    expect(logCall?.[logCall.length - 1]).toBe("--");
+    const diffCalls = calls.filter((c) => c[0] === "diff");
+    expect(diffCalls.length).toBeGreaterThan(0);
+    for (const diff of diffCalls) {
+      expect(diff[diff.length - 1]).toBe("--");
+      // base/head precede the separator
+      expect(diff).toContain("v1.0.0");
+      expect(diff).toContain("HEAD");
+    }
   });
 
   it("handles huge (>=1MB) files and nested paths", async () => {

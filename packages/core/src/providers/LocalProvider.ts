@@ -154,7 +154,7 @@ export class LocalProvider extends BaseProvider {
     let inputTokens = 0;
     let outputTokens = 0;
     try {
-      for await (const line of parseNDJSON(body, this.logger, req.signal)) {
+      for await (const line of parseNDJSON(body, this.logger, req.signal, this.streamIdleTimeoutMs())) {
         const root = asRecord(line);
         if (root === undefined) continue;
         const error = asString(root.error);

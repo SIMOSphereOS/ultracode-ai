@@ -1,6 +1,8 @@
 # Team-Zusammenarbeit
 
-> **Kollaborative Entwicklung mit UltraCode - Multi-User, Projekt-Teams, Wissensdatenbank**
+> ⚠️ **Vision / noch nicht implementiert.** Multi-User-Zusammenarbeit, geteilte Projekt-Teams und eine gemeinsame Wissensdatenbank sind **Roadmap**. Der aktuelle Code ist Single-User und lokal; es existiert kein Server, der mehrere Nutzer verbindet. Verbindlich ist die [CLI-Referenz](../REFERENCE/cli-commands.md).
+
+> **Kollaborative Entwicklung mit UltraCode - Multi-User, Projekt-Teams, Wissensdatenbank** *(geplant)*
 
 ---
 

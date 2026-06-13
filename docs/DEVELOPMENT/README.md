@@ -13,7 +13,7 @@ DEVELOPMENT/
 ├── 🏗️  architecture.md          # Systemarchitektur und Design
 ├── 🔧 core-system.md           # Kernsystem-Implementierung
 ├── 🤖 ai-versioning.md         # AI-Versionierungssystem
-├── 📋 tools-reference.md       # Alle 80+ Tools im Detail
+├── 📋 tools-reference.md       # Alle 14 Tools im Detail
 └── 🎭 agents-reference.md      # Agenten-System und -Typen
 ```
 
@@ -122,7 +122,7 @@ UltraCode folgt einem **modularen Mikroarchitektur-Ansatz** mit klaren Verantwor
 ### [📋 Tools-Referenz →](./tools-reference.md)
 
 **Enthält:**
-- 📚 **Alle 80+ Tools** mit detaillierter Beschreibung
+- 📚 **Alle 14 Tools** mit detaillierter Beschreibung
 - 🔧 **Tool-Signaturen** (Parameter, Rückgabewerte)
 - 🎯 **Verwendungsbeispiele** für jedes Tool
 - 🔒 **Berechtigungssystem** (ask, always, never)
@@ -164,7 +164,7 @@ UltraCode folgt einem **modularen Mikroarchitektur-Ansatz** mit klaren Verantwor
 
 ```bash
 # Repository klonen
-git clone https://github.com/ultracode-ai/ultracode.git
+git clone https://github.com/AndreasSchwan-SIMO/UltraCode.git
 cd ultracode
 
 # Abhängigkeiten installieren
@@ -357,7 +357,7 @@ node --max-old-space-size=8192 packages/cli/dist/index.js
 
 ### Erste Schritte
 
-1. **Issue finden**: [GitHub Issues](https://github.com/ultracode-ai/ultracode/issues)
+1. **Issue finden**: [GitHub Issues](https://github.com/AndreasSchwan-SIMO/UltraCode/issues)
 2. **Forken**: Repository forkern
 3. **Branch erstellen**: `git checkout -b feat/mein-feature`
 4. **Änderungen commiten**: Conventional Commits verwenden
@@ -381,9 +381,9 @@ Suche nach Issues mit diesen Labels:
 
 ## 📚 Wichtige Links
 
-- **Main Repository**: [https://github.com/ultracode-ai/ultracode](https://github.com/ultracode-ai/ultracode)
-- **Issues**: [https://github.com/ultracode-ai/ultracode/issues](https://github.com/ultracode-ai/ultracode/issues)
-- **Discussions**: [https://github.com/ultracode-ai/ultracode/discussions](https://github.com/ultracode-ai/ultracode/discussions)
+- **Main Repository**: [https://github.com/AndreasSchwan-SIMO/UltraCode](https://github.com/AndreasSchwan-SIMO/UltraCode)
+- **Issues**: [https://github.com/AndreasSchwan-SIMO/UltraCode/issues](https://github.com/AndreasSchwan-SIMO/UltraCode/issues)
+- **Discussions**: [https://github.com/AndreasSchwan-SIMO/UltraCode/discussions](https://github.com/AndreasSchwan-SIMO/UltraCode/discussions)
 - **Discord**: [https://discord.gg/ultracode](https://discord.gg/ultracode)
 - **Website**: [https://ultracode.ai](https://ultracode.ai)
 

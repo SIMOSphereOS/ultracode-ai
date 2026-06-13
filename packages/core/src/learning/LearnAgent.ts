@@ -24,6 +24,7 @@ import { completedEvent, emitLearningEvent, estimatedEvent, startedEvent } from 
 import { distillPage } from "./extract.js";
 import { Semaphore } from "./concurrency.js";
 import { NativeCrawlerProvider } from "./NativeCrawlerProvider.js";
+import { nodeDnsLookupAll } from "./urlGuard.js";
 import { SourceLibrary } from "./SourceLibrary.js";
 import { DEFAULT_ROUTING } from "./extract.js";
 import {
@@ -121,7 +122,9 @@ export class LearnAgent {
     this.author = opts.author;
     this.provider = opts.provider;
     this.homeDir = opts.homeDir ?? os.homedir();
-    this.ingestion = opts.ingestion ?? new NativeCrawlerProvider();
+    this.ingestion =
+      opts.ingestion ??
+      new NativeCrawlerProvider({ dnsLookup: nodeDnsLookupAll, allowPrivate: false });
     this.fetchImpl = opts.fetchImpl;
     this.now = opts.now ?? (() => Date.now());
     this.sqliteLoader = opts.sqliteLoader ?? defaultSqliteLoader;

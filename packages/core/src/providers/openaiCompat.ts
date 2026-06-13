@@ -314,7 +314,7 @@ export abstract class OpenAICompatProvider extends BaseProvider {
     const assembler = new OpenAIToolCallAssembler(this.logger);
     let usage: TokenUsage | undefined;
     try {
-      for await (const evt of parseSSEJson(body, this.logger, req.signal)) {
+      for await (const evt of parseSSEJson(body, this.logger, req.signal, this.streamIdleTimeoutMs())) {
         const root = asRecord(evt.json);
         if (root === undefined) continue;
         usage = parseOpenAIUsage(root.usage) ?? usage;

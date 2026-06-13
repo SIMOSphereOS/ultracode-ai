@@ -24,10 +24,10 @@ importers:
   packages/cli:
     dependencies:
       '@ultracode/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@ultracode/shared':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../shared
       commander:
         specifier: ^12.1.0
@@ -49,7 +49,7 @@ importers:
   packages/core:
     dependencies:
       '@ultracode/shared':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../shared
       semver:
         specifier: ^7.6.0

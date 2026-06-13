@@ -5,7 +5,7 @@ beiträgst, damit das Monorepo grün, deterministisch und cross-platform bleibt.
 
 ## Voraussetzungen
 
-- **Node.js >= 20**
+- **Node.js >= 22.13** (alle Pakete deklarieren `engines.node` `>=22.13.0`; `node:sqlite` benötigt 22.5+)
 - **pnpm** (Projekt nutzt `pnpm@11.5.2`)
 - **Git** (für die AI-Versioning-Features benötigt; ansonsten optional)
 

@@ -24,6 +24,8 @@ export type { ResolvePathOptions } from "./PathGuard.js";
 
 export { sanitizeEnv, isSecretEnvKey } from "./sanitizeEnv.js";
 
+export { DEFAULT_PROTECTED_EXTENSIONS, DEFAULT_READ_DENY } from "./defaults.js";
+
 export { BaseTool } from "./BaseTool.js";
 export type { ToolRunOutcome } from "./BaseTool.js";
 

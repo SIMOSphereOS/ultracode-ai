@@ -70,12 +70,19 @@ export class WriteFileTool extends BaseTool<typeof schema, WriteFileToolOutput> 
     );
   }
 
-  /** Whether `target` matches a protected extension / dotfile name. */
+  /**
+   * Whether `target` matches a protected extension, exact dotfile/basename, or
+   * — for entries containing a separator (e.g. `.git/config`) — a path suffix.
+   */
   private isProtected(target: string): boolean {
     if (this.protectedExtensions.length === 0) return false;
-    const base = path.basename(target).toLowerCase();
+    const normalized = target.replace(/\\/g, "/").toLowerCase();
+    const base = path.basename(normalized);
     const ext = path.extname(base); // "" for dotfiles like ".env"
-    return this.protectedExtensions.some((p) => p === ext || p === base);
+    return this.protectedExtensions.some((p) => {
+      if (p.includes("/")) return normalized === p || normalized.endsWith(`/${p}`);
+      return p === ext || p === base;
+    });
   }
 
   protected async run(

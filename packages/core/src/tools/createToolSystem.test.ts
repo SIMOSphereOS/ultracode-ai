@@ -147,6 +147,80 @@ describe("createToolSystem", () => {
     }
   });
 
+  it("first run (no override) denies writing .env and reading id_rsa (safe defaults)", async () => {
+    const { executor } = createToolSystem(makeConfig(), new NoopLogger());
+
+    // write_file: default protected_extensions blocks .env out of the box.
+    const write = await executor.execute(
+      "write_file",
+      { path: ".env", content: "SECRET=1" },
+      ctx({ confirm: async () => true }),
+    );
+    expect(write.ok).toBe(false);
+    expect(write.error?.code).toBe("TOOL_PERMISSION_DENIED");
+
+    // read: default read-deny blocks id_rsa even though the file exists.
+    await fs.writeFile(path.join(root, "id_rsa"), "----PRIVATE KEY----");
+    const read = await executor.execute(
+      "read",
+      { file_path: "id_rsa" },
+      ctx({ confirm: async () => true }),
+    );
+    expect(read.ok).toBe(false);
+    expect(read.error?.code).toBe("TOOL_PERMISSION_DENIED");
+
+    // edit: default protected_extensions blocks editing an existing .git/config
+    // out of the box (the write tool already protects it — so must edit).
+    await fs.mkdir(path.join(root, ".git"));
+    await fs.writeFile(path.join(root, ".git", "config"), "[core]\n\tbare = false");
+    const edit = await executor.execute(
+      "edit",
+      { file_path: ".git/config", old_string: "false", new_string: "true" },
+      ctx({ confirm: async () => true }),
+    );
+    expect(edit.ok).toBe(false);
+    expect(edit.error?.code).toBe("TOOL_PERMISSION_DENIED");
+    expect(await fs.readFile(path.join(root, ".git", "config"), "utf8")).toContain("bare = false");
+
+    // benign files are unaffected by the defaults.
+    const ok = await executor.execute(
+      "write_file",
+      { path: "ok.txt", content: "hi" },
+      ctx({ confirm: async () => true }),
+    );
+    expect(ok.ok).toBe(true);
+  });
+
+  it("an explicit empty override opts out of the safe defaults", async () => {
+    const config = makeConfig((c) => {
+      c.tools.perTool["write_file"] = { permission: "always", protectedExtensions: [] };
+      c.tools.perTool["read"] = { permission: "always", readDeny: [] };
+      c.tools.perTool["edit"] = { permission: "always", protectedExtensions: [] };
+    });
+    const { executor } = createToolSystem(config, new NoopLogger());
+
+    const write = await executor.execute("write_file", { path: ".env", content: "x=old" }, ctx());
+    expect(write.ok).toBe(true);
+
+    await fs.writeFile(path.join(root, "id_rsa"), "data");
+    const read = await executor.execute<{ content: string }>(
+      "read",
+      { file_path: "id_rsa" },
+      ctx(),
+    );
+    expect(read.ok).toBe(true);
+    expect(read.output.content).toBe("data");
+
+    // edit: empty override opts the edit tool out of the protected-file guard.
+    const edit = await executor.execute<{ replacements: number }>(
+      "edit",
+      { file_path: ".env", old_string: "old", new_string: "new" },
+      ctx(),
+    );
+    expect(edit.ok).toBe(true);
+    expect(await fs.readFile(path.join(root, ".env"), "utf8")).toBe("x=new");
+  });
+
   it("honours tools.disabled for built-ins", async () => {
     const config = makeConfig((c) => {
       c.tools.disabled = ["bash"];

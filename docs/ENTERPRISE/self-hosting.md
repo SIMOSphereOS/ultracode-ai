@@ -1,6 +1,8 @@
 # Selbsthosting
 
-> **Komplette Anleitung zum Selbsthosting von UltraCode - Volle Kontrolle über Ihre Daten**
+> ⚠️ **Vision / noch nicht implementiert.** UltraCode hat heute keinen server-seitigen Dienst, der sich „self-hosten“ ließe — es ist ein lokales CLI, das auf der eigenen Maschine läuft. Die folgende Anleitung beschreibt eine geplante self-hosted Server-Variante und ist **derzeit nicht lauffähig**. Für die reale Nutzung siehe [Installation](../GETTING-STARTED/installation.md).
+
+> **Komplette Anleitung zum Selbsthosting von UltraCode - Volle Kontrolle über Ihre Daten** *(geplant)*
 
 ---
 
@@ -47,7 +49,7 @@ UltraCode kann vollständig in Ihrer eigenen Infrastruktur gehostet werden. Dies
 #### 1. Repository klonen
 
 ```bash
-git clone https://github.com/ultracode-ai/ultracode.git
+git clone https://github.com/AndreasSchwan-SIMO/UltraCode.git
 cd ultracode
 ```
 

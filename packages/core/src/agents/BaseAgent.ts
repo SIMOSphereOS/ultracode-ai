@@ -20,8 +20,22 @@ import type {
   ToolDefinition,
 } from "@ultracode/shared";
 import { ExecutionEngine, isAbortError } from "../execution/ExecutionEngine.js";
+import type { ExecutionFinishReason } from "../execution/ExecutionEngine.js";
 import type { IToolRunner } from "../execution/types.js";
 import { FilteredToolRunner, toolPredicateFor } from "./toolFilter.js";
+
+/**
+ * {@link AgentRunResult} augmented with the optional terminal `finishReason`.
+ *
+ * Added back-compatibly: the field is **optional**, so every existing
+ * {@link AgentRunResult} consumer keeps working unchanged, while callers that
+ * care can detect a silently-truncated answer (`finishReason: "length"`) or an
+ * early no-progress termination (`"no_progress"`).
+ */
+export interface AgentRunResultWithFinish extends AgentRunResult {
+  /** Terminal finish reason of the underlying engine run. */
+  finishReason?: ExecutionFinishReason;
+}
 
 /** Collects an injected context string for a prompt (e.g. the ContextEngine). */
 export type ContextCollector = (prompt: string) => Promise<string>;
@@ -112,9 +126,15 @@ export class BaseAgent implements IAgent {
   /**
    * Run the agent.
    *
+   * Resolves with an {@link AgentRunResultWithFinish} — a back-compatible
+   * superset of {@link AgentRunResult} that also carries the engine's terminal
+   * `finishReason`. A `"length"` finish (provider token-cap truncation) is
+   * surfaced on the result **and** logged loudly via `logger.warn` so callers
+   * can detect a silently-truncated answer.
+   *
    * @throws {AgentError} on unrecoverable failure (cause preserved).
    */
-  async run(input: BaseAgentRunInput): Promise<AgentRunResult> {
+  async run(input: BaseAgentRunInput): Promise<AgentRunResultWithFinish> {
     try {
       let context = "";
       if (this.contextCollector) {
@@ -139,11 +159,24 @@ export class BaseAgent implements IAgent {
       if (input.onChunk !== undefined) engineInput.onChunk = input.onChunk;
 
       const result = await this.engine.run(engineInput);
+
+      if (result.finishReason === "length") {
+        this.logger.warn(
+          "model response was truncated by the token cap (finishReason: length); the answer may be incomplete",
+          {
+            agent: this.definition.name,
+            turns: result.turns,
+            outputTokens: result.usage.outputTokens,
+          },
+        );
+      }
+
       return {
         text: result.text,
         toolCallsExecuted: result.toolCallsExecuted,
         usage: result.usage,
         turns: result.turns,
+        finishReason: result.finishReason,
       };
     } catch (err) {
       if (isAbortError(err)) throw err;

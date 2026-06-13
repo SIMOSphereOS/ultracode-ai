@@ -13,11 +13,26 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndreasSchwan-SIMO/UltraCode.git",
+    "directory": "packages/shared"
+  },
+  "homepage": "https://github.com/AndreasSchwan-SIMO/UltraCode#readme",
+  "bugs": {
+    "url": "https://github.com/AndreasSchwan-SIMO/UltraCode/issues"
+  },
   "scripts": {
     "build": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "tsc -b"
   },
   "engines": {
     "node": ">=22.13.0"

@@ -771,4 +771,4 @@ port = 3000
 
 - [TOML-Spezifikation](https://toml.io/en/v2.0.0)
 - [TOML-Validator](https://www.toml-lint.com/)
-- [UltraCode Standard-Konfiguration](https://github.com/ultracode-ai/ultracode/blob/main/packages/core/src/config/defaults.ts)
+- [UltraCode Standard-Konfiguration](https://github.com/AndreasSchwan-SIMO/UltraCode/blob/main/packages/core/src/config/defaults.ts)

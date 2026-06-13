@@ -266,7 +266,7 @@ export class AnthropicProvider extends BaseProvider {
     const pendingToolUse = new Map<number, { id: string; name: string; json: string }>();
 
     try {
-      for await (const evt of parseSSEJson(body, this.logger, req.signal)) {
+      for await (const evt of parseSSEJson(body, this.logger, req.signal, this.streamIdleTimeoutMs())) {
         const root = asRecord(evt.json);
         if (root === undefined) continue;
         const type = asString(root.type);

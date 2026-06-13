@@ -1,6 +1,38 @@
 import { describe, expect, it } from "vitest";
-import { parseNDJSON, parseSSEEvents, parseSSEJson, streamLines } from "./sse.js";
+import {
+  DEFAULT_IDLE_TIMEOUT_MS,
+  parseNDJSON,
+  parseSSEEvents,
+  parseSSEJson,
+  StreamIdleTimeoutError,
+  streamLines,
+} from "./sse.js";
 import { captureLogger, collect, streamFromChunks } from "./testkit.test.js";
+
+/**
+ * Build a stream that emits `head` chunks then stalls forever (never enqueues
+ * again, never closes) — models a hung provider body. The returned `feed`
+ * pushes additional chunks; `close` ends the stream cleanly.
+ */
+function stallingStream(head: ReadonlyArray<string>): {
+  stream: ReadableStream<Uint8Array>;
+  feed: (chunk: string) => void;
+  close: () => void;
+} {
+  const encoder = new TextEncoder();
+  let ctrl!: ReadableStreamDefaultController<Uint8Array>;
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      ctrl = controller;
+      for (const chunk of head) controller.enqueue(encoder.encode(chunk));
+    },
+  });
+  return {
+    stream,
+    feed: (chunk: string) => ctrl.enqueue(encoder.encode(chunk)),
+    close: () => ctrl.close(),
+  };
+}
 
 describe("streamLines", () => {
   it("splits lines across arbitrary chunk boundaries", async () => {
@@ -49,6 +81,48 @@ describe("streamLines", () => {
     controller.abort();
     const iterator = streamLines(streamFromChunks(["a\n"]), controller.signal);
     await expect(iterator.next()).rejects.toMatchObject({ name: "AbortError" });
+  });
+
+  it("rejects with an idle-timeout error when the stream stalls after a chunk", async () => {
+    const { stream } = stallingStream(["first\n"]);
+    const iterator = streamLines(stream, undefined, 20);
+    const first = await iterator.next();
+    expect(first.value).toBe("first");
+    // No further data arrives within the idle window → idle timeout fires.
+    await expect(iterator.next()).rejects.toBeInstanceOf(StreamIdleTimeoutError);
+  });
+
+  it("does not time out while data keeps arriving within the idle window", async () => {
+    const { stream, feed, close } = stallingStream(["a\n"]);
+    const idleMs = 40;
+    const iterator = streamLines(stream, undefined, idleMs);
+    expect((await iterator.next()).value).toBe("a");
+    // Emit two more lines, each well within the idle window, resetting the timer.
+    for (const line of ["b", "c"]) {
+      await new Promise((r) => setTimeout(r, idleMs / 2));
+      feed(`${line}\n`);
+      expect((await iterator.next()).value).toBe(line);
+    }
+    close();
+    expect((await iterator.next()).done).toBe(true);
+  });
+
+  it("lets the caller's abort win over the idle timeout", async () => {
+    const { stream } = stallingStream(["x\n"]);
+    const controller = new AbortController();
+    const iterator = streamLines(stream, controller.signal, 10_000);
+    expect((await iterator.next()).value).toBe("x");
+    controller.abort(new Error("user abort"));
+    await expect(iterator.next()).rejects.toThrow("user abort");
+  });
+
+  it("disables the watchdog for a non-positive idle timeout", async () => {
+    const lines = await collect(streamLines(streamFromChunks(["a\n", "b\n"]), undefined, 0));
+    expect(lines).toEqual(["a", "b"]);
+  });
+
+  it("exposes a default idle window consistent with provider timeouts", () => {
+    expect(DEFAULT_IDLE_TIMEOUT_MS).toBeGreaterThan(0);
   });
 });
 
@@ -104,6 +178,14 @@ describe("parseSSEJson", () => {
     );
     expect(events).toEqual([{ json: payload }]);
   });
+
+  it("surfaces an idle timeout from a stalled SSE body", async () => {
+    const { logger } = captureLogger();
+    const { stream } = stallingStream(['data: {"x":1}\n\n']);
+    const iterator = parseSSEJson(stream, logger, undefined, 20);
+    expect((await iterator.next()).value).toEqual({ json: { x: 1 } });
+    await expect(iterator.next()).rejects.toBeInstanceOf(StreamIdleTimeoutError);
+  });
 });
 
 describe("parseNDJSON", () => {
@@ -114,5 +196,13 @@ describe("parseNDJSON", () => {
     );
     expect(items).toEqual([{ a: 1 }, { b: 2 }]);
     expect(logs.filter((l) => l.level === "warn")).toHaveLength(1);
+  });
+
+  it("surfaces an idle timeout from a stalled NDJSON body", async () => {
+    const { logger } = captureLogger();
+    const { stream } = stallingStream(['{"a":1}\n']);
+    const iterator = parseNDJSON(stream, logger, undefined, 20);
+    expect((await iterator.next()).value).toEqual({ a: 1 });
+    await expect(iterator.next()).rejects.toBeInstanceOf(StreamIdleTimeoutError);
   });
 });

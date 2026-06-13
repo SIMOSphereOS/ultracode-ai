@@ -3,7 +3,7 @@
 > **Open-Source AI Code Assistant für das Terminal — mit KI-gestützter Versionierung und Release-Planung.**
 
 [![CI](https://github.com/AndreasSchwan-SIMO/UltraCode/actions/workflows/ci.yml/badge.svg)](https://github.com/AndreasSchwan-SIMO/UltraCode/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen.svg)](#teststatus)
+[![Coverage](https://img.shields.io/badge/coverage-~93%25%20stmts%20%7C%20~86%25%20branches-brightgreen.svg)](#teststatus)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22.13-339933.svg)](#installation)
 [![pnpm](https://img.shields.io/badge/pnpm-11.5.2-f69220.svg)](#installation)
@@ -14,10 +14,10 @@ Coding-Tools nicht haben: einem **KI-gestützten Versionierungs- und Release-Sys
 aus Git-Diffs und Commits einen SemVer-Bump vorschlägt, einen Changelog-Entwurf erstellt und
 Quality-Gates für ein Release prüft.
 
-> **Reifegrad — ehrlich:** UltraCode hat sein erstes stabiles Release (Core `1.1.0`, übrige Pakete `1.0.1`;
-> `@ultracode/shared`, `@ultracode/core`, `ultracode` CLI eigenständig
+> **Reifegrad — ehrlich:** UltraCode ist auf dem Weg zum 1.3.0-Release (aktuell `@ultracode/core` `1.2.0`,
+> `ultracode` CLI `1.1.0`, `@ultracode/shared` `1.0.1`; jedes Paket eigenständig
 > versioniert). CLI-, Core- und Versionierungs-Fundament sind implementiert und getestet
-> (1347 Tests, ~93 % Coverage) und laufen in CI auf Linux, macOS und Windows (Node 22/24).
+> (1347 Tests, ~93 % Statements / ~86 % Branches Coverage) und laufen in CI auf Linux, macOS und Windows (Node 22/24).
 > Desktop-App und IDE-Plugins aus der Architektur-Vision sind **noch nicht** Teil dieses
 > Repos. Was hier dokumentiert ist, spiegelt den tatsächlichen Code wider.
 
@@ -194,6 +194,38 @@ ultracode config export config.json   # als JSON exportieren (oder stdout)
 ultracode config import config.json   # Overrides importieren
 ```
 
+### Kostenkontrolle, Skills, Agenten & Lernen
+
+```bash
+# Budget: Spend-Status, Plan (Cap / Approval-Threshold) und Ledger-Historie
+ultracode budget show                 # aktueller Spend, Cap, Rest (Alias: budget status)
+ultracode budget plan --cap 50 --threshold 5
+ultracode budget set budget.json      # Plan aus JSON-Datei laden + persistieren
+ultracode budget history --limit 20
+
+# Skills authoring: auflisten, anzeigen, aus Wissensmaterial erzeugen/upgraden/testen
+ultracode skills list [catalog]
+ultracode skills show <name>
+ultracode skills create --topic "…" --catalog "…" --summary "…" [--yes]
+ultracode skills upgrade --file material.json [--yes]
+ultracode skills test --file material.json
+
+# Agenten authoring (zusätzlich zu `agents list`): aus Wissensmaterial erzeugen/evolvieren/testen
+ultracode agents create --topic "…" --summary "…" [--yes]
+ultracode agents evolve --file material.json [--yes]
+ultracode agents test --file material.json
+
+# Lernen aus Dokumentationsquellen (zeigt erst einen Kostenreport)
+ultracode learn sources list
+ultracode learn sources add <url> [--catalog …] [--schedule on-demand|annual|<cron>] [--scope …] [--locale …]
+ultracode learn sources remove <id>
+ultracode learn run [sourceId] [--yes]
+ultracode learn schedule
+```
+
+Diese Kommandos unterstützen ebenfalls `--json`. `create`/`upgrade`/`evolve`/`run` geben ohne
+`--yes` nur einen Vorschlag bzw. Kostenreport aus und persistieren nichts.
+
 ---
 
 ## Konfiguration (Kurzüberblick)
@@ -259,7 +291,7 @@ Cross-cutting Conventions in [`CONTRACTS.md`](./packages/shared/CONTRACTS.md).
 
 ## Teststatus
 
-- **969 Tests**, **~94 % Coverage** (V8) — deterministisch und offline.
+- **1347 Tests**, **~93 % Statements / ~86 % Branches Coverage** (V8) — deterministisch und offline.
 - Unit-Tests pro Paket plus ein dediziertes `e2e`-Projekt (`pnpm test:e2e`).
 - **Cross-Platform** verifiziert für Linux, macOS und Windows.
 - Die Tests decken Angriffsflächen ab: Pfad-Traversal und Symlinks, Timeouts,

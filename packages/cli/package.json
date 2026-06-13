@@ -10,16 +10,28 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndreasSchwan-SIMO/UltraCode.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/AndreasSchwan-SIMO/UltraCode#readme",
+  "bugs": {
+    "url": "https://github.com/AndreasSchwan-SIMO/UltraCode/issues"
+  },
   "scripts": {
     "build": "tsc -b",
     "test": "vitest run",
-    "dev": "node --enable-source-maps dist/index.js"
+    "dev": "node --enable-source-maps dist/index.js",
+    "prepublishOnly": "tsc -b"
   },
   "dependencies": {
-    "@ultracode/core": "workspace:*",
-    "@ultracode/shared": "workspace:*",
+    "@ultracode/core": "workspace:^",
+    "@ultracode/shared": "workspace:^",
     "commander": "^12.1.0",
     "ink": "^5.1.0",
     "react": "^18.3.1"

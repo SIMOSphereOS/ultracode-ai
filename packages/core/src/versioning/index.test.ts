@@ -10,6 +10,7 @@ import type {
   UltraCodeConfig,
 } from "@ultracode/shared";
 import { defaultGitRunner } from "./GitClient.js";
+import type { GitCommandResult, GitRunner } from "./GitClient.js";
 import { createVersioningSystem } from "./index.js";
 import type { CommandRunner } from "./QualityGateSystem.js";
 
@@ -70,6 +71,34 @@ function configWithStable(stable: string): UltraCodeConfig {
 
 const okRunner: CommandRunner = async () => ({ exitCode: 0, stdout: "", stderr: "" });
 
+const FIELD_SEP = "\u001f";
+const RECORD_SEP = "\u001e";
+
+const ok = (stdout: string): GitCommandResult => ({ exitCode: 0, stdout, stderr: "" });
+const fail = (stderr: string): GitCommandResult => ({ exitCode: 128, stdout: "", stderr });
+
+/**
+ * Minimal in-memory git fake describing a repo tagged `tag` with a single
+ * added file and one `feat` commit on top. Used to exercise the base-version
+ * derivation deterministically (no real filesystem tags).
+ */
+function taggedRepoRunner(tag: string): GitRunner {
+  return async (args: readonly string[]): Promise<GitCommandResult> => {
+    const a = [...args];
+    const cmd = a[0];
+    if (cmd === "rev-parse" && a.includes("--is-inside-work-tree")) return ok("true\n");
+    if (cmd === "rev-parse" && a.includes("HEAD")) return ok("\n"); // hasCommits → exit 0
+    if (cmd === "describe") return ok(`${tag}\n`);
+    if (cmd === "log") {
+      return ok(`deadbeef${FIELD_SEP}feat(core): add feature${FIELD_SEP}${RECORD_SEP}`);
+    }
+    if (cmd === "diff" && a.includes("--name-status")) return ok(`A\0feature.ts\0`);
+    if (cmd === "diff" && a.includes("--numstat")) return ok(`1\t0\tfeature.ts\0`);
+    if (cmd === "show") return ok("export const feature = 2;\n");
+    return fail(`unexpected git invocation: ${a.join(" ")}`);
+  };
+}
+
 describe("createVersioningSystem", () => {
   it("analyze() uses the last tag as default range", async () => {
     const dir = await makeFeatureRepo();
@@ -102,12 +131,28 @@ describe("createVersioningSystem", () => {
     expect(pre.suggestedVersion).toBe("2.1.0-beta.0");
   });
 
-  it("suggest() falls back to DEFAULT_CONFIG channels without a config", async () => {
+  it("suggest() derives the base version from the latest git tag when the channel is the 0.0.0 default", async () => {
+    // makeFeatureRepo() tags v1.0.0; without an explicit version/channel base
+    // the bump must come from the real tag, not the DEFAULT_CONFIG 0.0.0 placeholder.
     const dir = await makeFeatureRepo();
     const system = createVersioningSystem({ cwd: dir, logger });
     const suggestion = await system.suggest();
-    expect(suggestion.currentVersion).toBe("0.0.0");
-    expect(suggestion.suggestedVersion).toBe("0.1.0");
+    expect(suggestion.currentVersion).toBe("1.0.0");
+    expect(suggestion.suggestedVersion).toBe("1.1.0");
+  });
+
+  it("suggest() bumps a v3.2.1-tagged repo to 3.3.0 via the injected git fake (not 0.1.0)", async () => {
+    const dir = await makeDir();
+    const system = createVersioningSystem({
+      cwd: dir,
+      logger,
+      gitRunner: taggedRepoRunner("v3.2.1"),
+    });
+    const suggestion = await system.suggest();
+    expect(suggestion.currentVersion).toBe("3.2.1");
+    expect(suggestion.bump).toBe("minor");
+    expect(suggestion.suggestedVersion).toBe("3.3.0");
+    expect(suggestion.suggestedVersion).not.toBe("0.1.0");
   });
 
   it("plan() defaults to the suggested version and drafts a changelog", async () => {

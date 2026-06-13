@@ -42,6 +42,13 @@ export default defineConfig({
       provider: "v8",
       include: ["packages/*/src/**"],
       exclude: ["**/*.test.*", "**/dist/**"],
+      // CI quality gate: vitest exits non-zero when any threshold is not met,
+      // so coverage regressions fail the build.
+      thresholds: {
+        lines: 85,
+        statements: 85,
+        branches: 80,
+      },
     },
   },
 });

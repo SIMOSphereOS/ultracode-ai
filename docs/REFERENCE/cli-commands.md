@@ -6,7 +6,7 @@
 
 ## Überblick
 
-Das CLI heißt `ultracode` (Binary aus `packages/cli`, Version `0.2.1`). Es ist mit [Commander.js](https://github.com/tj/commander.js) aufgebaut (`createProgram` in `packages/cli/src/program.ts`) und läuft als TS-ESM-Programm auf Node.js `>= 20`. Die Cross-Platform-Unterstützung (Linux/macOS/Windows) ergibt sich aus dem reinen Node-Stack ohne native Abhängigkeiten.
+Das CLI heißt `ultracode` (Binary aus `packages/cli`, Version `1.1.0`). Es ist mit [Commander.js](https://github.com/tj/commander.js) aufgebaut (`createProgram` in `packages/cli/src/program.ts`) und läuft als TS-ESM-Programm auf Node.js `>= 22.13`. Die Cross-Platform-Unterstützung (Linux/macOS/Windows) ergibt sich aus dem reinen Node-Stack ohne native Abhängigkeiten.
 
 ```text
 ultracode [globale Optionen] [kommando] [argumente] [optionen]
@@ -198,7 +198,7 @@ Geprüfte Checks (`collectDoctorReport`):
 
 | Check | Kritisch | Inhalt |
 |-------|----------|--------|
-| `node` | ja | Node.js `>= 20` (Konstante `MIN_NODE_MAJOR`). |
+| `node` | ja | Node.js `>= 22.13` (Konstanten `MIN_NODE_MAJOR` = 22, `MIN_NODE_MINOR` = 13). |
 | `git` | nein | `git --version` verfügbar (sonst Versionierungs-Features deaktiviert). |
 | `config-dir` | ja | Schreibzugriff auf das Config-Verzeichnis (`~/.ultracode`). |
 | `config` | ja | Konfiguration lädt und validiert. |
@@ -214,9 +214,87 @@ ultracode doctor --json
 
 ---
 
+## `ultracode budget`
+
+Kostenkontrolle (`registerBudgetCommands` in `packages/cli/src/commands/budget.ts`).
+
+| Subkommando | Beschreibung |
+|-------------|--------------|
+| `budget show [--json]` | Druckt den aktuellen Budget-Status: Spend, Cap, Rest. |
+| `budget status [--json]` | Alias von `budget show`. |
+| `budget plan [--cap <usd>] [--threshold <usd>] [--json]` | Installiert oder liest den Budget-Plan (monatlicher USD-Cap, Approval-Threshold). |
+| `budget set <file>` | Lädt einen `BudgetPlan` aus einer JSON-Datei und persistiert ihn. |
+| `budget history [--limit <n>] [--json]` | Druckt das Spend-Ledger (geschätzt vs. tatsächlich). |
+
+```bash
+ultracode budget show
+ultracode budget plan --cap 50 --threshold 5
+ultracode budget set ./budget.json
+ultracode budget history --limit 20 --json
+```
+
+---
+
+## `ultracode skills`
+
+Skills inspizieren und aus Wissensmaterial authoren (`registerSkillsCommands` in `packages/cli/src/commands/skills.ts`).
+
+| Subkommando | Beschreibung |
+|-------------|--------------|
+| `skills list [catalog] [--json]` | Listet authored Skills (optional auf einen Katalog beschränkt). |
+| `skills show <name> [--json]` | Druckt einen einzelnen Skill (Frontmatter + Body). |
+| `skills create [--file <path>] [--topic <t>] [--catalog <c>] [--summary <s>] [--yes] [--json]` | Erzeugt einen neuen Skill aus Material; ohne `--yes` nur Vorschlag. |
+| `skills upgrade […] [--yes] [--json]` | Upgradet einen bestehenden Skill aus neuem Material; ohne `--yes` nur Vorschlag. |
+| `skills test […] [--json]` | Testet einen Skill-Vorschlag aus Material, ohne zu persistieren. |
+
+```bash
+ultracode skills list
+ultracode skills show <name>
+ultracode skills create --topic "…" --catalog "…" --summary "…" --yes
+```
+
+---
+
+## `ultracode agents` (Authoring)
+
+Zusätzlich zu `agents list` (siehe oben) authort `registerAuthoringAgentCommands` (`packages/cli/src/commands/authoring-agents.ts`) Agenten aus Wissensmaterial.
+
+| Subkommando | Beschreibung |
+|-------------|--------------|
+| `agents create [--file <path>] [--topic <t>] [--catalog <c>] [--summary <s>] [--yes] [--json]` | Erzeugt einen neuen Agenten aus Material; ohne `--yes` nur Vorschlag. |
+| `agents evolve […] [--yes] [--json]` | Evolviert einen bestehenden Agenten aus neuem Material; ohne `--yes` nur Vorschlag. |
+| `agents test […] [--json]` | Testet einen Agenten-Vorschlag aus Material, ohne zu persistieren. |
+
+```bash
+ultracode agents create --topic "…" --summary "…" --yes
+ultracode agents test --file ./material.json
+```
+
+---
+
+## `ultracode learn`
+
+Aus Dokumentationsquellen lernen (`registerLearnCommands` in `packages/cli/src/commands/learn.ts`).
+
+| Subkommando | Beschreibung |
+|-------------|--------------|
+| `learn sources list [--json]` | Listet registrierte Dokumentationsquellen. |
+| `learn sources add <url> [--catalog <c>] [--schedule <s>] [--scope <p>] [--locale <l>] [--json]` | Registriert eine neue Quelle (Schedule: `on-demand` \| `annual` \| Cron). |
+| `learn sources remove <id> [--json]` | Entfernt eine registrierte Quelle. |
+| `learn run [sourceId] [--yes] [--json]` | Plant und (nach Freigabe) führt das Lernen für eine Quelle aus — zeigt zuerst den Kostenreport. Ohne `--yes` ist eine interaktive Bestätigung nötig. |
+| `learn schedule [--json]` | Zeigt den Refresh-Schedule je Quelle. |
+
+```bash
+ultracode learn sources list
+ultracode learn sources add https://docs.example.com --catalog example --schedule annual
+ultracode learn run --yes
+```
+
+---
+
 ## Hinweise zu `--json`
 
-Folgende Kommandos unterstützen maschinenlesbare JSON-Ausgabe: `run --json`, `config show/get --json`, `tools list --json`, `agents list --json`, `version analyze/suggest --json`, `release plan --json`, `quality --json`, `doctor --json`. Die JSON-Ausgabe geht jeweils nach `stdout` (eine Zeile bzw. ein Objekt) und eignet sich für die Weiterverarbeitung in Skripten.
+Folgende Kommandos unterstützen maschinenlesbare JSON-Ausgabe: `run --json`, `config show/get --json`, `tools list --json`, `agents list/create/evolve/test --json`, `version analyze/suggest --json`, `release plan --json`, `quality --json`, `doctor --json`, `budget show/status/plan/history --json`, `skills list/show/create/upgrade/test --json`, `learn sources list/add/remove/run/schedule --json`. Die JSON-Ausgabe geht jeweils nach `stdout` (eine Zeile bzw. ein Objekt) und eignet sich für die Weiterverarbeitung in Skripten.
 
 ---
 

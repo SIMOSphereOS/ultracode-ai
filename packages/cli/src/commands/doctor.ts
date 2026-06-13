@@ -63,7 +63,15 @@ export const API_KEY_VARS = [
 ] as const;
 
 /** Minimum supported Node.js major version. */
-export const MIN_NODE_MAJOR = 20;
+export const MIN_NODE_MAJOR = 22;
+
+/**
+ * Minimum supported Node.js minor version *within* {@link MIN_NODE_MAJOR}.
+ * A newer major satisfies the requirement regardless of its minor; only the
+ * boundary major is gated on this minor. Mirrors the `engines.node`
+ * (`>=22.13.0`) declared by every workspace package.
+ */
+export const MIN_NODE_MINOR = 13;
 
 /** Default writability probe: mkdir -p, then create + delete a marker file. */
 export async function defaultCheckWritable(dir: string): Promise<true | string> {
@@ -99,15 +107,23 @@ export async function collectDoctorReport(deps: DoctorDeps): Promise<DoctorRepor
   const checks: DoctorCheck[] = [];
 
   // 1. Node.js version (critical)
-  const major = Number.parseInt(deps.nodeVersion.split(".")[0] ?? "", 10);
-  const nodeOk = Number.isFinite(major) && major >= MIN_NODE_MAJOR;
+  const [majorRaw, minorRaw] = deps.nodeVersion.split(".");
+  const major = Number.parseInt(majorRaw ?? "", 10);
+  const minor = Number.parseInt(minorRaw ?? "", 10);
+  const required = `${MIN_NODE_MAJOR}.${MIN_NODE_MINOR}`;
+  // A newer major always qualifies; the boundary major additionally requires
+  // minor >= MIN_NODE_MINOR (an unparseable minor on the boundary major fails).
+  const nodeOk =
+    Number.isFinite(major) &&
+    (major > MIN_NODE_MAJOR ||
+      (major === MIN_NODE_MAJOR && Number.isFinite(minor) && minor >= MIN_NODE_MINOR));
   checks.push({
     name: "node",
     ok: nodeOk,
     critical: true,
     detail: nodeOk
-      ? `Node.js v${deps.nodeVersion} (>= ${MIN_NODE_MAJOR} required)`
-      : `Node.js v${deps.nodeVersion} is not supported — version ${MIN_NODE_MAJOR} or newer is required`,
+      ? `Node.js v${deps.nodeVersion} (>= ${required} required)`
+      : `Node.js v${deps.nodeVersion} is not supported — version ${required} or newer is required`,
   });
 
   // 2. git availability (non-critical)

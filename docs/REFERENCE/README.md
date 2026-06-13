@@ -23,16 +23,17 @@ Die Referenzdokumentation bietet detaillierte Informationen zu allen technischen
 
 ## 🎯 Schnellzugriff
 
-### API
-- **Base URL**: `https://api.ultracode.ai/v1` oder selbst gehostet
-- **Authentication**: Bearer Token (JWT)
+### API *(Vision / noch nicht implementiert)*
+> ⚠️ Die REST/WebSocket/JWT-API existiert im aktuellen Code **nicht** (`api.ultracode.ai` ist kein realer Endpoint). Siehe [api.md](./api.md) für den geplanten Stand. Verbindlich ist die CLI.
+- **Base URL** *(geplant)*: `https://api.ultracode.ai/v1`
+- **Authentication** *(geplant)*: Bearer Token (JWT)
 - **Format**: JSON
 - **Dokumentation**: OpenAPI 3.0 / Swagger
 
 ### CLI
-- **Installation**: `npm install -g ultracode`
+- **Installation**: aus dem Quellcode (`pnpm install && pnpm build`); `npm install -g ultracode` ab 1.3.0 (siehe [Installation](../GETTING-STARTED/installation.md))
 - **Hilfe**: `ultracode --help`
-- **Version**: `ultracode version`
+- **Version**: `ultracode --version`
 
 ### Slash Commands
 - **Prefix**: `/` (Standard)
@@ -286,7 +287,7 @@ rg "/generate" docs/REFERENCE/slash-commands.md -A 10
 - **API-Fragen**: api@ultracode.ai
 - **CLI-Fragen**: cli@ultracode.ai
 - **Allgemeiner Support**: support@ultracode.ai
-- **GitHub Discussions**: [https://github.com/ultracode-ai/ultracode/discussions](https://github.com/ultracode-ai/ultracode/discussions)
+- **GitHub Discussions**: [https://github.com/AndreasSchwan-SIMO/UltraCode/discussions](https://github.com/AndreasSchwan-SIMO/UltraCode/discussions)
 
 ---
 

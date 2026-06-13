@@ -1,0 +1,50 @@
+name: Publish
+
+on:
+  push:
+    tags: ["v*"]
+
+# Minimal permissions: read the checkout, write provenance/id-token for npm.
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: publish (npm)
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.2
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      # pnpm rewrites workspace:^ protocol specifiers to the real published
+      # versions at publish time, so the released tarballs contain no
+      # "workspace:*"/"workspace:^" ranges. Manual verification:
+      #   pnpm -r --filter ultracode pack  → inspect package.json in the tarball.
+      - name: Publish to npm
+        run: pnpm -r publish --no-git-checks --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"

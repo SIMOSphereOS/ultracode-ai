@@ -8,7 +8,7 @@
 
 Das Tool-System wird von `createToolSystem` (`packages/core/src/tools/createToolSystem.ts`) zusammengesetzt: eine `ToolRegistry` mit allen Built-in-Tools plus ein `ToolExecutor`. Jedes Tool erbt von `BaseTool` (`packages/core/src/tools/BaseTool.ts`), validiert seine Argumente mit einem zod-Schema und liefert ein `ToolResult` – `execute` wirft nie, sondern wandelt Fehler in `ok: false` um.
 
-Aktuell registriert `createToolSystem` **13 Built-in-Tools**. (Die übergeordnete Architekturdoku spricht historisch von „80+ Tools" als Zielbild; die folgende Tabelle bildet den realen Stand des Codes ab.)
+Aktuell registriert `createToolSystem` **13 Built-in-Tools**. Die Fassade `UltraCode` ergänzt zur Laufzeit das `task`-Subagent-Tool (`packages/core/src/UltraCode.ts`), sodass Agenten insgesamt **14 Tools** sehen. (Frühere Dokumente sprachen von „80+ Tools" als Zielbild; die folgende Tabelle bildet den realen Stand des Codes ab.)
 
 ### Tool-Definition
 

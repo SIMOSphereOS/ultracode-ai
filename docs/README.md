@@ -27,7 +27,7 @@ docs/
 │   ├── architecture.md            # Systemarchitektur
 │   ├── core-system.md             # Kernsystem-Details
 │   ├── ai-versioning.md           # AI-Versionierungssystem
-│   ├── tools-reference.md         # Tool-Referenz (80+ Tools)
+│   ├── tools-reference.md         # Tool-Referenz (14 Tools)
 │   └── agents-reference.md        # Agenten-Referenz
 │
 ├── 🔧 INTEGRATION/                # Integration
@@ -138,7 +138,7 @@ rg "migration" docs/INTEGRATION/
 
 ## 📞 Support & Feedback
 
-- **GitHub Discussions**: [https://github.com/ultracode-ai/ultracode/discussions](https://github.com/ultracode-ai/ultracode/discussions)
+- **GitHub Discussions**: [https://github.com/AndreasSchwan-SIMO/UltraCode/discussions](https://github.com/AndreasSchwan-SIMO/UltraCode/discussions)
 - **Discord**: [https://discord.gg/ultracode](https://discord.gg/ultracode)
 - **E-Mail**: support@ultracode.ai
 

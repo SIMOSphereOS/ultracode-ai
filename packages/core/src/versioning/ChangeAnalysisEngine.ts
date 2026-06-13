@@ -30,6 +30,23 @@ const RECORD_SEP = "\u001e";
 /** Extensions considered for the exported-symbol API diff. */
 const API_DIFF_FILE_RE = /\.(ts|tsx|mts|cts)$/;
 
+/**
+ * Rejects a user-controlled git ref token that would be parsed as an option by
+ * the git CLI (anything beginning with `-`). Without this guard a crafted
+ * range such as `--output=/tmp/x` or `-foo` would be passed straight through to
+ * `git log`/`git diff`, enabling argument injection (e.g. arbitrary file
+ * writes). The literal `--` separator added at each call site cannot precede a
+ * revision argument, so leading-dash refs must be refused outright.
+ */
+function assertSafeRef(ref: string, kind: "base" | "head" | "range"): void {
+  if (ref.startsWith("-")) {
+    throw new VersioningError(
+      `invalid git ${kind} "${ref}": refs must not begin with "-" (argument injection guard)`,
+      { details: { kind, ref } },
+    );
+  }
+}
+
 /** Construction options for {@link ChangeAnalysisEngine}. */
 export interface ChangeAnalysisEngineOptions {
   /** Repository working directory. */
@@ -127,10 +144,13 @@ export class ChangeAnalysisEngine {
   private async resolveRange(range?: string): Promise<ResolvedRange> {
     if (range !== undefined && range.trim() !== "") {
       const trimmed = range.trim();
+      assertSafeRef(trimmed, "range");
       const match = /^(.*?)\.{2,3}(.*)$/.exec(trimmed);
       if (match) {
         const base = (match[1] ?? "").trim() || "HEAD";
         const head = (match[2] ?? "").trim() || "HEAD";
+        assertSafeRef(base, "base");
+        assertSafeRef(head, "head");
         return { base, head, logRange: `${base}..${head}` };
       }
       return { base: trimmed, head: "HEAD", logRange: `${trimmed}..HEAD` };
@@ -154,6 +174,9 @@ export class ChangeAnalysisEngine {
   private async collectCommits(logRange: string | undefined): Promise<CommitInfo[]> {
     const args = ["log", `--format=%H${FIELD_SEP}%s${FIELD_SEP}%b${RECORD_SEP}`];
     if (logRange !== undefined) args.push(logRange);
+    // Separate revisions from pathspecs so a crafted range can never be
+    // reinterpreted as a path; leading-dash refs are already rejected upstream.
+    args.push("--");
     const out = await this.git.output(args);
     const commits: CommitInfo[] = [];
     for (const record of out.split(RECORD_SEP)) {
@@ -184,8 +207,9 @@ export class ChangeAnalysisEngine {
       "-z",
       base,
       head,
+      "--",
     ]);
-    const numstatOut = await this.git.output(["diff", "--numstat", "-M", "-z", base, head]);
+    const numstatOut = await this.git.output(["diff", "--numstat", "-M", "-z", base, head, "--"]);
 
     const counts = this.parseNumstat(numstatOut);
     const files: FileChange[] = [];
@@ -265,6 +289,9 @@ export class ChangeAnalysisEngine {
     const breaking: BreakingChange[] = [];
     for (const file of files) {
       if (file.status !== "modified" || !API_DIFF_FILE_RE.test(file.path)) continue;
+      // `git show <rev>:<path>` takes a single object spec; a `--` separator
+      // would turn it into a pathspec, so we rely on base/head being validated
+      // non-dash refs (see assertSafeRef) to prevent option injection here.
       const oldContent = await this.git.tryOutput(["show", `${base}:${file.path}`]);
       const newContent = await this.git.tryOutput(["show", `${head}:${file.path}`]);
       if (oldContent === null || newContent === null) continue;
