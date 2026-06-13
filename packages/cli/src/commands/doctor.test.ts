@@ -12,7 +12,7 @@ import {
 
 function makeDeps(over: Partial<DoctorDeps> = {}): DoctorDeps {
   return {
-    nodeVersion: "20.11.1",
+    nodeVersion: "22.13.0",
     env: {},
     isTTY: true,
     gitVersion: async () => "git version 2.43.0",
@@ -37,19 +37,37 @@ describe("collectDoctorReport — node version", () => {
     expect(report.ok).toBe(false);
   });
 
-  it("passes on Node 20 (boundary)", async () => {
-    const report = await collectDoctorReport(makeDeps({ nodeVersion: "20.0.0" }));
+  it("fails critically on Node 20 (below the 22 floor)", async () => {
+    const report = await collectDoctorReport(makeDeps({ nodeVersion: "20.18.0" }));
+    expect(check(report, "node").ok).toBe(false);
+    expect(check(report, "node").critical).toBe(true);
+    expect(report.ok).toBe(false);
+  });
+
+  it("fails on Node 22 below the required minor (22.12)", async () => {
+    const report = await collectDoctorReport(makeDeps({ nodeVersion: "22.12.0" }));
+    expect(check(report, "node").ok).toBe(false);
+    expect(check(report, "node").detail).toContain("22.13");
+  });
+
+  it("passes on Node 22.13 (boundary minor)", async () => {
+    const report = await collectDoctorReport(makeDeps({ nodeVersion: "22.13.0" }));
     expect(check(report, "node").ok).toBe(true);
     expect(report.ok).toBe(true);
   });
 
-  it("passes on Node 22", async () => {
-    const report = await collectDoctorReport(makeDeps({ nodeVersion: "22.4.1" }));
+  it("passes on a newer major regardless of minor (24.0)", async () => {
+    const report = await collectDoctorReport(makeDeps({ nodeVersion: "24.0.1" }));
     expect(check(report, "node").ok).toBe(true);
   });
 
   it("fails gracefully on an unparseable version", async () => {
     const report = await collectDoctorReport(makeDeps({ nodeVersion: "weird" }));
+    expect(check(report, "node").ok).toBe(false);
+  });
+
+  it("fails on the boundary major with an unparseable minor", async () => {
+    const report = await collectDoctorReport(makeDeps({ nodeVersion: "22.x" }));
     expect(check(report, "node").ok).toBe(false);
   });
 });

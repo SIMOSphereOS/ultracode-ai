@@ -40,6 +40,25 @@ import type { OptimizeResult, PromptPayload } from "../tokens/index.js";
 export const DEFAULT_MAX_TURNS = 16;
 
 /**
+ * Default number of *consecutive* identical tool-call batches that trips the
+ * no-progress guard. When the model re-emits the same batch (same tool names +
+ * canonical args) this many turns in a row, the loop terminates early with a
+ * distinct {@link ExecutionRunResult.finishReason} of `"no_progress"` instead
+ * of silently burning the whole turn budget. Must be `>= 2` (a single batch is
+ * never "repeated"). No per-module `defaults.ts` exists for this engine, so the
+ * limit lives here as a named const.
+ */
+export const DEFAULT_NO_PROGRESS_LIMIT = 3;
+
+/**
+ * Terminal finish reason for an engine run. Superset of the provider-level
+ * {@link FinishReason}: adds `"no_progress"`, an engine-synthesised reason that
+ * signals the model stalled on identical tool-call batches (see
+ * {@link DEFAULT_NO_PROGRESS_LIMIT}).
+ */
+export type ExecutionFinishReason = FinishReason | "no_progress";
+
+/**
  * Narrow, locally-defined token-optimizer boundary.
  *
  * Mirrors `TokenOptimizer.optimize` from `core/tokens` without importing the
@@ -68,6 +87,13 @@ export interface ExecutionEngineOptions {
   events?: IEventBus;
   /** Maximum model turns before the run fails with `AgentError`. Default 16. */
   maxTurns?: number;
+  /**
+   * Number of consecutive identical tool-call batches that trips the
+   * no-progress guard and terminates the run early with
+   * `finishReason: "no_progress"`. Default {@link DEFAULT_NO_PROGRESS_LIMIT}.
+   * Values `< 2` are clamped to `2` (a lone batch can never be a repeat).
+   */
+  noProgressLimit?: number;
   /** Token cap forwarded to the provider. */
   maxTokens?: number;
   /** Sampling temperature forwarded to the provider. */
@@ -133,8 +159,11 @@ export interface ExecutionRunResult {
   turns: number;
   /** Full transcript of the run (system, user, assistant and tool messages). */
   messages: ChatMessage[];
-  /** Finish reason of the final model turn. */
-  finishReason: FinishReason;
+  /**
+   * Finish reason of the final model turn, or the engine-synthesised
+   * `"no_progress"` when the run was terminated early by the no-progress guard.
+   */
+  finishReason: ExecutionFinishReason;
 }
 
 /** `true` when `err` is an abort-derived error (AbortError / ABORT_ERR). */
@@ -176,6 +205,49 @@ function addFinite(a: number, b: unknown): number {
 }
 
 /**
+ * Canonical, order-stable JSON of an arbitrary value: object keys are sorted
+ * recursively so that `{a,b}` and `{b,a}` serialise identically. Arrays keep
+ * their order (positional). Never throws (circular structures, BigInt, …) —
+ * falls back to {@link safeJson}. Used to fingerprint tool-call arguments for
+ * the no-progress guard, where semantically-identical batches must compare
+ * equal regardless of key ordering.
+ */
+function canonicalJson(value: unknown): string {
+  try {
+    const seen = new WeakSet<object>();
+    const normalize = (val: unknown): unknown => {
+      if (val === null || typeof val !== "object") return val;
+      if (seen.has(val as object)) return "[Circular]";
+      seen.add(val as object);
+      if (Array.isArray(val)) return val.map(normalize);
+      const out: Record<string, unknown> = {};
+      for (const key of Object.keys(val as Record<string, unknown>).sort()) {
+        out[key] = normalize((val as Record<string, unknown>)[key]);
+      }
+      return out;
+    };
+    const json = JSON.stringify(normalize(value));
+    return json === undefined ? String(value) : json;
+  } catch {
+    return safeJson(value);
+  }
+}
+
+/**
+ * Order-independent fingerprint of a turn's tool-call batch: each call is
+ * reduced to `name` + {@link canonicalJson} of its arguments, and the per-call
+ * signatures are sorted so the batch signature does not depend on the order the
+ * model emitted the calls. Two turns requesting the same tools with the same
+ * args therefore produce an identical signature.
+ */
+function batchSignature(calls: ToolCallRequest[]): string {
+  return calls
+    .map((c) => `${c.name} ${canonicalJson(c.arguments)}`)
+    .sort()
+    .join("");
+}
+
+/**
  * Multi-turn agentic execution loop over an injected provider and tool runner.
  *
  * Failure model:
@@ -194,6 +266,7 @@ export class ExecutionEngine {
   private readonly logger: Logger;
   private readonly events?: IEventBus;
   private readonly maxTurns: number;
+  private readonly noProgressLimit: number;
   private readonly maxTokens?: number;
   private readonly temperature?: number;
   private readonly cwd: string;
@@ -213,6 +286,11 @@ export class ExecutionEngine {
       typeof maxTurns === "number" && Number.isFinite(maxTurns) && maxTurns >= 1
         ? Math.floor(maxTurns)
         : DEFAULT_MAX_TURNS;
+    const noProgressLimit = options.noProgressLimit;
+    this.noProgressLimit =
+      typeof noProgressLimit === "number" && Number.isFinite(noProgressLimit)
+        ? Math.max(2, Math.floor(noProgressLimit))
+        : DEFAULT_NO_PROGRESS_LIMIT;
     this.maxTokens = options.maxTokens;
     this.temperature = options.temperature;
     this.cwd = options.cwd ?? process.cwd();
@@ -249,6 +327,12 @@ export class ExecutionEngine {
 
     const usage: TokenUsage = { inputTokens: 0, outputTokens: 0 };
     let toolCallsExecuted = 0;
+
+    // No-progress guard: the signature of the previous turn's tool batch and how
+    // many consecutive turns have produced that identical batch (the first
+    // occurrence counts as 1).
+    let prevBatchSignature: string | undefined;
+    let repeatCount = 0;
 
     for (let turn = 1; turn <= this.maxTurns; turn++) {
       throwIfAborted(signal);
@@ -299,6 +383,33 @@ export class ExecutionEngine {
           turns: turn,
           messages,
           finishReason: result.finishReason,
+        };
+      }
+
+      // No-progress / duplicate-batch guard. A model re-emitting the same tool
+      // batch every turn would otherwise burn the entire budget and then error;
+      // terminate early with a distinct `"no_progress"` result instead.
+      const signature = batchSignature(toolCalls);
+      if (signature === prevBatchSignature) {
+        repeatCount += 1;
+      } else {
+        prevBatchSignature = signature;
+        repeatCount = 1;
+      }
+      if (repeatCount >= this.noProgressLimit) {
+        this.logger.warn("agent loop stalled on identical tool batches; terminating early", {
+          turn,
+          repeatCount,
+          noProgressLimit: this.noProgressLimit,
+          model: this.model,
+        });
+        return {
+          text: result.text ?? "",
+          toolCallsExecuted,
+          usage,
+          turns: turn,
+          messages,
+          finishReason: "no_progress",
         };
       }
 

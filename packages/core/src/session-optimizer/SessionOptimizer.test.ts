@@ -383,3 +383,45 @@ describe("extreme inputs", () => {
     expect(r.savedTokens).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe("buildWorkingSetPersisted", () => {
+  it("uses a prior persisted summary + pinned facts from the sidecar", async () => {
+    const record = rec(turns(12), "s1");
+    const store = new FakeStore(record);
+    const opt = createSessionOptimizer(baseOpts(store, { thresholds: { recentKeep: 4 } }));
+
+    // Persist a sidecar by running an incremental pass first.
+    await opt.processIncremental("s1");
+    // Overwrite the sidecar with a distinctive, non-re-derivable summary so we
+    // can prove the persisted path is what was replayed (not the sync derive).
+    const sidecar = path.join(home, ".ultracode", "sessions-opt", "s1.json");
+    await fs.writeFile(
+      sidecar,
+      JSON.stringify({
+        version: 1,
+        sessionId: "s1",
+        summarizedUpToIndex: 8,
+        durableSummary: "SENTINEL: earlier turns settled on approach Z.",
+        pinnedFacts: ["decision: approach Z"],
+        updatedAt: "2026-06-12T12:00:00.000Z",
+      }),
+      "utf8",
+    );
+
+    const ws = await opt.buildWorkingSetPersisted(record);
+    expect(ws.durableSummary).toBe("SENTINEL: earlier turns settled on approach Z.");
+    expect(ws.pinnedFacts).toContain("decision: approach Z");
+  });
+
+  it("falls back to the sync working set when no sidecar exists", async () => {
+    const record = rec(turns(12), "s1");
+    const store = new FakeStore(record);
+    const opt = createSessionOptimizer(baseOpts(store, { thresholds: { recentKeep: 4 } }));
+
+    const persisted = await opt.buildWorkingSetPersisted(record);
+    const sync = opt.buildWorkingSet(record);
+    expect(persisted.durableSummary).toBe(sync.durableSummary);
+    expect(persisted.pinnedFacts).toEqual(sync.pinnedFacts);
+    expect(persisted.messages.length).toBe(sync.messages.length);
+  });
+});

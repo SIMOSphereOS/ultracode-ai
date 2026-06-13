@@ -16,9 +16,43 @@
  * All parsers accept an optional `AbortSignal`; abort is observed between (and
  * during) reads, the underlying reader is cancelled, and the abort reason is
  * thrown to the consumer.
+ *
+ * All parsers also enforce a streaming inactivity watchdog (`idleTimeoutMs`,
+ * default {@link DEFAULT_IDLE_TIMEOUT_MS}): the timer is reset on every chunk
+ * read and a stalled body rejects with a {@link StreamIdleTimeoutError} once the
+ * window elapses. The caller's `AbortSignal` always takes precedence over the
+ * idle timeout.
  */
 
 import type { Logger } from "@ultracode/shared";
+
+/**
+ * Default streaming idle timeout (ms).
+ *
+ * A streaming body that produces no data for longer than this window is
+ * considered stalled and aborted. `fetch()`'s per-request timeout only covers
+ * the headers (it resolves once they arrive), so without this watchdog a hung
+ * provider stream would wedge the run forever — notably on the non-interactive
+ * `run -p` path, which passes no external abort signal. Reuses the same order
+ * of magnitude as the providers' default per-request `timeoutMs`.
+ */
+export const DEFAULT_IDLE_TIMEOUT_MS = 60_000;
+
+/**
+ * Error thrown when a streaming body stalls (no data within the idle window).
+ * `BaseProvider.toProviderError` recognises it and maps it onto a retryable
+ * timeout `ProviderError`, mirroring the existing per-request timeout path.
+ */
+export class StreamIdleTimeoutError extends Error {
+  /** Always true: lets `BaseProvider.toProviderError` flag a retryable timeout. */
+  public readonly isIdleTimeout = true;
+  constructor(public readonly idleTimeoutMs: number) {
+    super(`Stream stalled: no data received within ${idleTimeoutMs}ms`);
+    this.name = "StreamIdleTimeoutError";
+    // Restore prototype chain so `instanceof` works after transpilation/bundling.
+    Object.setPrototypeOf(this, StreamIdleTimeoutError.prototype);
+  }
+}
 
 /** A single parsed Server-Sent Event. */
 export interface SSEEvent {
@@ -53,15 +87,50 @@ async function raceAbort<T>(promise: Promise<T>, signal: AbortSignal | undefined
 }
 
 /**
+ * Race `reader.read()` against the caller's abort signal AND an inactivity
+ * watchdog. The idle timer is (re)armed before each read and cleared as soon as
+ * data (or `done`) arrives; if it elapses first the read rejects with a
+ * {@link StreamIdleTimeoutError}. The caller's external abort always wins: it is
+ * composed in via {@link raceAbort}, never replaced.
+ */
+async function readWithIdleTimeout<T>(
+  read: Promise<T>,
+  signal: AbortSignal | undefined,
+  idleTimeoutMs: number,
+): Promise<T> {
+  // Non-positive timeout disables the watchdog (idle protection opt-out).
+  if (!(idleTimeoutMs > 0)) return raceAbort(read, signal);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const idle = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new StreamIdleTimeoutError(idleTimeoutMs)), idleTimeoutMs);
+    if (typeof (timer as { unref?: () => void }).unref === "function") {
+      (timer as unknown as { unref: () => void }).unref();
+    }
+  });
+  try {
+    return await Promise.race([raceAbort(read, signal), idle]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
+/**
  * Split a byte stream into text lines.
  *
  * Handles `\r\n` and `\n` line endings, lines split across arbitrary chunk
  * boundaries (including mid-UTF-8-sequence) and a trailing line without a
  * final newline. Cancels the reader on early exit or abort.
+ *
+ * An inactivity watchdog (`idleTimeoutMs`, default {@link DEFAULT_IDLE_TIMEOUT_MS})
+ * guards every read: the timer is reset on every chunk, and a stalled stream
+ * rejects with a {@link StreamIdleTimeoutError} once the window elapses. Pass a
+ * non-positive value to disable it. The caller's `signal` always takes
+ * precedence over the idle timeout.
  */
 export async function* streamLines(
   stream: ReadableStream<Uint8Array>,
   signal?: AbortSignal,
+  idleTimeoutMs: number = DEFAULT_IDLE_TIMEOUT_MS,
 ): AsyncGenerator<string, void, undefined> {
   const reader = stream.getReader();
   const decoder = new TextDecoder("utf-8");
@@ -69,7 +138,9 @@ export async function* streamLines(
   try {
     for (;;) {
       if (signal?.aborted) throw abortReason(signal);
-      const { done, value } = await raceAbort(reader.read(), signal);
+      // Idle timer is armed here and reset implicitly on the next loop turn,
+      // i.e. once a chunk (or `done`) is observed.
+      const { done, value } = await readWithIdleTimeout(reader.read(), signal, idleTimeoutMs);
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
       let newlineIndex: number;
@@ -109,10 +180,11 @@ export async function* streamLines(
 export async function* parseSSEEvents(
   stream: ReadableStream<Uint8Array>,
   signal?: AbortSignal,
+  idleTimeoutMs: number = DEFAULT_IDLE_TIMEOUT_MS,
 ): AsyncGenerator<SSEEvent, void, undefined> {
   let dataLines: string[] = [];
   let eventName: string | undefined;
-  for await (const line of streamLines(stream, signal)) {
+  for await (const line of streamLines(stream, signal, idleTimeoutMs)) {
     if (line === "") {
       if (dataLines.length > 0) {
         const out: SSEEvent = { data: dataLines.join("\n") };
@@ -158,8 +230,9 @@ export async function* parseSSEJson(
   stream: ReadableStream<Uint8Array>,
   logger: Logger,
   signal?: AbortSignal,
+  idleTimeoutMs: number = DEFAULT_IDLE_TIMEOUT_MS,
 ): AsyncGenerator<SSEJsonEvent, void, undefined> {
-  for await (const evt of parseSSEEvents(stream, signal)) {
+  for await (const evt of parseSSEEvents(stream, signal, idleTimeoutMs)) {
     const data = evt.data.trim();
     if (data === "[DONE]") return;
     if (data === "") continue;
@@ -184,8 +257,9 @@ export async function* parseNDJSON(
   stream: ReadableStream<Uint8Array>,
   logger: Logger,
   signal?: AbortSignal,
+  idleTimeoutMs: number = DEFAULT_IDLE_TIMEOUT_MS,
 ): AsyncGenerator<unknown, void, undefined> {
-  for await (const line of streamLines(stream, signal)) {
+  for await (const line of streamLines(stream, signal, idleTimeoutMs)) {
     const trimmed = line.trim();
     if (trimmed === "") continue;
     try {

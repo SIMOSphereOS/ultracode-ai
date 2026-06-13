@@ -1,8 +1,13 @@
 # Changelog — @ultracode/shared
 
-All notable changes to the `@ultracode/shared` package. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer 2.0](https://semver.org/). Versioned independently from the monorepo release.
+All notable changes to the `@ultracode/shared` package. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer 2.0](https://semver.org/). Aligned to the monorepo `1.3.0` production-ready milestone.
 
 ## [Unreleased]
+
+## [1.3.0] - 2026-06-13
+
+### Packaging
+- Version aligned to the `1.3.0` release train. Added `publishConfig.access: public`, `files`, `repository`, `homepage`, `bugs`, `prepublishOnly` and a package `README`/`LICENSE` so the contract layer is independently publishable to npm. No API changes.
 
 ## [1.0.1] - 2026-06-12
 

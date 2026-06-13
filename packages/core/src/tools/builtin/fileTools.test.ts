@@ -127,6 +127,37 @@ describe("ReadTool", () => {
     expect(result.error?.message).toContain("outside");
   });
 
+  it("denies reading files on the read-deny list (exfiltration guard)", async () => {
+    const guarded = new ReadTool({ readDeny: [".env", ".pem", "id_rsa", ".git/config"] });
+    await fs.writeFile(path.join(root, ".env"), "SECRET=1");
+    await fs.writeFile(path.join(root, "server.pem"), "----KEY----");
+    await fs.writeFile(path.join(root, "id_rsa"), "----PRIV----");
+    await fs.mkdir(path.join(root, ".git"));
+    await fs.writeFile(path.join(root, ".git", "config"), "[core]");
+
+    for (const target of [".env", "server.pem", "id_rsa", ".git/config"]) {
+      const result = await guarded.execute(guarded.validate({ file_path: target }), ctx());
+      expect(result.ok).toBe(false);
+      expect(result.error?.code).toBe("TOOL_PERMISSION_DENIED");
+    }
+
+    // unprotected sibling still reads
+    await fs.writeFile(path.join(root, "notes.txt"), "ok");
+    const ok = await guarded.execute(guarded.validate({ file_path: "notes.txt" }), ctx());
+    expect(ok.ok).toBe(true);
+    expect(ok.output.content).toBe("ok");
+  });
+
+  it("read-deny does not over-match similar names", async () => {
+    const guarded = new ReadTool({ readDeny: [".env", "id_rsa"] });
+    await fs.writeFile(path.join(root, "x.environment"), "ok");
+    await fs.writeFile(path.join(root, "id_rsa.pub"), "public");
+    const env = await guarded.execute(guarded.validate({ file_path: "x.environment" }), ctx());
+    expect(env.ok).toBe(true);
+    const pub = await guarded.execute(guarded.validate({ file_path: "id_rsa.pub" }), ctx());
+    expect(pub.ok).toBe(true);
+  });
+
   it("throws ValidationError on invalid argument types", () => {
     expect(() => tool.validate({ file_path: 42 })).toThrow(ValidationError);
     expect(() => tool.validate({})).toThrow(ValidationError);
@@ -181,6 +212,24 @@ describe("WriteFileTool", () => {
     // unprotected sibling extension still works
     const ok = await guarded.execute(
       guarded.validate({ path: "x.environment", content: "x" }),
+      ctx(),
+    );
+    expect(ok.ok).toBe(true);
+  });
+
+  it("denies path-suffix protected entries (e.g. .git/config)", async () => {
+    const guarded = new WriteFileTool({ protectedExtensions: [".git/config", "id_rsa"] });
+    for (const target of [".git/config", path.join("sub", ".git", "config"), "id_rsa"]) {
+      const result = await guarded.execute(
+        guarded.validate({ path: target, content: "x" }),
+        ctx(),
+      );
+      expect(result.ok).toBe(false);
+      expect(result.error?.code).toBe("TOOL_PERMISSION_DENIED");
+    }
+    // a plain config (not under .git) is fine
+    const ok = await guarded.execute(
+      guarded.validate({ path: "config", content: "x" }),
       ctx(),
     );
     expect(ok.ok).toBe(true);
@@ -284,6 +333,64 @@ describe("EditTool", () => {
     expect(() =>
       tool.validate({ file_path: "f", old_string: "", new_string: "x" }),
     ).toThrow(ValidationError);
+  });
+
+  it("denies editing protected extensions and dotfile names", async () => {
+    const guarded = new EditTool({ protectedExtensions: [".env", ".toml"] });
+    await fs.writeFile(path.join(root, ".env"), "SECRET=old");
+    await fs.writeFile(path.join(root, "config.toml"), "k = 'old'");
+    for (const target of [".env", "config.toml"]) {
+      const result = await guarded.execute(
+        guarded.validate({ file_path: target, old_string: "old", new_string: "new" }),
+        ctx(),
+      );
+      expect(result.ok).toBe(false);
+      expect(result.error?.code).toBe("TOOL_PERMISSION_DENIED");
+    }
+    // protected file is left untouched
+    expect(await fs.readFile(path.join(root, ".env"), "utf8")).toBe("SECRET=old");
+
+    // unprotected sibling extension still edits
+    await fs.writeFile(path.join(root, "x.environment"), "old");
+    const ok = await guarded.execute(
+      guarded.validate({ file_path: "x.environment", old_string: "old", new_string: "new" }),
+      ctx(),
+    );
+    expect(ok.ok).toBe(true);
+    expect(await fs.readFile(path.join(root, "x.environment"), "utf8")).toBe("new");
+  });
+
+  it("denies editing path-suffix protected entries (e.g. .git/config)", async () => {
+    const guarded = new EditTool({ protectedExtensions: [".git/config", "id_rsa"] });
+    await fs.mkdir(path.join(root, ".git"));
+    await fs.writeFile(path.join(root, ".git", "config"), "[core]\n\told = 1");
+    await fs.writeFile(path.join(root, "id_rsa"), "----OLD KEY----");
+    for (const target of [".git/config", "id_rsa"]) {
+      const result = await guarded.execute(
+        guarded.validate({ file_path: target, old_string: "old", new_string: "new" }),
+        ctx(),
+      );
+      expect(result.ok).toBe(false);
+      expect(result.error?.code).toBe("TOOL_PERMISSION_DENIED");
+    }
+    // a plain config (not under .git) is fine
+    await fs.writeFile(path.join(root, "config"), "old");
+    const ok = await guarded.execute(
+      guarded.validate({ file_path: "config", old_string: "old", new_string: "new" }),
+      ctx(),
+    );
+    expect(ok.ok).toBe(true);
+  });
+
+  it("without a protectedExtensions list, edits any file (opt-out)", async () => {
+    const open = new EditTool();
+    await fs.writeFile(path.join(root, ".env"), "SECRET=old");
+    const result = await open.execute(
+      open.validate({ file_path: ".env", old_string: "old", new_string: "new" }),
+      ctx(),
+    );
+    expect(result.ok).toBe(true);
+    expect(await fs.readFile(path.join(root, ".env"), "utf8")).toBe("SECRET=new");
   });
 });
 

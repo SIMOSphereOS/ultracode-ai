@@ -12,6 +12,15 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+// The production wiring passes the real `nodeDnsLookupAll` into the default
+// crawler. Mock only that symbol so the DNS-rebinding layer can be exercised
+// without a real network lookup; everything else in the guard stays real.
+const dnsResolved = vi.fn<(hostname: string) => Promise<Array<{ address: string; family: number }>>>();
+vi.mock("./urlGuard.js", async () => {
+  const actual = await vi.importActual<typeof import("./urlGuard.js")>("./urlGuard.js");
+  return { ...actual, nodeDnsLookupAll: (hostname: string) => dnsResolved(hostname) };
+});
+
 import { createLearnAgent, SEED_SOURCES } from "./index.js";
 import { LearnError } from "./errors.js";
 import { createCheckpointStore, defaultSqliteLoader } from "./checkpoint.js";
@@ -385,5 +394,37 @@ describe("module wiring", () => {
 
   it("defaultSqliteLoader is exported and is a function", () => {
     expect(typeof defaultSqliteLoader).toBe("function");
+  });
+
+  it("wires the default crawler with the DNS-rebinding guard (blocks a host resolving to a private IP)", async () => {
+    // No `ingestion` → LearnAgent constructs its default NativeCrawlerProvider,
+    // which (per the production wiring) must carry `dnsLookup: nodeDnsLookupAll`
+    // and `allowPrivate: false`. The seed source host therefore gets resolved,
+    // and a private resolution must block every fetch before it leaves the box.
+    dnsResolved.mockReset();
+    dnsResolved.mockResolvedValue([{ address: "10.0.0.5", family: 4 }]);
+
+    const fetchedUrls: string[] = [];
+    const fetchImpl = (async (url: string) => {
+      fetchedUrls.push(url);
+      return { status: 200, ok: true, headers: { get: () => null }, text: async () => "" };
+    }) as never;
+
+    const agent = createLearnAgent({
+      homeDir: home,
+      fetchImpl,
+      now,
+      sqliteLoader: async () => { throw new Error("json"); },
+    });
+
+    const report = await agent.run(SOURCE_ID, { approved: true, concurrency: 1 });
+
+    // The DNS layer resolved the seed host and saw a private IP, so the guard
+    // blocked the request before any real fetch occurred.
+    expect(dnsResolved).toHaveBeenCalled();
+    expect(fetchedUrls).toHaveLength(0);
+    // The single entry-URL candidate maps to a status-0 (guard-blocked) page:
+    // nothing changed, nothing processed.
+    expect(report.processed).toBe(0);
   });
 });

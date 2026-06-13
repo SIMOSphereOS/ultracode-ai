@@ -12,6 +12,8 @@ import type {
   CompletionRequest,
   CompletionResult,
   ILLMProvider,
+  Logger,
+  LogMeta,
   TokenUsage,
   ToolCallRequest,
   ToolContext,
@@ -19,7 +21,7 @@ import type {
   ToolResult,
   UltraCodeEvent,
 } from "@ultracode/shared";
-import { ExecutionEngine, isAbortError } from "./ExecutionEngine.js";
+import { DEFAULT_NO_PROGRESS_LIMIT, ExecutionEngine, isAbortError } from "./ExecutionEngine.js";
 import type { IToolRunner } from "./types.js";
 
 /* ----------------------------------------------------------------------------
@@ -163,6 +165,17 @@ class FakeToolRunner implements IToolRunner {
 }
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/** Logger that records every warn() call for assertions. */
+class CapturingLogger implements Logger {
+  readonly warnings: Array<{ msg: string; meta?: LogMeta }> = [];
+  debug(): void {}
+  info(): void {}
+  warn(msg: string, meta?: LogMeta): void {
+    this.warnings.push(meta === undefined ? { msg } : { msg, meta });
+  }
+  error(): void {}
+}
 
 function makeEngine(
   provider: ILLMProvider,
@@ -512,5 +525,107 @@ describe("ExecutionEngine", () => {
     const provider = new FakeProvider([stop("ok")]);
     const engine = makeEngine(provider, new FakeToolRunner(), { maxTurns: Number.NaN });
     await expect(engine.run({ prompt: "x" })).resolves.toMatchObject({ text: "ok" });
+  });
+
+  it("terminates with 'no_progress' when N identical tool batches repeat (default limit)", async () => {
+    // Script more identical batches than the default limit and a high maxTurns
+    // so termination is driven by the no-progress guard, not the turn budget.
+    const identical = () => toolTurn([call("c", "echo", { q: "same" })]);
+    const provider = new FakeProvider([identical(), identical(), identical(), identical()]);
+    const tools = new FakeToolRunner();
+    const logger = new CapturingLogger();
+    const engine = makeEngine(provider, tools, { maxTurns: 16, logger });
+
+    const result = await engine.run({ prompt: "loop" });
+
+    expect(result.finishReason).toBe("no_progress");
+    expect(result.turns).toBe(DEFAULT_NO_PROGRESS_LIMIT);
+    // Tools ran for the first (limit - 1) turns; the stalling turn breaks before exec.
+    expect(tools.calls).toHaveLength(DEFAULT_NO_PROGRESS_LIMIT - 1);
+    expect(result.toolCallsExecuted).toBe(DEFAULT_NO_PROGRESS_LIMIT - 1);
+    expect(logger.warnings.some((w) => w.msg.includes("stalled"))).toBe(true);
+  });
+
+  it("honours a custom noProgressLimit", async () => {
+    const identical = () => toolTurn([call("c", "echo", { q: "same" })]);
+    const provider = new FakeProvider([identical(), identical()]);
+    const engine = makeEngine(provider, new FakeToolRunner(), {
+      noProgressLimit: 2,
+      maxTurns: 16,
+    });
+    const result = await engine.run({ prompt: "loop" });
+    expect(result.finishReason).toBe("no_progress");
+    expect(result.turns).toBe(2);
+  });
+
+  it("clamps a noProgressLimit below 2 up to 2", async () => {
+    const identical = () => toolTurn([call("c", "echo", { q: "same" })]);
+    const provider = new FakeProvider([identical(), identical()]);
+    const engine = makeEngine(provider, new FakeToolRunner(), {
+      noProgressLimit: 1,
+      maxTurns: 16,
+    });
+    const result = await engine.run({ prompt: "loop" });
+    expect(result.finishReason).toBe("no_progress");
+    expect(result.turns).toBe(2);
+  });
+
+  it("treats batches with the same args in different key order as identical", async () => {
+    const provider = new FakeProvider([
+      toolTurn([call("c1", "echo", { a: 1, b: 2 })]),
+      toolTurn([call("c2", "echo", { b: 2, a: 1 })]),
+    ]);
+    const engine = makeEngine(provider, new FakeToolRunner(), {
+      noProgressLimit: 2,
+      maxTurns: 16,
+    });
+    const result = await engine.run({ prompt: "loop" });
+    expect(result.finishReason).toBe("no_progress");
+    expect(result.turns).toBe(2);
+  });
+
+  it("treats batches with the same calls in different order as identical", async () => {
+    const provider = new FakeProvider([
+      toolTurn([call("c1", "echo", { n: 1 }), call("c2", "echo", { n: 2 })]),
+      toolTurn([call("c3", "echo", { n: 2 }), call("c4", "echo", { n: 1 })]),
+    ]);
+    const engine = makeEngine(provider, new FakeToolRunner(), {
+      noProgressLimit: 2,
+      maxTurns: 16,
+    });
+    const result = await engine.run({ prompt: "loop" });
+    expect(result.finishReason).toBe("no_progress");
+    expect(result.turns).toBe(2);
+  });
+
+  it("does not trip the guard for well-behaved differing tool batches", async () => {
+    const provider = new FakeProvider([
+      toolTurn([call("c1", "echo", { step: 1 })]),
+      toolTurn([call("c2", "echo", { step: 2 })]),
+      toolTurn([call("c3", "echo", { step: 3 })]),
+      stop("done"),
+    ]);
+    const engine = makeEngine(provider, new FakeToolRunner(), {
+      noProgressLimit: 2,
+      maxTurns: 16,
+    });
+    const result = await engine.run({ prompt: "work" });
+    expect(result.finishReason).toBe("stop");
+    expect(result.text).toBe("done");
+    expect(result.turns).toBe(4);
+  });
+
+  it("resets the repeat counter when a different batch interrupts the streak", async () => {
+    // A,A,B,A,A with limit 3 must NOT trip: longest identical streak is 2.
+    const a = () => toolTurn([call("c", "echo", { v: "a" })]);
+    const b = () => toolTurn([call("c", "echo", { v: "b" })]);
+    const provider = new FakeProvider([a(), a(), b(), a(), a(), stop("done")]);
+    const engine = makeEngine(provider, new FakeToolRunner(), {
+      noProgressLimit: 3,
+      maxTurns: 16,
+    });
+    const result = await engine.run({ prompt: "work" });
+    expect(result.finishReason).toBe("stop");
+    expect(result.turns).toBe(6);
   });
 });

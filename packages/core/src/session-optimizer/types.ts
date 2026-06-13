@@ -120,4 +120,15 @@ export interface SessionOptimizer {
    * never splitting a tool-call/tool-result pair.
    */
   buildWorkingSet(record: import("@ultracode/shared").SessionRecord): WorkingSet;
+  /**
+   * Like {@link SessionOptimizer.buildWorkingSet} but reads the persisted
+   * sidecar first, so the rolling durable summary and pinned facts produced by
+   * prior {@link SessionOptimizer.processIncremental} passes (including any
+   * LLM-cheap-model summary) are reused. Falls back to the synchronous
+   * {@link SessionOptimizer.buildWorkingSet} path on any error or when no
+   * sidecar exists.
+   */
+  buildWorkingSetPersisted(
+    record: import("@ultracode/shared").SessionRecord,
+  ): Promise<WorkingSet>;
 }

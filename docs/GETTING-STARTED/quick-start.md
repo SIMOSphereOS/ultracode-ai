@@ -59,7 +59,7 @@ Gib einen der folgenden Befehle ein und drücke **Enter**:
 
 ## Schritt 4: Mit Tools arbeiten
 
-UltraCode kann **80+ Tools** ausführen. Hier sind die wichtigsten:
+UltraCode registriert **14 Tools** (13 Built-in-Tools plus das `task`-Subagent-Tool). Hier sind die wichtigsten:
 
 | **Tool** | **Befehl** | **Beispiel** |
 |----------|------------|--------------|
@@ -279,7 +279,7 @@ Nach dem Quick Start:
 
 1. **[Konfiguration →](./configuration.md)** – UltraCode anpassen
 2. **[AI-Versionierung →](../AI-FEATURES/versioning-system.md)** – Einzigartige Features entdecken
-3. **[Tools-Referenz →](../REFERENCE/tools-reference.md)** – Alle 80+ Tools kennenlernen
+3. **[Tools-Referenz →](../REFERENCE/tools-reference.md)** – Alle 14 Tools kennenlernen
 4. **[Agenten →](../DEVELOPMENT/agents-reference.md)** – Agenten im Detail
 
 ---
@@ -332,4 +332,4 @@ ultracode --config set MISTRAL_API_KEY=xxx
 - **In-App Hilfe**: `/help`
 - **Dokumentation**: [https://ultracode.ai/docs](https://ultracode.ai/docs)
 - **Discord**: [https://discord.gg/ultracode](https://discord.gg/ultracode)
-- **GitHub**: [https://github.com/ultracode-ai/ultracode](https://github.com/ultracode-ai/ultracode)
+- **GitHub**: [https://github.com/AndreasSchwan-SIMO/UltraCode](https://github.com/AndreasSchwan-SIMO/UltraCode)

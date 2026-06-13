@@ -1,6 +1,8 @@
 # API Dokumentation
 
-> **Komplette REST & WebSocket API für UltraCode - OpenAPI 3.0 kompatibel**
+> ⚠️ **Vision / noch nicht implementiert.** Dieses Dokument beschreibt eine geplante REST/WebSocket/JWT-API, die **nicht** Teil des aktuellen Codes ist. UltraCode ist heute ein lokales CLI-Tool (`packages/cli`) ohne HTTP-Server, ohne Cloud-Endpoint (`api.ultracode.ai` existiert nicht) und ohne Authentifizierungs-Layer. Bis diese Komponenten gebaut sind, ist nichts hier funktionsfähig. Verbindlich ist allein die [CLI-Referenz](./cli-commands.md).
+
+> **Komplette REST & WebSocket API für UltraCode - OpenAPI 3.0 kompatibel** *(geplant)*
 
 ---
 

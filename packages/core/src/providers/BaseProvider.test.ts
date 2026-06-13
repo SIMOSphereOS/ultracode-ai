@@ -7,6 +7,8 @@ import type {
   ProviderOptions,
 } from "@ultracode/shared";
 import { BaseProvider, isRetryableStatus, parseRetryAfter } from "./BaseProvider.js";
+import { LocalProvider } from "./LocalProvider.js";
+import { StreamIdleTimeoutError } from "./sse.js";
 import { captureLogger, stubFetchSequence, stubHangingFetch, testOptions } from "./testkit.test.js";
 
 /** Minimal concrete subclass exposing the protected HTTP layer. */
@@ -17,6 +19,12 @@ class TestProvider extends BaseProvider {
   }
   public request(url: string, init?: Parameters<BaseProvider["fetchWithRetry"]>[1]): Promise<Response> {
     return this.fetchWithRetry(url, init);
+  }
+  public mapError(err: unknown, signal?: AbortSignal): ProviderError {
+    return this.toProviderError(err, "Streaming from test failed", signal);
+  }
+  public idleTimeout(): number {
+    return this.streamIdleTimeoutMs();
   }
   public listModels(): Promise<string[]> {
     return Promise.resolve([]);
@@ -162,5 +170,76 @@ describe("BaseProvider.fetchWithRetry", () => {
     expect(err).toBeInstanceOf(ProviderError);
     expect((err as ProviderError).retryable).toBe(false);
     expect((err as ProviderError).message).toMatch(/aborted/i);
+  });
+});
+
+describe("BaseProvider streaming idle timeout", () => {
+  it("reuses the per-request timeout as the stream idle window", () => {
+    const provider = new TestProvider(testOptions({ timeoutMs: 12_345 }));
+    expect(provider.idleTimeout()).toBe(12_345);
+  });
+
+  it("maps a StreamIdleTimeoutError onto a retryable timeout ProviderError", () => {
+    const provider = new TestProvider(testOptions());
+    const mapped = provider.mapError(new StreamIdleTimeoutError(750));
+    expect(mapped).toBeInstanceOf(ProviderError);
+    expect(mapped.retryable).toBe(true);
+    expect(mapped.provider).toBe("test");
+    expect(mapped.message).toMatch(/stalled/i);
+    expect(mapped.details?.timeout).toBe(true);
+    expect(mapped.details?.idleTimeoutMs).toBe(750);
+  });
+
+  it("lets the caller's abort win over an idle timeout when mapping", () => {
+    const provider = new TestProvider(testOptions());
+    const controller = new AbortController();
+    controller.abort(new Error("user cancelled"));
+    const mapped = provider.mapError(new StreamIdleTimeoutError(750), controller.signal);
+    expect(mapped.retryable).toBe(false);
+    expect(mapped.details?.aborted).toBe(true);
+    expect(mapped.message).toMatch(/aborted/i);
+  });
+
+  it("end-to-end: a real provider stream wires its configured timeout into the idle watchdog", async () => {
+    // Drive an ACTUAL provider streaming method (LocalProvider.stream) with a
+    // distinctively small configured `timeoutMs`. The body emits one NDJSON
+    // line then stalls forever, so the parser's idle watchdog must fire — but
+    // only if the provider actually passed `streamIdleTimeoutMs()` (= the
+    // configured value) as the parser's 4th argument. The surfaced timeout
+    // ProviderError carries `idleTimeoutMs`, which we assert equals the
+    // CONFIGURED value (not the 60s parser default), proving the configurable
+    // path end-to-end rather than just the helper in isolation.
+    const configuredTimeoutMs = 20;
+    const encoder = new TextEncoder();
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode('{"message":{"content":"hi"}}\n'));
+        // Never close / never enqueue again: the body stalls until the watchdog.
+      },
+    });
+    stubFetchSequence(() => new Response(body, { status: 200 }));
+    const provider = new LocalProvider(testOptions({ timeoutMs: configuredTimeoutMs }), captureLogger().logger);
+
+    const err = await (async () => {
+      try {
+        for await (const _ of provider.stream({ model: "m", messages: [] })) {
+          /* drain the first text chunk, then stall until the idle watchdog */
+        }
+        return undefined;
+      } catch (e) {
+        return e;
+      }
+    })();
+
+    expect(err).toBeInstanceOf(ProviderError);
+    const pe = err as ProviderError;
+    expect(pe.retryable).toBe(true);
+    expect(pe.message).toMatch(/stalled/i);
+    expect(pe.details?.timeout).toBe(true);
+    // The configured timeout (not DEFAULT_IDLE_TIMEOUT_MS = 60_000) flowed
+    // through streamIdleTimeoutMs() into the parser's watchdog.
+    expect(pe.details?.idleTimeoutMs).toBe(configuredTimeoutMs);
+    expect(pe.cause).toBeInstanceOf(StreamIdleTimeoutError);
+    expect((pe.cause as StreamIdleTimeoutError).idleTimeoutMs).toBe(configuredTimeoutMs);
   });
 });

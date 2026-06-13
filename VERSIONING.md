@@ -26,6 +26,22 @@
 4. Commit `chore(release): vX.Y.Z` + Git-Tag `vX.Y.Z`.
 5. `gh release create vX.Y.Z` mit Release Notes aus dem Root-Changelog.
 
+## npm-Veröffentlichung
+
+Der Git-Tag `vX.Y.Z` (Push) ist zugleich der Auslöser für die npm-Publikation.
+
+- Workflow: `.github/workflows/publish.yml`, getriggert auf `push` von `v*`-Tags.
+- Schritte: `pnpm install --frozen-lockfile` → `pnpm build` → `pnpm -r publish --no-git-checks --access public`.
+- Authentifizierung über das Secret `NODE_AUTH_TOKEN` (npm-Registry, via `actions/setup-node` `registry-url`).
+- Publizierte Pakete: `@ultracode/shared`, `@ultracode/core` (beide scoped, `publishConfig.access: public`)
+  und `ultracode` (CLI, unscoped/öffentlich).
+- **Workspace-Auflösung:** `workspace:^`-Abhängigkeiten werden von pnpm beim Publish auf die realen
+  veröffentlichten Versionen umgeschrieben; die Tarballs enthalten **keine** `workspace:*`-Spezifizierer.
+  Manuelle Verifikation vor einem Release: `pnpm --filter ultracode pack` und die `package.json` im
+  Tarball prüfen.
+- Jedes publizierbare Paket bringt `dist`, `README.md` und `LICENSE` mit (`files`-Feld) und führt
+  über `prepublishOnly` (`tsc -b`) einen Build vor der Veröffentlichung aus.
+
 ## Qualitäts-Gates vor einem Release
 
 - Build grün (`pnpm build`), alle Unit-Tests grün (`pnpm test`), E2E grün (`pnpm test:e2e`).

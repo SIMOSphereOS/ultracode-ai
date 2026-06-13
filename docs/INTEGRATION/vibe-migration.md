@@ -383,7 +383,7 @@ ultracode --compat vibe
    - [AI-Versionierung →](../AI-FEATURES/versioning-system.md)
    - [LSP-Integration →](../DEVELOPMENT/architecture.md#lsp-integration)
 3. **Feedback geben:**
-   - [GitHub Issues](https://github.com/ultracode-ai/ultracode/issues) (Label: `migration`)
+   - [GitHub Issues](https://github.com/AndreasSchwan-SIMO/UltraCode/issues) (Label: `migration`)
    - [Discord #migration](https://discord.gg/ultracode)
 
 ---

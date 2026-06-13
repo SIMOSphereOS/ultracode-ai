@@ -10,6 +10,7 @@ import { ENV_PREFIX } from "@ultracode/shared";
 import type { IEventBus, Logger, PerToolConfig, UltraCodeConfig } from "@ultracode/shared";
 import { ToolRegistry } from "./ToolRegistry.js";
 import { ToolExecutor, DEFAULT_TOOL_TIMEOUT_SECONDS } from "./ToolExecutor.js";
+import { DEFAULT_PROTECTED_EXTENSIONS, DEFAULT_READ_DENY } from "./defaults.js";
 import { ReadTool } from "./builtin/ReadTool.js";
 import { WriteFileTool } from "./builtin/WriteFileTool.js";
 import { EditTool } from "./builtin/EditTool.js";
@@ -86,19 +87,35 @@ export function createToolSystem(
   const dirs = (name: string): string[] | undefined =>
     stringArrayOption(perTool[name], "allowedDirs");
 
+  // Safe-by-default hardening: apply the shipped protected-extensions /
+  // read-deny lists unless the user explicitly overrides them (an override
+  // replaces the default wholesale, including the empty-array opt-out).
+  const readDeny =
+    stringArrayOption(perTool["read"], "readDeny") ?? [...DEFAULT_READ_DENY];
+  const protectedExtensions =
+    stringArrayOption(perTool["write_file"], "protectedExtensions") ?? [...DEFAULT_PROTECTED_EXTENSIONS];
+  const editProtectedExtensions =
+    stringArrayOption(perTool["edit"], "protectedExtensions") ?? [...DEFAULT_PROTECTED_EXTENSIONS];
+
   registry.register(
     new ReadTool({
       allowedDirs: dirs("read"),
       maxFileBytes: numberOption(perTool["read"], "maxFileBytes"),
+      readDeny,
     }),
   );
   registry.register(
     new WriteFileTool({
       allowedDirs: dirs("write_file"),
-      protectedExtensions: stringArrayOption(perTool["write_file"], "protectedExtensions"),
+      protectedExtensions,
     }),
   );
-  registry.register(new EditTool({ allowedDirs: dirs("edit") }));
+  registry.register(
+    new EditTool({
+      allowedDirs: dirs("edit"),
+      protectedExtensions: editProtectedExtensions,
+    }),
+  );
   registry.register(new DeleteFileTool({ allowedDirs: dirs("delete_file") }));
   // Grep runs its match in a worker the host hard-terminates on timeout (ReDoS
   // backstop). Mirror the executor's effective per-tool timeout so the worker

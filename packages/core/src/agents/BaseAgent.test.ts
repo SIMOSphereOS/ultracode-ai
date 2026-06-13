@@ -6,6 +6,8 @@ import type {
   CompletionResult,
   CompletionChunk,
   ILLMProvider,
+  Logger,
+  LogMeta,
   ToolDefinition,
   ToolResult,
   ToolCallRequest,
@@ -72,6 +74,25 @@ const toolTurn = (calls: ToolCallRequest[]): CompletionResult => ({
   usage: { inputTokens: 1, outputTokens: 1 },
   finishReason: "tool_calls",
 });
+
+/** A turn that the provider truncated at the token cap. */
+const lengthTurn = (text: string): CompletionResult => ({
+  text,
+  toolCalls: [],
+  usage: { inputTokens: 1, outputTokens: 9 },
+  finishReason: "length",
+});
+
+/** Logger that records every warn() call for assertions. */
+class CapturingLogger implements Logger {
+  readonly warnings: Array<{ msg: string; meta?: LogMeta }> = [];
+  debug(): void {}
+  info(): void {}
+  warn(msg: string, meta?: LogMeta): void {
+    this.warnings.push(meta === undefined ? { msg } : { msg, meta });
+  }
+  error(): void {}
+}
 
 const builtin = (name: string): AgentDefinition => {
   const found = BUILT_IN_AGENTS.find((a) => a.name === name);
@@ -159,7 +180,33 @@ describe("BaseAgent.run", () => {
       toolCallsExecuted: 1,
       usage: { inputTokens: 2, outputTokens: 2 },
       turns: 2,
+      finishReason: "stop",
     });
+  });
+
+  it("surfaces a 'length' finishReason on the result and logs a warning", async () => {
+    const provider = new FakeProvider([lengthTurn("partial answer that got cut")]);
+    const logger = new CapturingLogger();
+    const agent = makeAgent(builtin("default"), provider, new RecordingRunner(), { logger });
+
+    const result = await agent.run({ prompt: "write a long essay" });
+
+    expect(result.text).toBe("partial answer that got cut");
+    expect(result.finishReason).toBe("length");
+    expect(logger.warnings).toHaveLength(1);
+    expect(logger.warnings[0]?.msg).toContain("truncated");
+    expect(logger.warnings[0]?.meta).toMatchObject({ agent: "default" });
+  });
+
+  it("does not warn for a clean 'stop' finishReason", async () => {
+    const provider = new FakeProvider([stop("complete answer")]);
+    const logger = new CapturingLogger();
+    const agent = makeAgent(builtin("default"), provider, new RecordingRunner(), { logger });
+
+    const result = await agent.run({ prompt: "hi" });
+
+    expect(result.finishReason).toBe("stop");
+    expect(logger.warnings).toHaveLength(0);
   });
 
   it("injects collected context into the system message", async () => {

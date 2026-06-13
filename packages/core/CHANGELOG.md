@@ -1,8 +1,25 @@
 # Changelog — @ultracode/core
 
-All notable changes to the `@ultracode/core` package. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer 2.0](https://semver.org/). Versioned independently from the monorepo release.
+All notable changes to the `@ultracode/core` package. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), [SemVer 2.0](https://semver.org/). Aligned to the monorepo `1.3.0` production-ready milestone.
 
 ## [Unreleased]
+
+## [1.3.0] - 2026-06-13
+
+### Added
+- **Streaming idle/body timeout** across all providers: a configurable inactivity watchdog (reuses `ProviderOptions.timeoutMs`) aborts a stalled stream instead of wedging the run; surfaces a retryable timeout `ProviderError`. Caller abort always wins.
+- **Agent-loop no-progress detection**: an order-independent per-turn tool-batch signature; `N` identical consecutive batches terminate with a distinct `no_progress` `finishReason` instead of exhausting the turn budget. `finishReason` (incl. `length` truncation) now propagates through `AgentRunResult` and logs a warning on truncation.
+- **Safe-by-default file guards**: `DEFAULT_PROTECTED_EXTENSIONS` + `DEFAULT_READ_DENY` (`.env`, `.pem`, `.key`, `id_rsa`, `.npmrc`, `.git/config`) wired into `read` (read-deny), `write_file` and `edit` (write-protect); opt-out via per-tool override.
+
+### Changed
+- **Versioning**: `resolveBaseVersion` derives the current version from the latest SemVer git tag (`GitClient.lastTag`) or repo `package.json` before falling back to `0.0.0` — fixes the USP bumping from `0.0.0` on real repos.
+- **`SqliteSessionStore`**: `PRAGMA journal_mode=WAL` + `busy_timeout=5000` on open; `appendMessages` read-modify-write wrapped in `BEGIN IMMEDIATE`/`COMMIT` (`ROLLBACK` on error) — fixes `SQLITE_BUSY` and the silent lost-update race between concurrent terminals.
+- **`SessionOptimizer`**: `UltraCode.run` now calls `buildWorkingSetPersisted`, activating the incremental/LLM-summary/pinned-fact sidecar pipeline (previously dead code; falls back to the sync path on error).
+
+### Security
+- **`sanitizeEnv`**: token-boundary secret denylist now strips previously-leaked `AWS_SECRET_ACCESS_KEY`, `SSH_PRIVATE_KEY`, `SECRET_KEY`, bare `API_KEY`/`ACCESS_KEY`, cloud-prefixed secrets and Vault `SECRET_ID`, while keeping benign pointers (`API_KEY_PATH`, `TOKEN_DIR`, …) and non-secret names (`KEYBOARD`, `TOKENIZER`).
+- **SSRF**: `NativeCrawlerProvider` is now constructed with `{ dnsLookup: nodeDnsLookupAll, allowPrivate: false }` in both production sites — the DNS-rebinding / resolved-IP check actually runs.
+- **Versioning git invocations**: reject leading-dash refspecs (`assertSafeRef`) and insert `--` separators, closing an argument-injection / arbitrary-file-write vector.
 
 ## [1.2.0] - 2026-06-12
 

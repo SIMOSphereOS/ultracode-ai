@@ -166,6 +166,54 @@ describe("UltraCode + SessionOptimizer integration", () => {
     expect(history.length).toBeLessThan(long.length);
   });
 
+  it("replays a prior persisted durable summary from the sidecar when continuing a session", async () => {
+    const store = new MapStore();
+    const provider = new StubProvider();
+    const optimizer = createSessionOptimizer({
+      sessionStore: store,
+      logger: new NoopLogger(),
+      homeDir: home,
+      thresholds: { recentKeep: 4 },
+    });
+
+    // Seed a session plus a sidecar carrying a durable summary produced by an
+    // earlier incremental pass (e.g. a cheap-model summary). Replaying must
+    // surface this persisted summary — it is NOT re-derivable from the raw
+    // history alone, so it proves the persisted path (not the sync one) ran.
+    await store.create("default", "t");
+    const msgs: ChatMessage[] = [{ role: "system", content: "sys" }];
+    for (let i = 0; i < 12; i++) {
+      msgs.push({ role: "user", content: `turn ${i}` });
+      msgs.push({ role: "assistant", content: `ack ${i}` });
+    }
+    await store.appendMessages("sess-1", msgs);
+
+    const sidecarDir = path.join(home, ".ultracode", "sessions-opt");
+    await fs.mkdir(sidecarDir, { recursive: true });
+    const PERSISTED = "PERSISTED-SUMMARY-MARKER: earlier turns chose plan A.";
+    await fs.writeFile(
+      path.join(sidecarDir, "sess-1.json"),
+      JSON.stringify({
+        version: 1,
+        sessionId: "sess-1",
+        summarizedUpToIndex: 8,
+        durableSummary: PERSISTED,
+        pinnedFacts: ["decision: use plan A"],
+        updatedAt: new Date().toISOString(),
+      }),
+      "utf8",
+    );
+
+    const ultra = build(store, provider, optimizer);
+    await ultra.run("continue", { sessionId: "sess-1" });
+
+    const history = provider.lastRequest?.messages ?? [];
+    const joined = history.map((m) => m.content).join("\n");
+    expect(joined).toContain("Compacted session context");
+    expect(joined).toContain(PERSISTED);
+    expect(joined).toContain("decision: use plan A");
+  });
+
   it("starts a background compaction pass after a successful turn (fire-and-forget)", async () => {
     const store = new MapStore();
     const provider = new StubProvider();
@@ -193,6 +241,9 @@ describe("UltraCode + SessionOptimizer integration", () => {
       buildWorkingSet: () => {
         throw new Error("boom");
       },
+      buildWorkingSetPersisted: async () => {
+        throw new Error("boom");
+      },
       processIncremental: vi.fn(async () => {
         throw new Error("background boom");
       }),
@@ -209,7 +260,7 @@ describe("UltraCode + SessionOptimizer integration", () => {
     expect(optimizer.processIncremental).toHaveBeenCalled();
   });
 
-  it("falls back to raw history when buildWorkingSet throws on a continued session", async () => {
+  it("falls back to raw history when buildWorkingSetPersisted throws on a continued session", async () => {
     const store = new MapStore();
     const provider = new StubProvider();
     await store.create("default", "t");
@@ -220,6 +271,9 @@ describe("UltraCode + SessionOptimizer integration", () => {
     ]);
     const optimizer = {
       buildWorkingSet: () => {
+        throw new Error("ws boom");
+      },
+      buildWorkingSetPersisted: async () => {
         throw new Error("ws boom");
       },
       processIncremental: vi.fn(async () => ({
@@ -244,6 +298,7 @@ describe("UltraCode + SessionOptimizer integration", () => {
     const provider = new StubProvider();
     const optimizer = {
       buildWorkingSet: vi.fn(() => ({ messages: [], durableSummary: "", pinnedFacts: [] })),
+      buildWorkingSetPersisted: vi.fn(async () => ({ messages: [], durableSummary: "", pinnedFacts: [] })),
       processIncremental: vi.fn(async () => ({
         sessionId: "s",
         beforeTokens: 0,
@@ -275,6 +330,7 @@ describe("UltraCode + SessionOptimizer integration", () => {
     await ultra.run("hello");
     await new Promise((r) => setTimeout(r, 10));
     expect(optimizer.buildWorkingSet).not.toHaveBeenCalled();
+    expect(optimizer.buildWorkingSetPersisted).not.toHaveBeenCalled();
     expect(optimizer.processIncremental).not.toHaveBeenCalled();
   });
 });

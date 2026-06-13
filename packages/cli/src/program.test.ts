@@ -105,7 +105,7 @@ function makeCtx(facade: UltraCodeFacade, over: Partial<CliContext> = {}) {
     cwd: os.tmpdir(),
     env: {},
     homedir: os.tmpdir(),
-    nodeVersion: "20.0.0",
+    nodeVersion: "22.13.0",
     stdout: {
       write: (s: string) => {
         out += s;

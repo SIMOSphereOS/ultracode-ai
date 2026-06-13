@@ -1,6 +1,8 @@
 # Enterprise Features
 
-> **Unternehmensfunktionen für UltraCode - Skalierbar, Sicher, Kollaborativ**
+> ⚠️ **Vision / noch nicht implementiert.** Die in diesem Abschnitt beschriebenen Enterprise-Funktionen (Multi-User-Self-Hosting, Team-Kollaboration, zentrales Security-/Compliance-Backend) sind **Roadmap**, kein heute auslieferbarer Code. UltraCode ist aktuell ein lokales Single-User-CLI. Es gibt keinen Server, keine Benutzerverwaltung und keine SaaS-Komponente. Verbindlich ist der tatsächliche Funktionsumfang im [Haupt-README](../../README.md) und in der [CLI-Referenz](../REFERENCE/cli-commands.md).
+
+> **Unternehmensfunktionen für UltraCode - Skalierbar, Sicher, Kollaborativ** *(geplant)*
 
 ---
 

@@ -5,9 +5,10 @@
  * `old_string` must exist and (without `replace_all`) be unique.
  */
 
+import path from "node:path";
 import { promises as fs } from "node:fs";
 import { z } from "zod";
-import { ToolError } from "@ultracode/shared";
+import { ToolError, ToolPermissionDeniedError } from "@ultracode/shared";
 import type { ToolContext, ToolDefinition } from "@ultracode/shared";
 import { BaseTool } from "../BaseTool.js";
 import type { ToolRunOutcome } from "../BaseTool.js";
@@ -37,6 +38,13 @@ export interface EditToolOutput {
 export interface EditToolOptions {
   /** Extra allow-listed directories (besides `ctx.cwd`). */
   allowedDirs?: readonly string[];
+  /**
+   * Extensions (e.g. `[".env", ".toml"]`), exact dotfile/basenames (`".env"`,
+   * `"id_rsa"`) or path-suffix entries (`".git/config"`) that must never be
+   * edited. Case-insensitive. Mirrors {@link WriteFileTool}'s guard so the edit
+   * tool cannot clobber sensitive local files the write tool already protects.
+   */
+  protectedExtensions?: readonly string[];
 }
 
 /** Count non-overlapping occurrences of `needle` in `haystack`. */
@@ -71,10 +79,30 @@ export class EditTool extends BaseTool<typeof schema, EditToolOutput> {
   protected readonly schema = schema;
 
   private readonly guard: PathGuard;
+  private readonly protectedExtensions: string[];
 
   constructor(options: EditToolOptions = {}) {
     super();
     this.guard = new PathGuard({ allowedDirs: options.allowedDirs });
+    this.protectedExtensions = (options.protectedExtensions ?? []).map((e) =>
+      e.toLowerCase(),
+    );
+  }
+
+  /**
+   * Whether `target` matches a protected extension, exact dotfile/basename, or
+   * — for entries containing a separator (e.g. `.git/config`) — a path suffix.
+   * Mirrors {@link WriteFileTool.isProtected}.
+   */
+  private isProtected(target: string): boolean {
+    if (this.protectedExtensions.length === 0) return false;
+    const normalized = target.replace(/\\/g, "/").toLowerCase();
+    const base = path.basename(normalized);
+    const ext = path.extname(base); // "" for dotfiles like ".env"
+    return this.protectedExtensions.some((p) => {
+      if (p.includes("/")) return normalized === p || normalized.endsWith(`/${p}`);
+      return p === ext || p === base;
+    });
   }
 
   protected async run(
@@ -90,6 +118,19 @@ export class EditTool extends BaseTool<typeof schema, EditToolOutput> {
     }
 
     const resolved = await this.guard.resolve(ctx.cwd, args.file_path, name);
+    // Protected-file guard (mirrors WriteFileTool): refuse to clobber sensitive
+    // local files. Re-check the resolved path so path-suffix entries such as
+    // `.git/config` match regardless of how the caller spelled the input.
+    if (this.isProtected(args.file_path) || this.isProtected(resolved)) {
+      throw new ToolPermissionDeniedError(
+        `Editing "${args.file_path}" is blocked by protected_extensions`,
+        {
+          toolName: name,
+          details: { path: args.file_path, protectedExtensions: this.protectedExtensions },
+        },
+      );
+    }
+
     let content: string;
     try {
       content = await fs.readFile(resolved, "utf8");

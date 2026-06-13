@@ -111,6 +111,11 @@ export class SqliteSessionStore implements ISessionStore {
     }
     try {
       const db = new mod.DatabaseSync(dbPath);
+      // Enable WAL so a second UltraCode terminal in the same project can read
+      // while another writes, and a busy_timeout so concurrent writers retry
+      // instead of failing immediately with SQLITE_BUSY. WAL is a no-op for
+      // ":memory:" databases, which is harmless.
+      db.exec("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;");
       db.exec(SCHEMA);
       logger.debug("Opened sqlite session store", { dbPath });
       return new SqliteSessionStore(db, logger);
@@ -177,18 +182,35 @@ export class SqliteSessionStore implements ISessionStore {
   /** Append messages, bumping `updatedAt` and `messageCount`. */
   async appendMessages(id: string, msgs: ChatMessage[]): Promise<void> {
     await this.guard("append messages", () => {
-      const row = this.db
-        .prepare("SELECT id, title, created_at, updated_at, agent_name, messages FROM sessions WHERE id = ?")
-        .get(id) as SessionRow | undefined;
-      if (!row) {
-        throw new SessionError(`Cannot append messages: unknown session "${id}"`, {
-          details: { id },
-        });
+      // BEGIN IMMEDIATE acquires the write lock up front so the read-modify-write
+      // is atomic against a second writer (in another terminal/process). Without
+      // it, two concurrent SELECT-then-UPDATE cycles race and the slower writer's
+      // appended messages are silently clobbered. busy_timeout (set at open)
+      // makes a contended BEGIN IMMEDIATE retry instead of failing with
+      // SQLITE_BUSY.
+      this.db.exec("BEGIN IMMEDIATE");
+      try {
+        const row = this.db
+          .prepare("SELECT id, title, created_at, updated_at, agent_name, messages FROM sessions WHERE id = ?")
+          .get(id) as SessionRow | undefined;
+        if (!row) {
+          throw new SessionError(`Cannot append messages: unknown session "${id}"`, {
+            details: { id },
+          });
+        }
+        const messages = this.parseMessages(row).concat(msgs);
+        this.db
+          .prepare("UPDATE sessions SET messages = ?, message_count = ?, updated_at = ? WHERE id = ?")
+          .run(JSON.stringify(messages), messages.length, nowIso(), id);
+        this.db.exec("COMMIT");
+      } catch (err) {
+        try {
+          this.db.exec("ROLLBACK");
+        } catch {
+          // Roll back is best-effort; surface the original failure below.
+        }
+        throw err;
       }
-      const messages = this.parseMessages(row).concat(msgs);
-      this.db
-        .prepare("UPDATE sessions SET messages = ?, message_count = ?, updated_at = ? WHERE id = ?")
-        .run(JSON.stringify(messages), messages.length, nowIso(), id);
     });
   }
 

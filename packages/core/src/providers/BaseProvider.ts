@@ -14,6 +14,14 @@
  * - Every failure is mapped onto {@link ProviderError} with `provider`,
  *   `statusCode` and `retryable` set correctly.
  *
+ * For streaming responses the per-request `fetch` timeout only covers the
+ * headers (it resolves the moment they arrive), so a stalled body is guarded by
+ * a separate inactivity watchdog owned by the SSE/line parsers. The watchdog is
+ * reset on every chunk and, on expiry, raises a {@link StreamIdleTimeoutError}
+ * which {@link BaseProvider.toProviderError} maps onto a retryable timeout
+ * {@link ProviderError}. The window is {@link BaseProvider.streamIdleTimeoutMs}
+ * (reuses {@link ProviderOptions.timeoutMs}).
+ *
  * HTTP is performed exclusively through the global `fetch`.
  */
 
@@ -27,6 +35,7 @@ import type {
   ProviderId,
   ProviderOptions,
 } from "@ultracode/shared";
+import { StreamIdleTimeoutError } from "./sse.js";
 
 /** Maximum delay (ms) we are willing to wait between retries. */
 const MAX_BACKOFF_MS = 60_000;
@@ -248,7 +257,19 @@ export abstract class BaseProvider implements ILLMProvider {
    */
   protected toProviderError(err: unknown, message: string, signal?: AbortSignal): ProviderError {
     if (err instanceof ProviderError) return err;
+    // Caller's external abort always wins over an idle timeout.
     if (signal?.aborted === true) return this.abortError(signal.reason ?? err);
+    if (err instanceof StreamIdleTimeoutError) {
+      return new ProviderError(
+        `${this.name} streaming response stalled after ${err.idleTimeoutMs}ms of inactivity`,
+        {
+          provider: String(this.name),
+          retryable: true,
+          cause: err,
+          details: { idleTimeoutMs: err.idleTimeoutMs, timeout: true },
+        },
+      );
+    }
     if (this.isAbortError(err)) return this.abortError(err);
     return new ProviderError(
       `${message}: ${err instanceof Error ? err.message : String(err)}`,
@@ -286,6 +307,17 @@ export abstract class BaseProvider implements ILLMProvider {
         details: { url, body: truncate(text, MAX_ERROR_BODY_CHARS) },
       });
     }
+  }
+
+  /**
+   * Inactivity window (ms) for streaming bodies. Reuses the per-request
+   * {@link ProviderOptions.timeoutMs}; if a streaming body produces no data
+   * within this window the parser aborts the read and the run does not wedge.
+   * Concrete providers pass this to the SSE/line parsers (`parseSSEJson`,
+   * `parseNDJSON`, `streamLines`) as their `idleTimeoutMs` argument.
+   */
+  protected streamIdleTimeoutMs(): number {
+    return this.options.timeoutMs;
   }
 
   /** Require a readable body on a streaming response. */

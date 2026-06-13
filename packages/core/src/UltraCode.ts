@@ -577,7 +577,10 @@ export class UltraCode {
       homeDir,
       budget: planner,
       author: authoringInstance,
-      ingestion: new learningModule.NativeCrawlerProvider(),
+      ingestion: new learningModule.NativeCrawlerProvider({
+        dnsLookup: learningModule.nodeDnsLookupAll,
+        allowPrivate: false,
+      }),
       ...(extProvider !== undefined ? { provider: extProvider } : {}),
     });
     const learning = buildLearningFacade(learnAgent, logger);
@@ -703,7 +706,7 @@ export class UltraCode {
       // failure falls back to the raw history.
       if (this.sessionOptimizer && this.enableSessionOptimization) {
         try {
-          const ws = this.sessionOptimizer.buildWorkingSet(record);
+          const ws = await this.sessionOptimizer.buildWorkingSetPersisted(record);
           history = workingSetToHistory(ws);
         } catch (err) {
           this.logger.warn("session working-set build failed; using raw history", {

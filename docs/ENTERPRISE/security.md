@@ -1,6 +1,8 @@
 # Sicherheitskonzept
 
-> **Umfassendes Sicherheitskonzept für UltraCode Enterprise - DSGVO, SOC 2, ISO 27001 konform**
+> ⚠️ **Vision / noch nicht implementiert.** Dieses Dokument beschreibt das angestrebte Sicherheitskonzept einer künftigen Enterprise-/Server-Variante (zentrale Authentifizierung, RBAC, Audit-Logs, Zertifizierungen). Diese Komponenten existieren im aktuellen Code **nicht** — UltraCode ist ein lokales Single-User-CLI. Die real implementierten Sicherheitsmaßnahmen (PathGuard gegen Pfad-Traversal/Symlinks, Credential-Bereinigung der Subprozess-Umgebung, Secret-Maskierung) sind im [Haupt-README](../../README.md) und in [`CONTRACTS.md`](../../packages/shared/CONTRACTS.md) beschrieben.
+
+> **Umfassendes Sicherheitskonzept für UltraCode Enterprise - DSGVO, SOC 2, ISO 27001 konform** *(geplant)*
 
 ---
 

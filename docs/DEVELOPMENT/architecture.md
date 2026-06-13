@@ -45,7 +45,7 @@ UltraCode folgt einem **modularen, layer-basierten Architekturansatz** mit klare
 │  │  │    • Subagent Coordination                                            │││
 │  │  │                                                                       │││
 │  │  │  🛠️  TOOL SYSTEM                                                     │││
-│  │  │    • Tool Registry (80+ Tools)                                         │││
+│  │  │    • Tool Registry (14 Tools)                                          │││
 │  │  │    • Tool Execution Engine                                            │││
 │  │  │    • Permission System                                                │││
 │  │  │    • Tool Validation & Sanitization                                   │││

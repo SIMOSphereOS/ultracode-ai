@@ -7,6 +7,9 @@
  * contract.
  */
 
+import { readFile } from "node:fs/promises";
+import * as path from "node:path";
+import { clean, valid } from "semver";
 import { DEFAULT_CONFIG } from "@ultracode/shared";
 import type {
   ChangeAnalysis,
@@ -101,6 +104,37 @@ export interface VersioningSystem {
 }
 
 /**
+ * Normalises a git tag (or any version-ish token) to a valid SemVer string,
+ * tolerating a leading `v`. Returns `null` for non-semver tags so callers can
+ * skip them and fall through to the next base-version source.
+ */
+function semverFromTag(tag: string | null | undefined): string | null {
+  if (tag === undefined || tag === null) return null;
+  const trimmed = tag.trim();
+  if (trimmed === "") return null;
+  return valid(clean(trimmed) ?? "") ?? valid(trimmed);
+}
+
+/**
+ * Reads the `version` field from the repository `package.json`, returning a
+ * valid SemVer string or `null` when the file is missing, unreadable, lacks a
+ * version, or the version is not valid SemVer.
+ */
+async function packageJsonVersion(cwd: string): Promise<string | null> {
+  try {
+    const raw = await readFile(path.join(cwd, "package.json"), "utf8");
+    const parsed: unknown = JSON.parse(raw);
+    const version =
+      typeof parsed === "object" && parsed !== null
+        ? (parsed as { version?: unknown }).version
+        : undefined;
+    return typeof version === "string" ? semverFromTag(version) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Creates the AI versioning system for a repository.
  *
  * Factory contract:
@@ -133,6 +167,31 @@ export function createVersioningSystem(options: VersioningSystemOptions): Versio
 
   const analyze = (range?: string): Promise<ChangeAnalysis> => analyzer.analyze(range);
 
+  /**
+   * Resolves the base version a bump is computed from. Precedence:
+   * 1. the channel's configured version, when it is a meaningful (non-`0.0.0`)
+   *    SemVer string;
+   * 2. the latest SemVer git tag (already used for the diff range);
+   * 3. the repository `package.json` `version`;
+   * 4. the configured channel version (`0.0.0` default) as a last resort.
+   *
+   * This stops a tagged repo (e.g. `v3.2.1`) from wrongly bumping off the
+   * `0.0.0` placeholder when no explicit version/channel base is configured.
+   */
+  const resolveBaseVersion = async (channel: string): Promise<string> => {
+    const configured = recommender.resolveChannelVersion(channel);
+    const configuredSemver = semverFromTag(configured);
+    if (configuredSemver !== null && configuredSemver !== "0.0.0") return configured;
+
+    const fromTag = semverFromTag(await git.lastTag());
+    if (fromTag !== null) return fromTag;
+
+    const fromPackage = await packageJsonVersion(cwd);
+    if (fromPackage !== null) return fromPackage;
+
+    return configured;
+  };
+
   const suggest = async (
     range?: string,
     suggestOptions: SystemSuggestOptions = {},
@@ -140,7 +199,7 @@ export function createVersioningSystem(options: VersioningSystemOptions): Versio
     const analysis = await analyze(range);
     const currentVersion =
       suggestOptions.currentVersion ??
-      recommender.resolveChannelVersion(suggestOptions.channel ?? "stable");
+      (await resolveBaseVersion(suggestOptions.channel ?? "stable"));
     const opts: SuggestOptions =
       suggestOptions.prerelease !== undefined ? { prerelease: suggestOptions.prerelease } : {};
     return recommender.suggest(analysis, currentVersion, opts);
@@ -150,10 +209,7 @@ export function createVersioningSystem(options: VersioningSystemOptions): Versio
     const analysis = await analyze();
     let target = version;
     if (target === undefined || target === "") {
-      const suggestion = recommender.suggest(
-        analysis,
-        recommender.resolveChannelVersion("stable"),
-      );
+      const suggestion = recommender.suggest(analysis, await resolveBaseVersion("stable"));
       target = suggestion.suggestedVersion;
     }
     return planner.plan(target, analysis, planOptions);
