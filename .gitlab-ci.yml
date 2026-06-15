@@ -1,0 +1,25 @@
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+default:
+  image: node:22-alpine
+stages: [install, test, build]
+cache:
+  key: $CI_COMMIT_REF_SLUG
+  paths: [node_modules/]
+install:
+  stage: install
+  script: [npm ci || npm install]
+  artifacts: { paths: [node_modules/], expire_in: 1h }
+lint:
+  stage: test
+  needs: [install]
+  script: [npm run lint --if-present]
+test:
+  stage: test
+  needs: [install]
+  script: [npm test --if-present]
+build:
+  stage: build
+  needs: [install]
+  script: [npm run build --if-present]
