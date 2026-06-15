@@ -1,25 +1,137 @@
+# GitLab CI/CD — ultracode-ai (pnpm ESM Monorepo)
+# Stack: pnpm 11.5.2 · Node ≥ 22 · TypeScript project-references
+# Build order (tsc -b): packages/shared → packages/core → packages/cli
+# All workspace symlinks MUST survive install; therefore install + build stay
+# in the same job layer (no cross-job node_modules artifact).
+
 include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Secret-Detection.gitlab-ci.yml
-default:
-  image: node:22-alpine
-stages: [install, test, build]
-cache:
-  key: $CI_COMMIT_REF_SLUG
-  paths: [node_modules/]
-install:
-  stage: install
-  script: [npm ci || npm install]
-  artifacts: { paths: [node_modules/], expire_in: 1h }
-lint:
+
+variables:
+  PNPM_VERSION: "11.5.2"
+  NODE_VERSION: "22"
+  # pnpm store outside the project tree so it survives cache restore
+  PNPM_STORE_DIR: "${CI_PROJECT_DIR}/.pnpm-store"
+  # Vitest CI mode: no watch, structured output
+  CI: "true"
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v\d+/
+
+# ── shared setup template ─────────────────────────────────────────────────────
+.node_setup: &node_setup
+  image: node:${NODE_VERSION}-slim
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq git
+    - corepack enable
+    - corepack prepare pnpm@${PNPM_VERSION} --activate
+    - pnpm config set store-dir "${PNPM_STORE_DIR}"
+
+.pnpm_cache: &pnpm_cache
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+      prefix: pnpm-v1-node${NODE_VERSION}
+    paths:
+      - .pnpm-store
+    policy: pull-push
+
+# ── stages ────────────────────────────────────────────────────────────────────
+stages:
+  - install_build   # install + tsc -b in one shot (preserves workspace symlinks)
+  - test
+  - coverage
+  - security
+
+# ── install + build ───────────────────────────────────────────────────────────
+# WHY single job: pnpm workspace: symlinks live inside node_modules/.pnpm and
+# are relative paths. GitLab artifact upload/download does NOT preserve symlinks
+# reliably, so splitting install and build across jobs breaks resolution of
+# ultracode-shared and ultracode-core in the CLI package.
+install_and_build:
+  <<: *node_setup
+  <<: *pnpm_cache
+  stage: install_build
+  script:
+    - pnpm install --frozen-lockfile
+    # tsc -b respects project-reference order: shared → core → cli
+    - pnpm build
+  artifacts:
+    # Pass the compiled dist/ trees to downstream jobs.
+    # node_modules is intentionally excluded; each test job runs
+    # `pnpm install --frozen-lockfile` itself (restored from cache, so fast).
+    paths:
+      - packages/shared/dist/
+      - packages/core/dist/
+      - packages/cli/dist/
+    expire_in: 1 hour
+
+# ── unit tests ────────────────────────────────────────────────────────────────
+unit_tests:
+  <<: *node_setup
+  <<: *pnpm_cache
   stage: test
-  needs: [install]
-  script: [npm run lint --if-present]
-test:
+  needs: [install_and_build]
+  script:
+    # Restore symlinks via a fresh (cache-backed) install, then run tests
+    - pnpm install --frozen-lockfile
+    # vitest run (no watch); skips the e2e project (testTimeout=120s)
+    - pnpm test -- --project shared --project core --project cli
+  artifacts:
+    when: always
+    reports:
+      junit: junit.xml
+    paths:
+      - junit.xml
+    expire_in: 1 week
+
+# ── lint / typecheck ──────────────────────────────────────────────────────────
+typecheck:
+  <<: *node_setup
+  <<: *pnpm_cache
   stage: test
-  needs: [install]
-  script: [npm test --if-present]
-build:
-  stage: build
-  needs: [install]
-  script: [npm run build --if-present]
+  needs: [install_and_build]
+  script:
+    - pnpm install --frozen-lockfile
+    # Re-run tsc -b in noEmit mode to surface type errors as CI signal.
+    # (dist/ from artifacts ensures project refs are already built.)
+    - pnpm typecheck
+
+# ── coverage (only on default branch and MRs) ────────────────────────────────
+coverage:
+  <<: *node_setup
+  <<: *pnpm_cache
+  stage: coverage
+  needs: [install_and_build]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm test:coverage
+  coverage: '/Lines\s*:\s*([\d.]+)%/'
+  artifacts:
+    when: always
+    paths:
+      - coverage/
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    expire_in: 1 week
+
+# ── SAST / Secret-Detection (from included templates) ────────────────────────
+# The templates inject their own jobs into the `test` stage by default.
+# Override stage to `security` so they don't block unit tests.
+sast:
+  stage: security
+  needs: []
+
+secret_detection:
+  stage: security
+  needs: []
