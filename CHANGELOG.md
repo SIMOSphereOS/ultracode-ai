@@ -1,9 +1,35 @@
 # Changelog
 
+Alle relevanten Änderungen an UltraCode AI werden hier dokumentiert. /
 All notable changes to UltraCode AI are documented in this file.
-Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning follows [SemVer 2.0](https://semver.org/).
+Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/) ·
+Versionierung / Versioning: [Semantic Versioning](https://semver.org/) ·
+Release-Prozess / process: siehe `VERSIONING.md` (SIMO Release Management).
 
 ## [Unreleased]
+
+### Hinzugefügt / Added
+- **SIMO Release Management**: Pflicht-Artefakte `VERSION` und `.release.json`
+  ergänzt; Konsistenz-Gate `scripts/release-check.sh` (VERSION ↔ package.json ↔
+  `.release.json` ↔ CHANGELOG) und Bump-Helfer `scripts/release.sh` (Lock-Step). /
+  Added the mandatory `VERSION` and `.release.json` artifacts, a consistency gate
+  and a lock-step release bump helper.
+- **Tooling**: Biome (Lint + Format) mit `husky`/`lint-staged`-Pre-Commit; lokaler
+  CI-Spiegel `scripts/ci.sh` (`pnpm ci:local`); Suppression-Gate gegen
+  `@ts-ignore`/`@ts-nocheck`; `pnpm audit` als CI-Job. /
+  Biome lint+format with a pre-commit gate, a local CI mirror, a TS-suppression
+  gate and a dependency-audit CI job.
+- **CI**: dedizierter e2e-Job und JUnit-Testreport. / Dedicated e2e job and JUnit report.
+
+### Geändert / Changed
+- **Migration von GitHub nach GitLab**: `origin`, CI (GitHub Actions → GitLab CI,
+  npm-Publish-Job) und alle Repo-URLs auf `gitlab.simo-online.com/simo/ultracode-ai`. /
+  Migrated the project from GitHub to GitLab (remote, CI and all repository URLs).
+
+### Behoben / Fixed
+- JUnit-Report wurde trotz CI-Deklaration nie erzeugt; das e2e-Test-Projekt lief in
+  keinem dedizierten CI-Job. / The declared JUnit report was never produced and the
+  e2e project ran in no dedicated CI job.
 
 ## [1.3.1] - 2026-06-13
 

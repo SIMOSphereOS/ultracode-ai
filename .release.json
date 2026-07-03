@@ -1,0 +1,46 @@
+{
+  "project": "ultracode-ai",
+  "versioning": "semver",
+  "currentVersion": "1.3.1",
+  "repository": "https://gitlab.simo-online.com/simo/ultracode-ai",
+  "monorepo": {
+    "strategy": "lock-step",
+    "packages": ["packages/shared", "packages/core", "packages/cli"]
+  },
+  "channels": {
+    "stable": {
+      "branch": "main",
+      "preRelease": false,
+      "autoPublish": true,
+      "approvalRequired": true
+    },
+    "preview": {
+      "branch": "main",
+      "preRelease": true,
+      "suffix": "rc",
+      "autoPublish": true,
+      "approvalRequired": false
+    }
+  },
+  "managedCustomers": {
+    "enabled": false
+  },
+  "artifacts": {
+    "version": "VERSION",
+    "changelog": "CHANGELOG.md",
+    "upgradeGuide": "UPGRADE.md",
+    "releaseNotes": true
+  },
+  "publish": {
+    "registry": "npm",
+    "trigger": "git tag v*",
+    "pipeline": ".gitlab-ci.yml",
+    "tokenVar": "NPM_TOKEN",
+    "access": "public",
+    "order": ["ultracode-shared", "ultracode-core", "ultracode-ai"]
+  },
+  "hooks": {
+    "preRelease": ["pnpm ci:local"],
+    "postRelease": []
+  }
+}
