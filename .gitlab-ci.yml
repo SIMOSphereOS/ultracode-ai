@@ -81,8 +81,29 @@ unit_tests:
   script:
     # Restore symlinks via a fresh (cache-backed) install, then run tests
     - pnpm install --frozen-lockfile
-    # vitest run (no watch); skips the e2e project (testTimeout=120s)
+    # vitest run (no watch); the e2e project runs in its own e2e_tests job
     - pnpm test -- --project shared --project core --project cli
+  artifacts:
+    when: always
+    reports:
+      junit: junit.xml
+    paths:
+      - junit.xml
+    expire_in: 1 week
+
+# ── e2e / packaging tests ─────────────────────────────────────────────────────
+# Dedicated, fast signal for the e2e vitest project (tests/): offline instance
+# wiring + packaging/publish invariants. Runs on every pipeline, independent of
+# the slower, coverage-gated `coverage` job that previously was the ONLY place
+# these tests executed.
+e2e_tests:
+  <<: *node_setup
+  <<: *pnpm_cache
+  stage: test
+  needs: [install_and_build]
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm test:e2e
   artifacts:
     when: always
     reports:

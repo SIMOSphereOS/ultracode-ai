@@ -1,6 +1,7 @@
 node_modules/
 dist/
 coverage/
+junit.xml
 *.tsbuildinfo
 .env
 .env.*
