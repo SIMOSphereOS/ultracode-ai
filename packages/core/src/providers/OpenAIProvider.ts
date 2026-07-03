@@ -7,10 +7,11 @@
  */
 
 import type { Logger, ProviderOptions } from "ultracode-shared";
+import { OPENAI_BASE_URL } from "./catalog.js";
 import { OpenAICompatProvider } from "./openaiCompat.js";
 
-/** Default OpenAI API base URL. */
-export const OPENAI_BASE_URL = "https://api.openai.com/v1";
+/** Re-exported for backwards compatibility; canonical home is the catalog. */
+export { OPENAI_BASE_URL };
 
 /** LLM provider for the OpenAI platform. */
 export class OpenAIProvider extends OpenAICompatProvider {

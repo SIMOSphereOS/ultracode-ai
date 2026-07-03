@@ -56,6 +56,7 @@ import {
   buildLearningFacade,
 } from "./facade/ext-adapters.js";
 import type { AuthoringFacade, BudgetFacade, LearningFacade } from "./facade/ext-types.js";
+import { defaultApiKeyEnvVar } from "./providers/catalog.js";
 import type { SessionOptimizer } from "./session-optimizer/index.js";
 import { createSessionOptimizer } from "./session-optimizer/index.js";
 
@@ -223,10 +224,11 @@ function composeCollectors(
   };
 }
 
-/** Environment variable name that holds the API key for a provider. */
-function apiKeyEnvVar(provider: string): string {
-  return `${provider.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_API_KEY`;
-}
+/**
+ * Environment variable name that holds the API key for a provider — the
+ * canonical convention from the provider catalog ({@link defaultApiKeyEnvVar}).
+ */
+const apiKeyEnvVar = defaultApiKeyEnvVar;
 
 /** Resolve a provider API key from the environment (provider- or UltraCode-prefixed). */
 function resolveApiKeyFromEnv(provider: string, env: NodeJS.ProcessEnv): string | undefined {

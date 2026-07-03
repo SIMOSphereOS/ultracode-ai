@@ -305,9 +305,11 @@ export {
 } from "./memory/index.js";
 export type {
   CreateProviderOptions,
+  ProviderDescriptor,
   ProviderRequestInit,
   SSEEvent,
   SSEJsonEvent,
+  WireFamily,
 } from "./providers/index.js";
 /* ---------------------------- Providers --------------------------------- */
 export {
@@ -316,6 +318,9 @@ export {
   AnthropicProvider,
   BaseProvider,
   createProvider,
+  defaultApiKeyEnvVar,
+  isKeyedProvider,
+  isKnownProvider,
   isRetryableStatus,
   LocalProvider,
   MISTRAL_BASE_URL,
@@ -327,6 +332,8 @@ export {
   OpenAICompatProvider,
   OpenAIProvider,
   OpenAIToolCallAssembler,
+  PROVIDER_CATALOG,
+  PROVIDER_IDS,
   parseNDJSON,
   parseRetryAfter,
   parseSSEEvents,

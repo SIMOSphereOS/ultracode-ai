@@ -25,6 +25,7 @@ import type {
 import { generateId, ProviderError } from "ultracode-shared";
 import type { ProviderRequestInit } from "./BaseProvider.js";
 import { BaseProvider } from "./BaseProvider.js";
+import { OLLAMA_BASE_URL } from "./catalog.js";
 import {
   asArray,
   asNumber,
@@ -36,8 +37,8 @@ import {
 import type { TerminalCompletionChunk } from "./sse.js";
 import { parseNDJSON } from "./sse.js";
 
-/** Default Ollama endpoint. */
-export const OLLAMA_BASE_URL = "http://localhost:11434";
+/** Re-exported for backwards compatibility; canonical home is the catalog. */
+export { OLLAMA_BASE_URL };
 
 /** Map ChatMessages onto Ollama's chat format. */
 function toOllamaMessages(messages: ChatMessage[]): Record<string, unknown>[] {

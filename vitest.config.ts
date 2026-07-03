@@ -33,6 +33,10 @@ export default defineConfig({
             "packages/cli/tests/**/*.test.tsx",
           ],
           environment: "node",
+          // Ink/chalk honour FORCE_COLOR from the invoking shell; the UI tests
+          // assert on plain lastFrame() text, so pin colours off to keep them
+          // environment-independent (a FORCE_COLOR=3 shell broke 6 of them).
+          env: { FORCE_COLOR: "0" },
         },
       },
       {
