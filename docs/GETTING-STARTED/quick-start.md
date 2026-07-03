@@ -332,4 +332,4 @@ ultracode-ai --config set MISTRAL_API_KEY=xxx
 - **In-App Hilfe**: `/help`
 - **Dokumentation**: [https://ultracode.ai/docs](https://ultracode.ai/docs)
 - **Discord**: [https://discord.gg/ultracode](https://discord.gg/ultracode)
-- **GitHub**: [https://github.com/AndreasSchwan-SIMO/ultracode-ai](https://github.com/AndreasSchwan-SIMO/ultracode-ai)
+- **GitLab**: [https://gitlab.simo-online.com/simo/ultracode-ai](https://gitlab.simo-online.com/simo/ultracode-ai)

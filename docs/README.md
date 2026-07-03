@@ -94,7 +94,7 @@ docs/
 ### Versionierung
 - **Dokumentationsversion**: Folgt der UltraCode AI-Version
 - **Änderungen**: Im [CHANGELOG.md](../CHANGELOG.md) dokumentiert
-- **Feedback**: Über GitHub Issues oder Discussions
+- **Feedback**: Über GitLab Issues oder Discussions
 
 ---
 
@@ -138,7 +138,7 @@ rg "migration" docs/INTEGRATION/
 
 ## 📞 Support & Feedback
 
-- **GitHub Discussions**: [https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions](https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions)
+- **GitLab Issues**: [https://gitlab.simo-online.com/simo/ultracode-ai/-/issues](https://gitlab.simo-online.com/simo/ultracode-ai/-/issues)
 - **Discord**: [https://discord.gg/ultracode](https://discord.gg/ultracode)
 - **E-Mail**: support@ultracode.ai
 

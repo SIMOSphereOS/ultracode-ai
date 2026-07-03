@@ -22,12 +22,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AndreasSchwan-SIMO/ultracode-ai.git",
+    "url": "git+https://gitlab.simo-online.com/simo/ultracode-ai.git",
     "directory": "packages/shared"
   },
-  "homepage": "https://github.com/AndreasSchwan-SIMO/ultracode-ai#readme",
+  "homepage": "https://gitlab.simo-online.com/simo/ultracode-ai#readme",
   "bugs": {
-    "url": "https://github.com/AndreasSchwan-SIMO/ultracode-ai/issues"
+    "url": "https://gitlab.simo-online.com/simo/ultracode-ai/-/issues"
   },
   "scripts": {
     "build": "tsc -b",

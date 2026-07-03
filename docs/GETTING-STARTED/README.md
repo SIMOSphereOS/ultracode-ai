@@ -104,7 +104,7 @@ ultracode-ai
 ## 📞 Hilfe erhalten
 
 - **Discord**: [https://discord.gg/ultracode](https://discord.gg/ultracode) (Echtzeit-Hilfe)
-- **GitHub Discussions**: [https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions](https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions)
+- **GitLab Issues**: [https://gitlab.simo-online.com/simo/ultracode-ai/-/issues](https://gitlab.simo-online.com/simo/ultracode-ai/-/issues)
 - **E-Mail**: support@ultracode.ai
 
 ---

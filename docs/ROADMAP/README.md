@@ -182,8 +182,8 @@ UltraCode AI Development Phases
 
 ## 📞 Support & Community
 
-- **GitHub**: [https://github.com/AndreasSchwan-SIMO/ultracode-ai](https://github.com/AndreasSchwan-SIMO/ultracode-ai)
-- **Discussions**: [https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions](https://github.com/AndreasSchwan-SIMO/ultracode-ai/discussions)
+- **GitLab**: [https://gitlab.simo-online.com/simo/ultracode-ai](https://gitlab.simo-online.com/simo/ultracode-ai)
+- **Discussions**: [https://gitlab.simo-online.com/simo/ultracode-ai/-/issues](https://gitlab.simo-online.com/simo/ultracode-ai/-/issues)
 - **Discord**: [https://discord.gg/ultracode](https://discord.gg/ultracode)
 - **E-Mail**: contact@ultracode.ai
 

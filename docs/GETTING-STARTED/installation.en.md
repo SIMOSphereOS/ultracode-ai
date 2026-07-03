@@ -51,7 +51,7 @@ For contributing or the latest `main`:
 
 ```bash
 # Clone the repository (the clone directory is named ultracode-ai)
-git clone https://github.com/AndreasSchwan-SIMO/ultracode-ai.git
+git clone https://gitlab.simo-online.com/simo/ultracode-ai.git
 cd ultracode-ai
 
 # Install dependencies
@@ -157,7 +157,7 @@ rm -rf ~/.ultracode
 | `SQLITE` notice on start | Informational — `node:sqlite` is experimental; the warning is suppressed internally. |
 | Source build fails | Check `pnpm --version` (`11.5.2`?) and the Node version, then `pnpm install && pnpm build`. |
 
-For bugs: [Issues](https://github.com/AndreasSchwan-SIMO/ultracode-ai/issues).
+For bugs: [Issues](https://gitlab.simo-online.com/simo/ultracode-ai/-/issues).
 
 ---
 

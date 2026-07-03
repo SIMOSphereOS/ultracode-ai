@@ -361,7 +361,7 @@ export class MyReleasePlanner extends BaseReleasePlanner {
 ## 🤝 Community & Support
 
 - **Discord:** [#ai-features Channel](https://discord.gg/ultracode)
-- **GitHub Issues:** [AI Label](https://github.com/AndreasSchwan-SIMO/ultracode-ai/labels/ai)
+- **GitLab Issues:** [AI Label](https://gitlab.simo-online.com/simo/ultracode-ai/-/labels/ai)
 - **Dokumentation:** [UltraCode AI Docs](https://ultracode.ai/docs)
 
 ---
