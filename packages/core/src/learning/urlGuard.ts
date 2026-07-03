@@ -23,13 +23,8 @@
  */
 
 import { lookup as dnsLookupCb } from "node:dns";
-
+import { BLOCKED_IPV4_RANGES, BLOCKED_IPV6_RANGES, DEFAULT_ALLOW_PRIVATE } from "./defaults.js";
 import { LearnError } from "./errors.js";
-import {
-  BLOCKED_IPV4_RANGES,
-  BLOCKED_IPV6_RANGES,
-  DEFAULT_ALLOW_PRIVATE,
-} from "./defaults.js";
 import { normalizeUrl, sameHost } from "./url.js";
 
 /** Result of a {@link isFetchAllowed} check. */
@@ -41,7 +36,9 @@ export interface FetchAllowDecision {
 }
 
 /** A `dns.lookup(..., { all: true })`-shaped resolver (injected for testability). */
-export type DnsLookupAll = (hostname: string) => Promise<Array<{ address: string; family: number }>>;
+export type DnsLookupAll = (
+  hostname: string,
+) => Promise<Array<{ address: string; family: number }>>;
 
 /**
  * Default DNS resolver backed by `node:dns` `lookup(host, { all: true })`,
@@ -279,8 +276,14 @@ function parseIpv6(s: string): number[] | null {
   let groups: string[];
   if (doubleColon !== -1) {
     if (head.indexOf("::", doubleColon + 1) !== -1) return null; // only one "::"
-    const before = head.slice(0, doubleColon).split(":").filter((p) => p.length > 0);
-    const after = head.slice(doubleColon + 2).split(":").filter((p) => p.length > 0);
+    const before = head
+      .slice(0, doubleColon)
+      .split(":")
+      .filter((p) => p.length > 0);
+    const after = head
+      .slice(doubleColon + 2)
+      .split(":")
+      .filter((p) => p.length > 0);
     const explicit = before.length + after.length + tailGroups.length;
     if (explicit > 8) return null;
     const fill = 8 - explicit;

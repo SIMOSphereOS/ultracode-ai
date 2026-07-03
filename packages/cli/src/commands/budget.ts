@@ -10,14 +10,14 @@
  * Every subcommand supports `--json` for machine-readable output.
  */
 
-import path from "node:path";
 import { promises as fs } from "node:fs";
+import path from "node:path";
 import type { Command } from "commander";
+import type { BudgetPlanView } from "ultracode-core";
 import { ValidationError } from "ultracode-shared";
 import type { CliContext } from "../context.js";
-import { budgetOf, withExtFacade } from "./ext-helpers.js";
 import { formatBudgetStatus, formatLedger } from "./ext-format.js";
-import type { BudgetPlanView } from "ultracode-core";
+import { budgetOf, withExtFacade } from "./ext-helpers.js";
 
 interface JsonOption {
   json?: boolean;
@@ -35,13 +35,16 @@ interface HistoryOptions extends JsonOption {
 /** Parse a numeric CLI option, throwing {@link ValidationError} when invalid. */
 function parseNumber(raw: string, label: string): number {
   const n = Number(raw);
-  if (!Number.isFinite(n)) throw new ValidationError(`${label} must be a finite number, got "${raw}"`);
+  if (!Number.isFinite(n))
+    throw new ValidationError(`${label} must be a finite number, got "${raw}"`);
   return n;
 }
 
 /** Register the `budget` command group on `program`. */
 export function registerBudgetCommands(program: Command, ctx: CliContext): void {
-  const budget = program.command("budget").description("cost control: plan, status and spend history");
+  const budget = program
+    .command("budget")
+    .description("cost control: plan, status and spend history");
 
   const showAction = async (opts: JsonOption): Promise<void> =>
     withExtFacade(ctx, async (facade) => {
@@ -83,7 +86,9 @@ export function registerBudgetCommands(program: Command, ctx: CliContext): void 
         if (opts.json) {
           ctx.stdout.write(`${JSON.stringify(plan)}\n`);
         } else {
-          ctx.stdout.write(`Budget Plan\n  Cap: ${plan.capUsd === null ? "(none)" : `$${plan.capUsd}`}\n`);
+          ctx.stdout.write(
+            `Budget Plan\n  Cap: ${plan.capUsd === null ? "(none)" : `$${plan.capUsd}`}\n`,
+          );
           if (plan.approvalThresholdUsd !== undefined) {
             ctx.stdout.write(`  Approval threshold: $${plan.approvalThresholdUsd}\n`);
           }

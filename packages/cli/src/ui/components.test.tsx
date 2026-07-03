@@ -1,9 +1,9 @@
+import { render } from "ink-testing-library";
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
-import { render } from "ink-testing-library";
 import { dark } from "../themes/index.js";
 import { ChatInput } from "./ChatInput.js";
-import { ChatOutput, type ChatEntry } from "./ChatOutput.js";
+import { type ChatEntry, ChatOutput } from "./ChatOutput.js";
 import { StatusBar, shortSessionId } from "./StatusBar.js";
 import { ToolOutput } from "./ToolOutput.js";
 

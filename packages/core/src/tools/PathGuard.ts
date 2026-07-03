@@ -14,8 +14,8 @@
  *   Windows).
  */
 
-import path from "node:path";
 import { promises as fs } from "node:fs";
+import path from "node:path";
 import { ToolError } from "ultracode-shared";
 import { resolveHome } from "../config/paths.js";
 
@@ -122,13 +122,10 @@ export async function resolvePath(
 
   const contained = realRoots.some((root) => isPathInside(root, realTarget));
   if (!contained) {
-    throw new ToolError(
-      `Path "${p}" resolves outside of the allowed directories`,
-      {
-        toolName,
-        details: { path: p, resolved: realTarget, allowedRoots: realRoots },
-      },
-    );
+    throw new ToolError(`Path "${p}" resolves outside of the allowed directories`, {
+      toolName,
+      details: { path: p, resolved: realTarget, allowedRoots: realRoots },
+    });
   }
   return realTarget;
 }

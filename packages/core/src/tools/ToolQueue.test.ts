@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG, NoopLogger, sleep } from "ultracode-shared";
 import type { ITool, ToolContext, ToolDefinition } from "ultracode-shared";
-import { ToolRegistry } from "./ToolRegistry.js";
+import { DEFAULT_CONFIG, NoopLogger, sleep } from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import { ToolExecutor } from "./ToolExecutor.js";
 import { ToolQueue } from "./ToolQueue.js";
+import { ToolRegistry } from "./ToolRegistry.js";
 
 function makeCtx(extra: Partial<ToolContext> = {}): ToolContext {
   return { cwd: process.cwd(), env: {}, logger: new NoopLogger(), ...extra };
@@ -120,11 +120,7 @@ describe("ToolQueue", () => {
 
   it("resolves (never rejects) when the underlying tool fails", async () => {
     const registry = new ToolRegistry();
-    const executor = new ToolExecutor(
-      registry,
-      structuredClone(DEFAULT_CONFIG),
-      new NoopLogger(),
-    );
+    const executor = new ToolExecutor(registry, structuredClone(DEFAULT_CONFIG), new NoopLogger());
     const queue = new ToolQueue(executor);
     const result = await queue.enqueue({ name: "missing", args: {}, ctx: makeCtx() });
     expect(result.ok).toBe(false);

@@ -6,13 +6,13 @@
  * UI can never end up without colour tokens.
  */
 
-import type { Theme } from "./theme.js";
 import { dark } from "./dark.js";
 import { dracula } from "./dracula.js";
 import { light } from "./light.js";
+import type { Theme } from "./theme.js";
 
 export type { Theme } from "./theme.js";
-export { dark, light, dracula };
+export { dark, dracula, light };
 
 /** Name → theme lookup with a guaranteed `dark` fallback. */
 export class ThemeManager {

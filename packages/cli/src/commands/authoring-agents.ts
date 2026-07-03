@@ -10,15 +10,15 @@
  * `--topic`/`--catalog` flags (same convention as `skills create`).
  */
 
+import { promises as fs } from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { promises as fs } from "node:fs";
 import type { Command } from "commander";
+import type { AuthoringFacade, AuthoringProposal, KnowledgeMaterial } from "ultracode-core";
 import { ValidationError } from "ultracode-shared";
 import type { CliContext } from "../context.js";
-import { authoringOf, withExtFacade } from "./ext-helpers.js";
 import { formatBlock, formatTestResult } from "./ext-format.js";
-import type { AuthoringFacade, AuthoringProposal, KnowledgeMaterial } from "ultracode-core";
+import { authoringOf, withExtFacade } from "./ext-helpers.js";
 
 interface AgentMaterialOptions {
   file?: string;
@@ -29,7 +29,10 @@ interface AgentMaterialOptions {
   json?: boolean;
 }
 
-async function loadMaterial(ctx: CliContext, opts: AgentMaterialOptions): Promise<KnowledgeMaterial> {
+async function loadMaterial(
+  ctx: CliContext,
+  opts: AgentMaterialOptions,
+): Promise<KnowledgeMaterial> {
   if (opts.file !== undefined) {
     const target = path.resolve(ctx.cwd, opts.file);
     let raw: string;
@@ -83,9 +86,7 @@ function agentMethod(
 ): (material: KnowledgeMaterial) => AuthoringProposal | Promise<AuthoringProposal> {
   const fn = which === "create" ? authoring.createAgent : authoring.evolveAgent;
   if (typeof fn !== "function") {
-    throw new ValidationError(
-      `Agent ${which} is not available in this build of ultracode-core.`,
-    );
+    throw new ValidationError(`Agent ${which} is not available in this build of ultracode-core.`);
   }
   return fn.bind(authoring);
 }
@@ -144,7 +145,9 @@ export function registerAuthoringAgentCommands(program: Command, ctx: CliContext
     .action(async (opts: AgentMaterialOptions) => proposeAgent(ctx, "evolve", opts));
 
   materialOptions(
-    agents.command("test").description("test an agent proposal built from material, without persisting"),
+    agents
+      .command("test")
+      .description("test an agent proposal built from material, without persisting"),
   )
     .option("--json", "output as JSON")
     .action(async (opts: AgentMaterialOptions) =>

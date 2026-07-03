@@ -3,16 +3,16 @@
  * suggestion with confidence and human-readable reasons.
  */
 
-import { clean, inc, major, prerelease, valid } from "semver";
 import type { ReleaseType } from "semver";
-import { VersioningError, clamp } from "ultracode-shared";
+import { clean, inc, major, prerelease, valid } from "semver";
 import type {
   BumpType,
   ChangeAnalysis,
   Logger,
-  VersionSuggestion,
   VersioningConfig,
+  VersionSuggestion,
 } from "ultracode-shared";
+import { clamp, VersioningError } from "ultracode-shared";
 
 /** Options influencing a single suggestion. */
 export interface SuggestOptions {
@@ -144,10 +144,9 @@ export class VersionRecommender {
           : (`pre${bump === "none" ? "patch" : bump}` as ReleaseType);
       const next = inc(cleaned, releaseType, identifier);
       if (next === null) {
-        throw new VersioningError(
-          `could not compute a ${releaseType} increment of "${cleaned}"`,
-          { details: { currentVersion: cleaned, releaseType, identifier } },
-        );
+        throw new VersioningError(`could not compute a ${releaseType} increment of "${cleaned}"`, {
+          details: { currentVersion: cleaned, releaseType, identifier },
+        });
       }
       suggestedVersion = next;
       bump = "prerelease";

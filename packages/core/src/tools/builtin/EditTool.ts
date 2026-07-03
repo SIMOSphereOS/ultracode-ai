@@ -5,13 +5,13 @@
  * `old_string` must exist and (without `replace_all`) be unique.
  */
 
-import path from "node:path";
 import { promises as fs } from "node:fs";
-import { z } from "zod";
-import { ToolError, ToolPermissionDeniedError } from "ultracode-shared";
+import path from "node:path";
 import type { ToolContext, ToolDefinition } from "ultracode-shared";
-import { BaseTool } from "../BaseTool.js";
+import { ToolError, ToolPermissionDeniedError } from "ultracode-shared";
+import { z } from "zod";
 import type { ToolRunOutcome } from "../BaseTool.js";
+import { BaseTool } from "../BaseTool.js";
 import { PathGuard } from "../PathGuard.js";
 import { isBinaryFile, writeFileAtomic } from "./fsUtils.js";
 
@@ -84,9 +84,7 @@ export class EditTool extends BaseTool<typeof schema, EditToolOutput> {
   constructor(options: EditToolOptions = {}) {
     super();
     this.guard = new PathGuard({ allowedDirs: options.allowedDirs });
-    this.protectedExtensions = (options.protectedExtensions ?? []).map((e) =>
-      e.toLowerCase(),
-    );
+    this.protectedExtensions = (options.protectedExtensions ?? []).map((e) => e.toLowerCase());
   }
 
   /**

@@ -9,19 +9,19 @@
  */
 
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
-import { ConfigError, isPlainObject } from "ultracode-shared";
 import type { DeepPartial, UltraCodeConfig } from "ultracode-shared";
+import { ConfigError, isPlainObject } from "ultracode-shared";
+import type { ResolvedUltraCodeConfig } from "./schema.js";
 import {
   AGENT_ENTRY_SPEC,
   CONFIG_SPEC,
-  DANGEROUS_KEYS,
-  PER_TOOL_SPEC,
   camelizeKey,
-  snakeifyKey,
+  DANGEROUS_KEYS,
   type ObjectSpec,
+  PER_TOOL_SPEC,
   type SpecNode,
+  snakeifyKey,
 } from "./spec.js";
-import type { ResolvedUltraCodeConfig } from "./schema.js";
 
 /** Callback invoked for every unknown/ignored key. */
 export type WarnFn = (message: string) => void;
@@ -48,11 +48,14 @@ export function parseTomlSource(source: string, origin: string): Record<string, 
     const err = cause as { message?: string; line?: number; column?: number };
     const line = typeof err.line === "number" ? err.line : undefined;
     const column = typeof err.column === "number" ? err.column : undefined;
-    const where = line !== undefined ? ` (line ${line}${column !== undefined ? `, column ${column}` : ""})` : "";
-    throw new ConfigError(
-      `Invalid TOML in ${origin}${where}: ${err.message ?? String(cause)}`,
-      { cause, details: { origin, line, column } },
-    );
+    const where =
+      line !== undefined
+        ? ` (line ${line}${column !== undefined ? `, column ${column}` : ""})`
+        : "";
+    throw new ConfigError(`Invalid TOML in ${origin}${where}: ${err.message ?? String(cause)}`, {
+      cause,
+      details: { origin, line, column },
+    });
   }
 }
 
@@ -287,7 +290,8 @@ export function configToToml(config: ResolvedUltraCodeConfig | UltraCodeConfig):
 
 /** Removes `undefined` values recursively (smol-toml rejects them). */
 function pruneUndefined(input: unknown): never | Record<string, unknown> | unknown {
-  if (Array.isArray(input)) return input.filter((v) => v !== undefined).map((v) => pruneUndefined(v));
+  if (Array.isArray(input))
+    return input.filter((v) => v !== undefined).map((v) => pruneUndefined(v));
   if (!isPlainObject(input)) return input;
   const out: Record<string, unknown> = {};
   for (const key of Object.keys(input)) {

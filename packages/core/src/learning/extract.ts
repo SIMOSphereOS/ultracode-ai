@@ -17,7 +17,6 @@
 import { createHash } from "node:crypto";
 
 import type { ILLMProvider } from "ultracode-shared";
-import type { KnowledgeMaterial, RoutingShare } from "./types.js";
 import {
   CHARS_PER_TOKEN,
   DEFAULT_CHUNK_TOKENS,
@@ -33,6 +32,7 @@ import {
   SUMMARY_CHUNK_COUNT,
   SUMMARY_MAX_CHARS,
 } from "./defaults.js";
+import type { KnowledgeMaterial, RoutingShare } from "./types.js";
 
 export { DEFAULT_CHUNK_TOKENS, DEFAULT_OVERLAP, DEFAULT_ROUTING } from "./defaults.js";
 
@@ -187,7 +187,11 @@ export async function distillPage(
       const res = await opts.provider.complete({
         model,
         messages: [
-          { role: "system", content: "Summarise the following documentation chunk into 1-3 dense factual sentences. No preamble." },
+          {
+            role: "system",
+            content:
+              "Summarise the following documentation chunk into 1-3 dense factual sentences. No preamble.",
+          },
           { role: "user", content: chunk.text },
         ],
         ...(opts.signal ? { signal: opts.signal } : {}),
@@ -256,7 +260,10 @@ function extractCodeLike(text: string): string[] {
   for (const line of text.split("\n")) {
     const trimmed = line.trim();
     if (trimmed.length === 0) continue;
-    if (/[{};=]|^\s*(az |npm |pnpm |import |const |function |class |def |curl )/.test(line) && /[A-Za-z]/.test(line)) {
+    if (
+      /[{};=]|^\s*(az |npm |pnpm |import |const |function |class |def |curl )/.test(line) &&
+      /[A-Za-z]/.test(line)
+    ) {
       out.push(trimmed);
     }
   }

@@ -1,7 +1,6 @@
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   ChatMessage,
   ILLMProvider,
@@ -11,11 +10,16 @@ import type {
   SessionRecord,
 } from "ultracode-shared";
 import { NoopLogger } from "ultracode-shared";
-import { HeuristicTokenCounter } from "../tokens/TokenCounter.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { IBudgetGate } from "../budget/types.js";
-import { createSessionOptimizer } from "./SessionOptimizer.js";
-import { dedupMessages, extractiveSummary, mergeSummary } from "./SessionOptimizer.js";
+import { HeuristicTokenCounter } from "../tokens/TokenCounter.js";
 import { DEDUP_MIN_CONTENT_CHARS } from "./defaults.js";
+import {
+  createSessionOptimizer,
+  dedupMessages,
+  extractiveSummary,
+  mergeSummary,
+} from "./SessionOptimizer.js";
 
 let home: string;
 
@@ -66,7 +70,10 @@ function turns(n: number, prefix = "msg"): ChatMessage[] {
   const out: ChatMessage[] = [{ role: "system", content: "You are a helpful agent." }];
   for (let i = 0; i < n; i++) {
     out.push({ role: "user", content: `${prefix} user ${i} touches file_${i}.ts` });
-    out.push({ role: "assistant", content: `${prefix} assistant ${i} decided to use approach_${i}` });
+    out.push({
+      role: "assistant",
+      content: `${prefix} assistant ${i} decided to use approach_${i}`,
+    });
   }
   return out;
 }

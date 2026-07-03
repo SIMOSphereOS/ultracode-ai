@@ -128,9 +128,7 @@ export interface SessionOptimizer {
    * {@link SessionOptimizer.buildWorkingSet} path on any error or when no
    * sidecar exists.
    */
-  buildWorkingSetPersisted(
-    record: import("ultracode-shared").SessionRecord,
-  ): Promise<WorkingSet>;
+  buildWorkingSetPersisted(record: import("ultracode-shared").SessionRecord): Promise<WorkingSet>;
   /**
    * Delete the persisted sidecar for a session. Called from the session
    * delete/prune path so an optimizer sidecar never outlives the raw session

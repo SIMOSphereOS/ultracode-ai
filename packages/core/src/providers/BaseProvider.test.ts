@@ -1,11 +1,11 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { ProviderError } from "ultracode-shared";
 import type {
   CompletionChunk,
   CompletionRequest,
   CompletionResult,
   ProviderOptions,
 } from "ultracode-shared";
+import { ProviderError } from "ultracode-shared";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { BaseProvider, isRetryableStatus, parseRetryAfter } from "./BaseProvider.js";
 import { LocalProvider } from "./LocalProvider.js";
 import { StreamIdleTimeoutError } from "./sse.js";
@@ -17,7 +17,10 @@ class TestProvider extends BaseProvider {
   constructor(options: ProviderOptions) {
     super(options, captureLogger().logger);
   }
-  public request(url: string, init?: Parameters<BaseProvider["fetchWithRetry"]>[1]): Promise<Response> {
+  public request(
+    url: string,
+    init?: Parameters<BaseProvider["fetchWithRetry"]>[1],
+  ): Promise<Response> {
     return this.fetchWithRetry(url, init);
   }
   public mapError(err: unknown, signal?: AbortSignal): ProviderError {
@@ -150,7 +153,9 @@ describe("BaseProvider.fetchWithRetry", () => {
       .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ProviderError);
     expect((err as ProviderError).retryable).toBe(false);
-    expect((err as ProviderError).details?.aborted ?? (err as ProviderError).statusCode).toBeTruthy();
+    expect(
+      (err as ProviderError).details?.aborted ?? (err as ProviderError).statusCode,
+    ).toBeTruthy();
     expect(calls).toBe(1); // no retry after abort
   });
 
@@ -226,7 +231,10 @@ describe("BaseProvider.consumeStream (consumer isolation)", () => {
     const provider = new TestProvider(testOptions());
     let delivered = 0;
     const done = await provider.drive(
-      chunks({ type: "text", text: "x" }, { type: "done", usage: { inputTokens: 0, outputTokens: 0 } }),
+      chunks(
+        { type: "text", text: "x" },
+        { type: "done", usage: { inputTokens: 0, outputTokens: 0 } },
+      ),
       () => {
         delivered += 1;
         throw new Error("always throws");
@@ -285,7 +293,10 @@ describe("BaseProvider streaming idle timeout", () => {
       },
     });
     stubFetchSequence(() => new Response(body, { status: 200 }));
-    const provider = new LocalProvider(testOptions({ timeoutMs: configuredTimeoutMs }), captureLogger().logger);
+    const provider = new LocalProvider(
+      testOptions({ timeoutMs: configuredTimeoutMs }),
+      captureLogger().logger,
+    );
 
     const err = await (async () => {
       try {

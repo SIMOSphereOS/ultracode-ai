@@ -1,13 +1,13 @@
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { NoopLogger, ValidationError } from "ultracode-shared";
 import type { ToolContext } from "ultracode-shared";
+import { NoopLogger, ValidationError } from "ultracode-shared";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { DeleteFileTool } from "./DeleteFileTool.js";
+import { EditTool } from "./EditTool.js";
 import { ReadTool } from "./ReadTool.js";
 import { WriteFileTool } from "./WriteFileTool.js";
-import { EditTool } from "./EditTool.js";
-import { DeleteFileTool } from "./DeleteFileTool.js";
 
 let root: string;
 
@@ -57,10 +57,7 @@ describe("ReadTool", () => {
 
   it("returns empty content for an offset past the end", async () => {
     await fs.writeFile(path.join(root, "s.txt"), "only");
-    const result = await tool.execute(
-      tool.validate({ file_path: "s.txt", offset: 99 }),
-      ctx(),
-    );
+    const result = await tool.execute(tool.validate({ file_path: "s.txt", offset: 99 }), ctx());
     expect(result.ok).toBe(true);
     expect(result.output.content).toBe("");
     expect(result.output.lineCount).toBe(0);
@@ -118,10 +115,7 @@ describe("ReadTool", () => {
   });
 
   it("blocks path traversal", async () => {
-    const result = await tool.execute(
-      tool.validate({ file_path: "../../../etc/passwd" }),
-      ctx(),
-    );
+    const result = await tool.execute(tool.validate({ file_path: "../../../etc/passwd" }), ctx());
     expect(result.ok).toBe(false);
     expect(result.error?.code).toBe("TOOL_ERROR");
     expect(result.error?.message).toContain("outside");
@@ -202,10 +196,7 @@ describe("WriteFileTool", () => {
   it("denies protected extensions and dotfile names", async () => {
     const guarded = new WriteFileTool({ protectedExtensions: [".env", ".toml"] });
     for (const target of [".env", "secrets.env", "config.toml", "sub/x.TOML"]) {
-      const result = await guarded.execute(
-        guarded.validate({ path: target, content: "x" }),
-        ctx(),
-      );
+      const result = await guarded.execute(guarded.validate({ path: target, content: "x" }), ctx());
       expect(result.ok).toBe(false);
       expect(result.error?.code).toBe("TOOL_PERMISSION_DENIED");
     }
@@ -220,18 +211,12 @@ describe("WriteFileTool", () => {
   it("denies path-suffix protected entries (e.g. .git/config)", async () => {
     const guarded = new WriteFileTool({ protectedExtensions: [".git/config", "id_rsa"] });
     for (const target of [".git/config", path.join("sub", ".git", "config"), "id_rsa"]) {
-      const result = await guarded.execute(
-        guarded.validate({ path: target, content: "x" }),
-        ctx(),
-      );
+      const result = await guarded.execute(guarded.validate({ path: target, content: "x" }), ctx());
       expect(result.ok).toBe(false);
       expect(result.error?.code).toBe("TOOL_PERMISSION_DENIED");
     }
     // a plain config (not under .git) is fine
-    const ok = await guarded.execute(
-      guarded.validate({ path: "config", content: "x" }),
-      ctx(),
-    );
+    const ok = await guarded.execute(guarded.validate({ path: "config", content: "x" }), ctx());
     expect(ok.ok).toBe(true);
   });
 
@@ -330,9 +315,9 @@ describe("EditTool", () => {
   });
 
   it("rejects empty old_string at validation time", () => {
-    expect(() =>
-      tool.validate({ file_path: "f", old_string: "", new_string: "x" }),
-    ).toThrow(ValidationError);
+    expect(() => tool.validate({ file_path: "f", old_string: "", new_string: "x" })).toThrow(
+      ValidationError,
+    );
   });
 
   it("denies editing protected extensions and dotfile names", async () => {

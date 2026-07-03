@@ -15,7 +15,6 @@
  *   emitted as soon as their block stops.
  */
 
-import { ProviderError } from "ultracode-shared";
 import type {
   ChatMessage,
   CompletionChunk,
@@ -28,8 +27,9 @@ import type {
   ToolCallRequest,
   ToolDefinition,
 } from "ultracode-shared";
-import { BaseProvider } from "./BaseProvider.js";
+import { ProviderError } from "ultracode-shared";
 import type { ProviderRequestInit } from "./BaseProvider.js";
+import { BaseProvider } from "./BaseProvider.js";
 import { asArray, asNumber, asRecord, asString, safeParseArgs } from "./openaiCompat.js";
 import type { TerminalCompletionChunk } from "./sse.js";
 import { parseSSEJson } from "./sse.js";
@@ -133,7 +133,10 @@ export function toAnthropicTools(tools: ToolDefinition[]): Record<string, unknow
 }
 
 /** Map an Anthropic `stop_reason` onto the contract {@link FinishReason}. */
-export function mapAnthropicStopReason(reason: string | undefined, hasToolCalls: boolean): FinishReason {
+export function mapAnthropicStopReason(
+  reason: string | undefined,
+  hasToolCalls: boolean,
+): FinishReason {
   if (hasToolCalls) return "tool_calls";
   switch (reason) {
     case "end_turn":
@@ -297,7 +300,12 @@ export class AnthropicProvider extends BaseProvider {
     let hadToolCalls = false;
 
     try {
-      for await (const evt of parseSSEJson(body, this.logger, req.signal, this.streamIdleTimeoutMs())) {
+      for await (const evt of parseSSEJson(
+        body,
+        this.logger,
+        req.signal,
+        this.streamIdleTimeoutMs(),
+      )) {
         const root = asRecord(evt.json);
         if (root === undefined) continue;
         const type = asString(root.type);

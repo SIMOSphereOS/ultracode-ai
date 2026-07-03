@@ -20,14 +20,6 @@
  */
 
 import type { ChatMessage, ILLMProvider, ToolDefinition } from "ultracode-shared";
-import type { OptimizeContext, OptimizerStage, PromptPayload } from "./types.js";
-import {
-  hashBlock,
-  normalizeProseWhitespace,
-  splitBlocks,
-  splitCodeFences,
-  truncateAtWord,
-} from "./internal.js";
 import {
   DEDUP_PLACEHOLDER,
   DEFAULT_IMMUTABLE_CLOSE,
@@ -41,11 +33,19 @@ import {
   SUMMARIZER_SYSTEM_PROMPT,
   SUMMARIZER_TRANSCRIPT_MAX_CHARS,
 } from "./defaults.js";
+import {
+  hashBlock,
+  normalizeProseWhitespace,
+  splitBlocks,
+  splitCodeFences,
+  truncateAtWord,
+} from "./internal.js";
+import type { OptimizeContext, OptimizerStage, PromptPayload } from "./types.js";
 
 export {
   DEDUP_PLACEHOLDER,
-  DEFAULT_IMMUTABLE_OPEN,
   DEFAULT_IMMUTABLE_CLOSE,
+  DEFAULT_IMMUTABLE_OPEN,
   DEFAULT_TOOL_DESC_MAX,
 };
 

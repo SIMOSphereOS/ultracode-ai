@@ -10,9 +10,9 @@
  * `workspace:*` specifier that would break consumers of the published tarball.
  */
 
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -61,9 +61,7 @@ describe("packaging invariants", () => {
         const repo = manifest.repository as { url: string; directory: string };
         expect(repo.url).toBe(REPO_URL);
         expect(repo.directory).toBe(`packages/${dir}`);
-        expect(manifest.homepage).toBe(
-          "https://gitlab.simo-online.com/simo/ultracode-ai#readme",
-        );
+        expect(manifest.homepage).toBe("https://gitlab.simo-online.com/simo/ultracode-ai#readme");
         expect(manifest.bugs).toEqual({
           url: "https://gitlab.simo-online.com/simo/ultracode-ai/-/issues",
         });
@@ -76,9 +74,7 @@ describe("packaging invariants", () => {
       }
 
       it("carries an on-disk README and LICENSE copy", () => {
-        expect(existsSync(join(repoRoot, "packages", dir, "README.md"))).toBe(
-          true,
-        );
+        expect(existsSync(join(repoRoot, "packages", dir, "README.md"))).toBe(true);
         expect(existsSync(join(repoRoot, "packages", dir, "LICENSE"))).toBe(true);
       });
 
@@ -104,10 +100,7 @@ describe("packaging invariants", () => {
   it("package LICENSE copies match the root LICENSE byte-for-byte", () => {
     const root = readFileSync(join(repoRoot, "LICENSE"), "utf8");
     for (const dir of ["shared", "core", "cli"]) {
-      const copy = readFileSync(
-        join(repoRoot, "packages", dir, "LICENSE"),
-        "utf8",
-      );
+      const copy = readFileSync(join(repoRoot, "packages", dir, "LICENSE"), "utf8");
       expect(copy).toBe(root);
     }
   });

@@ -25,7 +25,11 @@ export function parseCliValue(raw: string): unknown {
   if (t === "false") return false;
   if (t === "null") return null;
   if (t !== "" && /^-?\d+(\.\d+)?$/.test(t) && Number.isFinite(Number(t))) return Number(t);
-  if (t.startsWith("[") || t.startsWith("{") || (t.startsWith('"') && t.endsWith('"') && t.length >= 2)) {
+  if (
+    t.startsWith("[") ||
+    t.startsWith("{") ||
+    (t.startsWith('"') && t.endsWith('"') && t.length >= 2)
+  ) {
     try {
       return JSON.parse(t) as unknown;
     } catch {
@@ -53,10 +57,7 @@ export function getAtPath(obj: unknown, dotted: string): unknown {
  * Flatten a nested plain object into `[dottedPath, leafValue]` pairs.
  * Arrays and non-plain objects are treated as leaves.
  */
-export function flattenLeaves(
-  obj: Record<string, unknown>,
-  prefix = "",
-): Array<[string, unknown]> {
+export function flattenLeaves(obj: Record<string, unknown>, prefix = ""): Array<[string, unknown]> {
   const out: Array<[string, unknown]> = [];
   for (const [key, value] of Object.entries(obj)) {
     const p = prefix === "" ? key : `${prefix}.${key}`;
@@ -122,15 +123,25 @@ export function formatTable(
   const cols = headers.length;
   const cell = (s: unknown): string =>
     truncate(String(s ?? "").replace(/\r?\n/g, " "), MAX_CELL_WIDTH);
-  const all = [headers, ...rows].map((r) =>
-    Array.from({ length: cols }, (_, i) => cell(r[i])),
-  );
+  const all = [headers, ...rows].map((r) => Array.from({ length: cols }, (_, i) => cell(r[i])));
   const widths = Array.from({ length: cols }, (_, i) =>
     Math.max(...all.map((r) => charLen(r[i] ?? ""))),
   );
   const pad = (s: string, w: number): string => s + " ".repeat(Math.max(0, w - charLen(s)));
-  const lines = all.map((r) => r.map((c, i) => pad(c, widths[i] ?? 0)).join("  ").trimEnd());
-  lines.splice(1, 0, widths.map((w) => "-".repeat(Math.max(1, w))).join("  ").trimEnd());
+  const lines = all.map((r) =>
+    r
+      .map((c, i) => pad(c, widths[i] ?? 0))
+      .join("  ")
+      .trimEnd(),
+  );
+  lines.splice(
+    1,
+    0,
+    widths
+      .map((w) => "-".repeat(Math.max(1, w)))
+      .join("  ")
+      .trimEnd(),
+  );
   return `${lines.join("\n")}\n`;
 }
 

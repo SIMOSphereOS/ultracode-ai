@@ -73,7 +73,7 @@ function deepMergeAt<T>(base: T, override: unknown, depth: number): T {
 
   for (const key of Object.keys(override)) {
     if (FORBIDDEN_KEYS.has(key)) continue;
-    if (!Object.prototype.hasOwnProperty.call(override, key)) continue;
+    if (!Object.hasOwn(override, key)) continue;
 
     const overrideVal = override[key];
     if (overrideVal === undefined) continue; // skip, keep base

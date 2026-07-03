@@ -13,15 +13,7 @@
  * integrator verifies the wiring once all modules exist.
  */
 
-import {
-  EventBus,
-  NoopLogger,
-  ProviderError,
-  SessionError,
-  ValidationError,
-  serializeError,
-  ENV_PREFIX,
-} from "ultracode-shared";
+import os from "node:os";
 import type {
   AgentDefinition,
   AgentRunResult,
@@ -44,20 +36,28 @@ import type {
   UltraCodeConfig,
   VersionSuggestion,
 } from "ultracode-shared";
-import os from "node:os";
-import { AgentManager, createAgentManager } from "./agents/AgentManager.js";
+import {
+  ENV_PREFIX,
+  EventBus,
+  NoopLogger,
+  ProviderError,
+  SessionError,
+  serializeError,
+  ValidationError,
+} from "ultracode-shared";
+import { type AgentManager, createAgentManager } from "./agents/AgentManager.js";
 import type { BaseAgentRunInput, ContextCollector } from "./agents/BaseAgent.js";
 import { createSkillInjector } from "./authoring/SkillInjector.js";
-import { createSessionOptimizer } from "./session-optimizer/index.js";
-import type { SessionOptimizer } from "./session-optimizer/index.js";
-import type { IToolRunner } from "./execution/types.js";
 import type { ConfigManager } from "./config/ConfigManager.js";
-import type { BudgetFacade, AuthoringFacade, LearningFacade } from "./facade/ext-types.js";
+import type { IToolRunner } from "./execution/types.js";
 import {
-  buildBudgetFacade,
   buildAuthoringFacade,
+  buildBudgetFacade,
   buildLearningFacade,
 } from "./facade/ext-adapters.js";
+import type { AuthoringFacade, BudgetFacade, LearningFacade } from "./facade/ext-types.js";
+import type { SessionOptimizer } from "./session-optimizer/index.js";
+import { createSessionOptimizer } from "./session-optimizer/index.js";
 
 /* ----------------------------------------------------------------------------
  * Factory contracts of the parallel modules.
@@ -298,8 +298,8 @@ export function createTaskTool(agents: AgentManager): RegistrableTool {
   const definition: ToolDefinition = {
     name: "task",
     description:
-      "Delegate a self-contained subtask to a named agent (e.g. \"plan\", \"review\", " +
-      "\"security\") and return its final answer. Use for focused, independent work.",
+      'Delegate a self-contained subtask to a named agent (e.g. "plan", "review", ' +
+      '"security") and return its final answer. Use for focused, independent work.',
     category: "ai",
     permission: "always",
     parameters: {
@@ -307,7 +307,8 @@ export function createTaskTool(agents: AgentManager): RegistrableTool {
       properties: {
         agent: {
           type: "string",
-          description: "Name of the agent to delegate to (e.g. default, build, plan, review, security).",
+          description:
+            "Name of the agent to delegate to (e.g. default, build, plan, review, security).",
         },
         prompt: {
           type: "string",
@@ -327,10 +328,14 @@ export function createTaskTool(agents: AgentManager): RegistrableTool {
       const agent = args["agent"];
       const prompt = args["prompt"];
       if (typeof agent !== "string" || agent.trim() === "") {
-        throw new ValidationError('Invalid arguments for tool "task": "agent" must be a non-empty string');
+        throw new ValidationError(
+          'Invalid arguments for tool "task": "agent" must be a non-empty string',
+        );
       }
       if (typeof prompt !== "string" || prompt.trim() === "") {
-        throw new ValidationError('Invalid arguments for tool "task": "prompt" must be a non-empty string');
+        throw new ValidationError(
+          'Invalid arguments for tool "task": "prompt" must be a non-empty string',
+        );
       }
       return { agent, prompt };
     },

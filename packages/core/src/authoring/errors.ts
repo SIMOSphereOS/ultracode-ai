@@ -7,8 +7,8 @@
  * across the frozen contract boundary.
  */
 
-import { UltraCodeError } from "ultracode-shared";
 import type { UltraCodeErrorOptions } from "ultracode-shared";
+import { UltraCodeError } from "ultracode-shared";
 
 /** A skill/agent authoring or registry operation failed. */
 export class AuthoringError extends UltraCodeError {

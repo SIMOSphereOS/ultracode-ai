@@ -10,11 +10,7 @@ import { NativeCrawlerProvider } from "./NativeCrawlerProvider.js";
 import type { FetchImpl, FetchResponseLike, IngestionContext, LearnSource } from "./types.js";
 
 /** Build a fake Response. */
-function res(
-  status: number,
-  body = "",
-  headers: Record<string, string> = {},
-): FetchResponseLike {
+function res(status: number, body = "", headers: Record<string, string> = {}): FetchResponseLike {
   const lower = new Map(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v]));
   return {
     status,
@@ -44,20 +40,34 @@ const SOURCE: LearnSource = {
 };
 
 const noSleep = (_ms: number, signal?: AbortSignal): Promise<void> => {
-  if (signal?.aborted) return Promise.reject(Object.assign(new Error("aborted"), { name: "AbortError" }));
+  if (signal?.aborted)
+    return Promise.reject(Object.assign(new Error("aborted"), { name: "AbortError" }));
   return Promise.resolve();
 };
 
 describe("NativeCrawlerProvider.discover", () => {
   it("discovers via robots-advertised sitemap, robots-filtered and host-scoped", async () => {
     const fetchImpl = routedFetch([
-      ["/robots.txt", () => res(200, "User-agent: *\nDisallow: /de-de/azure/secret\nSitemap: https://docs.example.com/map.xml")],
-      ["/map.xml", () =>
-        res(200, `<urlset>
+      [
+        "/robots.txt",
+        () =>
+          res(
+            200,
+            "User-agent: *\nDisallow: /de-de/azure/secret\nSitemap: https://docs.example.com/map.xml",
+          ),
+      ],
+      [
+        "/map.xml",
+        () =>
+          res(
+            200,
+            `<urlset>
           <url><loc>https://docs.example.com/de-de/azure/a</loc></url>
           <url><loc>https://docs.example.com/de-de/azure/secret/x</loc></url>
           <url><loc>https://other.com/de-de/azure/b</loc></url>
-        </urlset>`)],
+        </urlset>`,
+          ),
+      ],
     ]);
     const crawler = new NativeCrawlerProvider({ sleep: noSleep });
     const ctx: IngestionContext = { fetchImpl };
@@ -70,9 +80,19 @@ describe("NativeCrawlerProvider.discover", () => {
   it("recurses a sitemapindex into shards", async () => {
     const fetchImpl = routedFetch([
       ["/robots.txt", () => res(404, "")],
-      ["/sitemap.xml", () =>
-        res(200, `<sitemapindex><sitemap><loc>https://docs.example.com/shard1.xml</loc></sitemap></sitemapindex>`)],
-      ["/shard1.xml", () => res(200, `<urlset><url><loc>https://docs.example.com/de-de/azure/p</loc></url></urlset>`)],
+      [
+        "/sitemap.xml",
+        () =>
+          res(
+            200,
+            `<sitemapindex><sitemap><loc>https://docs.example.com/shard1.xml</loc></sitemap></sitemapindex>`,
+          ),
+      ],
+      [
+        "/shard1.xml",
+        () =>
+          res(200, `<urlset><url><loc>https://docs.example.com/de-de/azure/p</loc></url></urlset>`),
+      ],
     ]);
     const crawler = new NativeCrawlerProvider({ sleep: noSleep });
     const pages = await crawler.discover(SOURCE, { fetchImpl });
@@ -83,7 +103,10 @@ describe("NativeCrawlerProvider.discover", () => {
     const tocFetch = routedFetch([
       ["/robots.txt", () => res(404, "")],
       ["sitemap.xml", () => res(404, "")],
-      ["toc.json", () => res(200, JSON.stringify({ items: [{ href: "functions" }, { href: "storage" }] }))],
+      [
+        "toc.json",
+        () => res(200, JSON.stringify({ items: [{ href: "functions" }, { href: "storage" }] })),
+      ],
     ]);
     const crawler = new NativeCrawlerProvider({ sleep: noSleep });
     const pages = await crawler.discover(SOURCE, { fetchImpl: tocFetch });
@@ -99,7 +122,10 @@ describe("NativeCrawlerProvider.discover", () => {
 describe("NativeCrawlerProvider.fetchPage", () => {
   it("returns changed content with a hash on 200", async () => {
     const fetchImpl = vi.fn(async () =>
-      res(200, "<main><h1>Title</h1><p>Body text here.</p></main>", { etag: '"v1"', "last-modified": "Mon" }),
+      res(200, "<main><h1>Title</h1><p>Body text here.</p></main>", {
+        etag: '"v1"',
+        "last-modified": "Mon",
+      }),
     );
     const crawler = new NativeCrawlerProvider({ sleep: noSleep });
     const page = await crawler.fetchPage("https://e.com/p", {}, { fetchImpl });
@@ -130,7 +156,11 @@ describe("NativeCrawlerProvider.fetchPage", () => {
   it("detects unchanged content via matching hash", async () => {
     const html = "<main><p>stable</p></main>";
     const crawler = new NativeCrawlerProvider({ sleep: noSleep });
-    const first = await crawler.fetchPage("https://e.com/p", {}, { fetchImpl: vi.fn(async () => res(200, html)) });
+    const first = await crawler.fetchPage(
+      "https://e.com/p",
+      {},
+      { fetchImpl: vi.fn(async () => res(200, html)) },
+    );
     const second = await crawler.fetchPage(
       "https://e.com/p",
       { contentHash: first.contentHash },
@@ -161,7 +191,9 @@ describe("NativeCrawlerProvider.fetchPage", () => {
   });
 
   it("maps a thrown network error to a status-0 page", async () => {
-    const fetchImpl = vi.fn(async () => { throw new Error("ECONNRESET"); });
+    const fetchImpl = vi.fn(async () => {
+      throw new Error("ECONNRESET");
+    });
     const crawler = new NativeCrawlerProvider({ sleep: noSleep, maxRetries: 1 });
     const page = await crawler.fetchPage("https://e.com/p", {}, { fetchImpl });
     expect(page.status).toBe(0);
@@ -191,7 +223,10 @@ describe("NativeCrawlerProvider SSRF guard", () => {
         );
       }
       if (url.includes("docs.example.com/map.xml")) {
-        return res(200, `<urlset><url><loc>https://docs.example.com/de-de/azure/a</loc></url></urlset>`);
+        return res(
+          200,
+          `<urlset><url><loc>https://docs.example.com/de-de/azure/a</loc></url></urlset>`,
+        );
       }
       return res(404, "");
     });
@@ -218,7 +253,10 @@ describe("NativeCrawlerProvider SSRF guard", () => {
         );
       }
       if (url.includes("docs.example.com/shard-ok.xml")) {
-        return res(200, `<urlset><url><loc>https://docs.example.com/de-de/azure/p</loc></url></urlset>`);
+        return res(
+          200,
+          `<urlset><url><loc>https://docs.example.com/de-de/azure/p</loc></url></urlset>`,
+        );
       }
       return res(404, "");
     });

@@ -24,8 +24,7 @@
  * idle timeout.
  */
 
-import type { CompletionChunk, FinishReason, TokenUsage } from "ultracode-shared";
-import type { Logger } from "ultracode-shared";
+import type { CompletionChunk, FinishReason, Logger, TokenUsage } from "ultracode-shared";
 
 /**
  * Terminal `"done"` chunk augmented with provider-local stream-completion

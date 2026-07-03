@@ -1,16 +1,16 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG, NoopLogger, VersioningError } from "ultracode-shared";
 import type {
   CompletionChunk,
   CompletionResult,
   ILLMProvider,
   UltraCodeConfig,
 } from "ultracode-shared";
-import { defaultGitRunner } from "./GitClient.js";
+import { DEFAULT_CONFIG, NoopLogger, VersioningError } from "ultracode-shared";
+import { afterEach, describe, expect, it } from "vitest";
 import type { GitCommandResult, GitRunner } from "./GitClient.js";
+import { defaultGitRunner } from "./GitClient.js";
 import { createVersioningSystem } from "./index.js";
 import type { CommandRunner } from "./QualityGateSystem.js";
 
@@ -21,7 +21,8 @@ const cleanups: string[] = [];
 afterEach(async () => {
   while (cleanups.length > 0) {
     const dir = cleanups.pop();
-    if (dir !== undefined) await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+    if (dir !== undefined)
+      await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   }
 });
 

@@ -3,14 +3,13 @@
  * round-trip and corruption handling.
  */
 
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { mkdtemp, rm, writeFile, mkdir } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-
-import { SourceLibrary, SEED_SOURCES } from "./SourceLibrary.js";
-import { sourcesFile, learningDir } from "./paths.js";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { LearnError } from "./errors.js";
+import { learningDir, sourcesFile } from "./paths.js";
+import { SEED_SOURCES, SourceLibrary } from "./SourceLibrary.js";
 import type { LearnSource } from "./types.js";
 
 let home: string;
@@ -74,8 +73,12 @@ describe("SourceLibrary", () => {
 
   it("validates required fields", async () => {
     const lib = new SourceLibrary(home);
-    await expect(lib.add({ id: "", url: "x", catalog: "c" } as LearnSource)).rejects.toBeInstanceOf(LearnError);
-    await expect(lib.add({ id: "a", url: "", catalog: "c" } as LearnSource)).rejects.toBeInstanceOf(LearnError);
+    await expect(lib.add({ id: "", url: "x", catalog: "c" } as LearnSource)).rejects.toBeInstanceOf(
+      LearnError,
+    );
+    await expect(lib.add({ id: "a", url: "", catalog: "c" } as LearnSource)).rejects.toBeInstanceOf(
+      LearnError,
+    );
   });
 
   it("accepts a normal https URL at add time", async () => {

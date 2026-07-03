@@ -25,7 +25,6 @@
  * HTTP is performed exclusively through the global `fetch`.
  */
 
-import { NoopLogger, ProviderError, sleep, truncate } from "ultracode-shared";
 import type {
   CompletionChunk,
   CompletionRequest,
@@ -35,6 +34,7 @@ import type {
   ProviderId,
   ProviderOptions,
 } from "ultracode-shared";
+import { NoopLogger, ProviderError, sleep, truncate } from "ultracode-shared";
 import { StreamIdleTimeoutError } from "./sse.js";
 
 /** Maximum delay (ms) we are willing to wait between retries. */
@@ -65,7 +65,10 @@ export interface ProviderRequestInit {
  * Supports delta-seconds and HTTP-date forms; returns `undefined` when the
  * value is absent or unparsable.
  */
-export function parseRetryAfter(value: string | null, now: number = Date.now()): number | undefined {
+export function parseRetryAfter(
+  value: string | null,
+  now: number = Date.now(),
+): number | undefined {
   if (value === null) return undefined;
   const trimmed = value.trim();
   if (trimmed === "") return undefined;
@@ -271,10 +274,11 @@ export abstract class BaseProvider implements ILLMProvider {
       );
     }
     if (this.isAbortError(err)) return this.abortError(err);
-    return new ProviderError(
-      `${message}: ${err instanceof Error ? err.message : String(err)}`,
-      { provider: String(this.name), retryable: false, cause: err },
-    );
+    return new ProviderError(`${message}: ${err instanceof Error ? err.message : String(err)}`, {
+      provider: String(this.name),
+      retryable: false,
+      cause: err,
+    });
   }
 
   /** Heuristic for DOM/Node abort errors. */

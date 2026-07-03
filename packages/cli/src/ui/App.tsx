@@ -11,18 +11,19 @@
  * /clear /exit.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Text, useApp, useInput } from "ink";
-import { serializeError } from "ultracode-shared";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CompletionChunk } from "ultracode-shared";
+import { serializeError } from "ultracode-shared";
 import type { UltraCodeFacade } from "../context.js";
 import { ThemeManager } from "../themes/index.js";
 import { redactConfig } from "../utils/text.js";
 import { ChatInput } from "./ChatInput.js";
-import { ChatOutput, type ChatEntry } from "./ChatOutput.js";
+import { type ChatEntry, ChatOutput } from "./ChatOutput.js";
 import { DoublePress } from "./ctrl-c.js";
 import { StatusBar } from "./StatusBar.js";
-import { ToolOutput, type ToolEventView } from "./ToolOutput.js";
+import { type ToolEventView, ToolOutput } from "./ToolOutput.js";
 
 export interface AppProps {
   facade: UltraCodeFacade;
@@ -63,8 +64,7 @@ export function App({ facade, initialTheme, onExit }: AppProps): React.JSX.Eleme
     return idx >= 0 ? idx : 0;
   });
   const agentName = agentNames[agentIndex] ?? agentNames[0] ?? "default";
-  const model =
-    agents.find((a) => a.name === agentName)?.model ?? facade.config.core.activeModel;
+  const model = agents.find((a) => a.name === agentName)?.model ?? facade.config.core.activeModel;
 
   const [entries, setEntries] = useState<ChatEntry[]>([]);
   const [stream, setStream] = useState("");

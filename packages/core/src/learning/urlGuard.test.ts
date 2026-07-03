@@ -8,15 +8,14 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
-
+import { LearnError } from "./errors.js";
+import type { DnsLookupAll } from "./urlGuard.js";
 import {
   assertFetchAllowed,
   isBlockedIp,
   isFetchAllowed,
   isFetchAllowedAsync,
 } from "./urlGuard.js";
-import type { DnsLookupAll } from "./urlGuard.js";
-import { LearnError } from "./errors.js";
 
 const SOURCE = "https://docs.example.com/de-de/azure/";
 
@@ -150,14 +149,20 @@ describe("isFetchAllowedAsync DNS rebinding", () => {
     const dnsLookup: DnsLookupAll = vi.fn(async () => {
       throw new Error("ENOTFOUND");
     });
-    const d = await isFetchAllowedAsync("https://docs.example.com/x", { sourceUrl: SOURCE, dnsLookup });
+    const d = await isFetchAllowedAsync("https://docs.example.com/x", {
+      sourceUrl: SOURCE,
+      dnsLookup,
+    });
     expect(d.ok).toBe(false);
     expect(d.reason).toBe("dns-lookup-failed");
   });
 
   it("allows when DNS resolves only to public addresses", async () => {
     const dnsLookup: DnsLookupAll = vi.fn(async () => [{ address: "8.8.8.8", family: 4 }]);
-    const d = await isFetchAllowedAsync("https://docs.example.com/x", { sourceUrl: SOURCE, dnsLookup });
+    const d = await isFetchAllowedAsync("https://docs.example.com/x", {
+      sourceUrl: SOURCE,
+      dnsLookup,
+    });
     expect(d.ok).toBe(true);
   });
 
@@ -175,7 +180,10 @@ describe("isFetchAllowedAsync DNS rebinding", () => {
 
   it("blocks when DNS resolves to zero records", async () => {
     const dnsLookup: DnsLookupAll = vi.fn(async () => []);
-    const d = await isFetchAllowedAsync("https://docs.example.com/x", { sourceUrl: SOURCE, dnsLookup });
+    const d = await isFetchAllowedAsync("https://docs.example.com/x", {
+      sourceUrl: SOURCE,
+      dnsLookup,
+    });
     expect(d.ok).toBe(false);
     expect(d.reason).toBe("dns-no-records");
   });
@@ -188,7 +196,10 @@ describe("isFetchAllowedAsync DNS rebinding", () => {
 
   it("propagates a blocked sync decision without invoking DNS", async () => {
     const dnsLookup: DnsLookupAll = vi.fn(async () => [{ address: "8.8.8.8", family: 4 }]);
-    const d = await isFetchAllowedAsync("https://evil.example.org/x", { sourceUrl: SOURCE, dnsLookup });
+    const d = await isFetchAllowedAsync("https://evil.example.org/x", {
+      sourceUrl: SOURCE,
+      dnsLookup,
+    });
     expect(d.ok).toBe(false);
     expect(d.reason).toBe("cross-host");
     expect(dnsLookup).not.toHaveBeenCalled();
@@ -210,7 +221,10 @@ describe("isFetchAllowedAsync DNS rebinding", () => {
       { address: "8.8.8.8", family: 4 },
       { address: "127.0.0.1", family: 4 },
     ]);
-    const d = await isFetchAllowedAsync("https://docs.example.com/x", { sourceUrl: SOURCE, dnsLookup });
+    const d = await isFetchAllowedAsync("https://docs.example.com/x", {
+      sourceUrl: SOURCE,
+      dnsLookup,
+    });
     expect(d.ok).toBe(false);
     expect(d.reason).toContain("resolved-private-ip");
   });

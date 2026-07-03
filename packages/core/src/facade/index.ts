@@ -4,18 +4,17 @@
  * facade (Modules A/B/C of v1.2.0).
  */
 
+export {
+  buildAuthoringFacade,
+  buildBudgetFacade,
+  buildLearningFacade,
+} from "./ext-adapters.js";
 export type {
-  BudgetFacade,
-  BudgetStatusView,
-  BudgetPlanView,
-  BudgetPlanAnswers,
   AuthoringFacade,
+  BudgetFacade,
+  BudgetPlanAnswers,
+  BudgetPlanView,
+  BudgetStatusView,
   LearningFacade,
   SourceAddInput,
 } from "./ext-types.js";
-
-export {
-  buildBudgetFacade,
-  buildAuthoringFacade,
-  buildLearningFacade,
-} from "./ext-adapters.js";

@@ -6,8 +6,9 @@
  * component robust across terminals.
  */
 
-import React, { useRef, useState } from "react";
 import { Box, Text, useInput } from "ink";
+import type React from "react";
+import { useRef, useState } from "react";
 import type { Theme } from "../themes/index.js";
 
 export interface ChatInputProps {
@@ -108,7 +109,9 @@ export function ChatInput({
             {i === 0 ? "❯ " : "… "}
           </Text>
           {i === 0 && value === "" ? (
-            <Text color={theme.dim}>{disabled ? "(thinking — press Esc to cancel)" : placeholder}</Text>
+            <Text color={theme.dim}>
+              {disabled ? "(thinking — press Esc to cancel)" : placeholder}
+            </Text>
           ) : (
             <Text color={theme.text}>{line}</Text>
           )}

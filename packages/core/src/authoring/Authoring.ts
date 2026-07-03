@@ -25,19 +25,12 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-
-import { inc, valid, clean } from "semver";
 import type { ReleaseType } from "semver";
-import { NoopLogger, serializeError } from "ultracode-shared";
-import type {
-  AgentDefinition,
-  IEventBus,
-  ILLMProvider,
-  Logger,
-} from "ultracode-shared";
-
-import { resolveHome } from "../config/paths.js";
+import { clean, inc, valid } from "semver";
 import { stringify as stringifyToml } from "smol-toml";
+import type { AgentDefinition, IEventBus, ILLMProvider, Logger } from "ultracode-shared";
+import { NoopLogger, serializeError } from "ultracode-shared";
+import { resolveHome } from "../config/paths.js";
 
 import {
   AGENTS_DIR,
@@ -51,6 +44,7 @@ import {
   INFER_TOOLS_BASE,
   INITIAL_SKILL_VERSION,
   RESERVED_SEGMENTS,
+  SAFE_SEGMENT,
   SCORE_BODY_MAX,
   SCORE_BODY_TARGET_LENGTH,
   SCORE_DESCRIPTION_MAX,
@@ -64,7 +58,6 @@ import {
   SCORE_STATUS_DRAFT,
   SCORE_TRIGGERS_MAX,
   SCORE_TRIGGERS_TARGET,
-  SAFE_SEGMENT,
   SKILL_UPGRADE_RELEASE,
   SLUG_MAX_LENGTH,
   STOPWORDS as STOPWORD_LIST,
@@ -72,14 +65,14 @@ import {
 } from "./defaults.js";
 import { AuthoringError } from "./errors.js";
 import {
+  AGENT_CREATED_EVENT,
   emitAuthoringEvent,
   SKILL_CREATED_EVENT,
   SKILL_UPDATED_EVENT,
-  AGENT_CREATED_EVENT,
 } from "./events.js";
-import { agentSchema, skillSchema } from "./schema.js";
 import { SkillRegistry } from "./SkillRegistry.js";
 import { checkNoEscalation, clampToAllowed, findForbiddenPhrases } from "./safety.js";
+import { agentSchema, skillSchema } from "./schema.js";
 import type {
   AuthoringProposal,
   CostEstimate,
@@ -265,10 +258,7 @@ export class Authoring implements ISkillAuthor {
    * --------------------------------------------------------------------- */
 
   /** {@inheritDoc ISkillAuthor.persist} */
-  public async persist(
-    proposal: AuthoringProposal,
-    opts: { approved: boolean },
-  ): Promise<void> {
+  public async persist(proposal: AuthoringProposal, opts: { approved: boolean }): Promise<void> {
     if (!opts.approved) {
       this.logger.info("authoring.persist.skipped-unapproved", {
         kind: proposal.kind,
@@ -413,9 +403,9 @@ export class Authoring implements ISkillAuthor {
       detail: esc.ok ? "within allowed tool set" : `escalated: ${esc.escalated.join(", ")}`,
     });
 
-    const haystack = `${agent.description}\n${agent.systemPromptId ?? ""}\n${(agent.enabledTools ?? []).join(
-      "\n",
-    )}`;
+    const haystack = `${agent.description}\n${agent.systemPromptId ?? ""}\n${(
+      agent.enabledTools ?? []
+    ).join("\n")}`;
     const forbidden = findForbiddenPhrases(haystack);
     checks.push({
       name: "no-harmful-instructions",
@@ -450,7 +440,11 @@ export class Authoring implements ISkillAuthor {
     );
     // Triggers (up to 25): 0 → 0, ≥4 → full.
     const triggers = Array.isArray(skill.triggers) ? skill.triggers.length : 0;
-    score += clampScore((triggers / SCORE_TRIGGERS_TARGET) * SCORE_TRIGGERS_MAX, 0, SCORE_TRIGGERS_MAX);
+    score += clampScore(
+      (triggers / SCORE_TRIGGERS_TARGET) * SCORE_TRIGGERS_MAX,
+      0,
+      SCORE_TRIGGERS_MAX,
+    );
     // Sources (up to 20): ≥3 → full.
     const sources = Array.isArray(skill.sources) ? skill.sources.length : 0;
     score += clampScore((sources / SCORE_SOURCES_TARGET) * SCORE_SOURCES_MAX, 0, SCORE_SOURCES_MAX);
@@ -705,9 +699,7 @@ function extractFromVersion(proposal: AuthoringProposal): string {
 }
 
 /** Try to parse a `{description, triggers}` JSON object from LLM text. */
-function parseRefinement(
-  text: string,
-): { description: string; triggers: string[] } | null {
+function parseRefinement(text: string): { description: string; triggers: string[] } | null {
   if (typeof text !== "string") return null;
   // Tolerate accidental code fences / surrounding prose.
   const start = text.indexOf("{");
@@ -779,10 +771,10 @@ function clampScore(value: number, min: number, max: number): number {
 }
 
 /** Format a zod error compactly. */
-function formatZod(error: { issues: Array<{ path: Array<string | number>; message: string }> }): string {
-  return error.issues
-    .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
-    .join("; ");
+function formatZod(error: {
+  issues: Array<{ path: Array<string | number>; message: string }>;
+}): string {
+  return error.issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`).join("; ");
 }
 
 /** Restrict a name to a safe filename. */

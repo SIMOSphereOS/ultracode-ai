@@ -1,10 +1,10 @@
-import { describe, expect, it } from "vitest";
 import { ProviderError } from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import { AnthropicProvider } from "./AnthropicProvider.js";
+import { createProvider } from "./index.js";
 import { LocalProvider } from "./LocalProvider.js";
 import { MistralProvider } from "./MistralProvider.js";
 import { OpenAIProvider } from "./OpenAIProvider.js";
-import { createProvider } from "./index.js";
 import { testOptions } from "./testkit.test.js";
 
 describe("createProvider", () => {

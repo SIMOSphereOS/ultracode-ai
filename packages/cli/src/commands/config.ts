@@ -9,8 +9,8 @@
  * redaction so secrets are never printed.
  */
 
-import path from "node:path";
 import { promises as fs } from "node:fs";
+import path from "node:path";
 import type { Command } from "commander";
 import { ConfigError, isPlainObject } from "ultracode-shared";
 import type { CliContext, UltraCodeFacade } from "../context.js";
@@ -169,7 +169,9 @@ export function registerConfigCommand(program: Command, ctx: CliContext): void {
           manager.set(key, value);
         }
         await manager.save("user");
-        ctx.stdout.write(`✓ imported ${leaves.length} value(s) from ${target} (saved to user config)\n`);
+        ctx.stdout.write(
+          `✓ imported ${leaves.length} value(s) from ${target} (saved to user config)\n`,
+        );
       }),
     );
 }

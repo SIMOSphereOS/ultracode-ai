@@ -10,7 +10,6 @@
  * to preserve the established `./pricing.js` public surface.
  */
 
-import type { ModelPrice, PriceTable } from "./types.js";
 import {
   DEFAULT_FX_RATE,
   DEFAULT_MODEL,
@@ -19,6 +18,7 @@ import {
   USD_HIGH_FACTOR,
   USD_LOW_FACTOR,
 } from "./defaults.js";
+import type { ModelPrice, PriceTable } from "./types.js";
 
 export {
   DEFAULT_FX_RATE,

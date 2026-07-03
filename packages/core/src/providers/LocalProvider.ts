@@ -12,7 +12,6 @@
  * `http://localhost:11434`. No API key is required.
  */
 
-import { ProviderError, generateId } from "ultracode-shared";
 import type {
   ChatMessage,
   CompletionChunk,
@@ -23,8 +22,9 @@ import type {
   ProviderOptions,
   ToolCallRequest,
 } from "ultracode-shared";
-import { BaseProvider } from "./BaseProvider.js";
+import { generateId, ProviderError } from "ultracode-shared";
 import type { ProviderRequestInit } from "./BaseProvider.js";
+import { BaseProvider } from "./BaseProvider.js";
 import {
   asArray,
   asNumber,
@@ -81,7 +81,10 @@ function parseOllamaToolCalls(value: unknown, logger: Logger): ToolCallRequest[]
   return out;
 }
 
-function mapOllamaFinishReason(doneReason: string | undefined, hasToolCalls: boolean): FinishReason {
+function mapOllamaFinishReason(
+  doneReason: string | undefined,
+  hasToolCalls: boolean,
+): FinishReason {
   if (hasToolCalls) return "tool_calls";
   switch (doneReason) {
     case "length":
@@ -166,7 +169,12 @@ export class LocalProvider extends BaseProvider {
     let sawDone = false;
     let hadToolCalls = false;
     try {
-      for await (const line of parseNDJSON(body, this.logger, req.signal, this.streamIdleTimeoutMs())) {
+      for await (const line of parseNDJSON(
+        body,
+        this.logger,
+        req.signal,
+        this.streamIdleTimeoutMs(),
+      )) {
         const root = asRecord(line);
         if (root === undefined) continue;
         const error = asString(root.error);

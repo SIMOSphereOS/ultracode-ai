@@ -7,33 +7,30 @@
  * - {@link resolveHome} — `~` expansion helper (cross-platform).
  */
 
-export { loadConfig, ConfigManager } from "./ConfigManager.js";
 export type { ConfigManagerOptions, ConfigScope } from "./ConfigManager.js";
-
-export {
-  resolveHome,
-  userConfigFile,
-  userEnvFile,
-  profileFile,
-  projectConfigCandidates,
-  atomicWriteFile,
-} from "./paths.js";
-
-export { parseDotEnv, envToOverlay } from "./env.js";
-
-export {
-  parseTomlSource,
-  tomlToOverlay,
-  configToToml,
-} from "./mapping.js";
+export { ConfigManager, loadConfig } from "./ConfigManager.js";
+export { envToOverlay, parseDotEnv } from "./env.js";
 export type { ConfigOverlay, WarnFn } from "./mapping.js";
 
 export {
-  configSchema,
-  validateConfig,
+  configToToml,
+  parseTomlSource,
+  tomlToOverlay,
+} from "./mapping.js";
+export {
+  atomicWriteFile,
+  profileFile,
+  projectConfigCandidates,
+  resolveHome,
+  userConfigFile,
+  userEnvFile,
+} from "./paths.js";
+export type { ProvidersRuntimeConfig, ResolvedUltraCodeConfig } from "./schema.js";
+export {
   checkConfig,
+  configSchema,
   KNOWN_THEMES,
+  validateConfig,
 } from "./schema.js";
-export type { ResolvedUltraCodeConfig, ProvidersRuntimeConfig } from "./schema.js";
 
-export { camelizeKey, snakeifyKey, CONFIG_SPEC } from "./spec.js";
+export { CONFIG_SPEC, camelizeKey, snakeifyKey } from "./spec.js";

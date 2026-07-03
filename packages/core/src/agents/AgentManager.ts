@@ -8,7 +8,6 @@
  * `tools.perTool.task.maxConcurrent`, default 3).
  */
 
-import { AgentError, NoopLogger } from "ultracode-shared";
 import type {
   AgentConfigEntry,
   AgentDefinition,
@@ -19,9 +18,10 @@ import type {
   ProviderId,
   UltraCodeConfig,
 } from "ultracode-shared";
+import { AgentError, NoopLogger } from "ultracode-shared";
 import type { IToolRunner } from "../execution/types.js";
-import { BaseAgent } from "./BaseAgent.js";
 import type { ContextCollector } from "./BaseAgent.js";
+import { BaseAgent } from "./BaseAgent.js";
 import { BUILT_IN_AGENTS, SYSTEM_PROMPTS } from "./builtins.js";
 
 /** Maximum subagent delegation depth (a delegate of a delegate is the limit). */
@@ -89,7 +89,10 @@ class Semaphore {
 }
 
 /** Merge an `AgentsConfig` override entry into a definition (immutably). */
-function mergeConfigEntry(base: AgentDefinition, entry: AgentConfigEntry | undefined): AgentDefinition {
+function mergeConfigEntry(
+  base: AgentDefinition,
+  entry: AgentConfigEntry | undefined,
+): AgentDefinition {
   if (!entry) return { ...base };
   const merged: AgentDefinition = { ...base };
   if (entry.activeModel !== undefined) merged.model = entry.activeModel;
@@ -283,10 +286,9 @@ export class AgentManager {
       throw new AgentError(`Invalid delegation depth ${String(depth)}`);
     }
     if (depth > MAX_DELEGATION_DEPTH) {
-      throw new AgentError(
-        `Subagent delegation depth limit (${MAX_DELEGATION_DEPTH}) exceeded`,
-        { details: { depth, agent: agentName } },
-      );
+      throw new AgentError(`Subagent delegation depth limit (${MAX_DELEGATION_DEPTH}) exceeded`, {
+        details: { depth, agent: agentName },
+      });
     }
     const agent = this.get(agentName);
     const release = await this.delegationSemaphore.acquire();

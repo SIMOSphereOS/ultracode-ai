@@ -10,18 +10,18 @@
 import process from "node:process";
 import { Command, CommanderError } from "commander";
 import { UltraCodeError } from "ultracode-shared";
-import type { CliContext } from "./context.js";
-import { createDefaultContext } from "./context.js";
+import { registerAuthoringAgentCommands } from "./commands/authoring-agents.js";
+import { registerBudgetCommands } from "./commands/budget.js";
 import { registerConfigCommand } from "./commands/config.js";
 import { registerDoctorCommand } from "./commands/doctor.js";
+import { registerLearnCommands } from "./commands/learn.js";
 import { registerListCommands } from "./commands/list.js";
 import { registerRunCommand } from "./commands/run.js";
 import { runSetup } from "./commands/setup.js";
-import { registerVersioningCommands } from "./commands/versioning.js";
-import { registerBudgetCommands } from "./commands/budget.js";
 import { registerSkillsCommands } from "./commands/skills.js";
-import { registerAuthoringAgentCommands } from "./commands/authoring-agents.js";
-import { registerLearnCommands } from "./commands/learn.js";
+import { registerVersioningCommands } from "./commands/versioning.js";
+import type { CliContext } from "./context.js";
+import { createDefaultContext } from "./context.js";
 import { getCliVersion } from "./utils/cli-version.js";
 import { paint } from "./utils/text.js";
 
@@ -75,7 +75,7 @@ export function createProgram(ctx: CliContext): Command {
     }
     if (ctx.stdout.isTTY !== true || ctx.stdin.isTTY !== true) {
       ctx.stdout.write(
-        "No interactive terminal detected. Use `ultracode run -p \"<prompt>\"` for one-shot runs.\n\n",
+        'No interactive terminal detected. Use `ultracode run -p "<prompt>"` for one-shot runs.\n\n',
       );
       ctx.stdout.write(program.helpInformation());
       process.exitCode = 1;

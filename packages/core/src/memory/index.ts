@@ -12,28 +12,27 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-
-import { serializeError } from "ultracode-shared";
 import type { ISessionStore, Logger, UltraCodeConfig } from "ultracode-shared";
+import { serializeError } from "ultracode-shared";
 
 import { InMemorySessionStore } from "./InMemorySessionStore.js";
 import { JsonSessionStore } from "./JsonSessionStore.js";
-import { SqliteSessionStore } from "./SqliteSessionStore.js";
-import type { SqliteLoader } from "./SqliteSessionStore.js";
 import { resolveHome } from "./paths.js";
+import type { SqliteLoader } from "./SqliteSessionStore.js";
+import { SqliteSessionStore } from "./SqliteSessionStore.js";
 
 export { InMemorySessionStore } from "./InMemorySessionStore.js";
 export { JsonSessionStore } from "./JsonSessionStore.js";
-export { SqliteSessionStore, defaultSqliteLoader } from "./SqliteSessionStore.js";
+export type { MetadataCacheOptions } from "./MetadataCache.js";
+export { MetadataCache } from "./MetadataCache.js";
+export { resolveHome } from "./paths.js";
 export type {
+  SqliteDatabaseLike,
   SqliteLoader,
   SqliteModuleLike,
-  SqliteDatabaseLike,
   SqliteStatementLike,
 } from "./SqliteSessionStore.js";
-export { MetadataCache } from "./MetadataCache.js";
-export type { MetadataCacheOptions } from "./MetadataCache.js";
-export { resolveHome } from "./paths.js";
+export { defaultSqliteLoader, SqliteSessionStore } from "./SqliteSessionStore.js";
 
 /** File name of the SQLite database inside the session directory. */
 export const SESSION_DB_FILENAME = "sessions.db";

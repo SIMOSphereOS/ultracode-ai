@@ -1,11 +1,11 @@
-import os from "node:os";
-import path from "node:path";
 import { EventEmitter } from "node:events";
 import { promises as fs } from "node:fs";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import os from "node:os";
+import path from "node:path";
 import { ConfigError, DEFAULT_CONFIG } from "ultracode-shared";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { CliContext, UltraCodeFacade } from "../context.js";
-import { createTerminalIO, runSetup, writeApiKey, type SetupIO } from "./setup.js";
+import { createTerminalIO, runSetup, type SetupIO, writeApiKey } from "./setup.js";
 
 class FakeStdin extends EventEmitter {
   isTTY = true;
@@ -69,7 +69,9 @@ function makeCtx(facade: UltraCodeFacade, homedir: string) {
 }
 
 /** Scripted SetupIO that replays canned answers and records output. */
-function scriptedIO(answers: string[]): SetupIO & { output: () => string; maskedQuestions: string[] } {
+function scriptedIO(
+  answers: string[],
+): SetupIO & { output: () => string; maskedQuestions: string[] } {
   let out = "";
   const queue = [...answers];
   const maskedQuestions: string[] = [];
@@ -89,7 +91,8 @@ function scriptedIO(answers: string[]): SetupIO & { output: () => string; masked
 
 let tmp: string | undefined;
 afterEach(async () => {
-  if (tmp !== undefined) await fs.rm(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+  if (tmp !== undefined)
+    await fs.rm(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   tmp = undefined;
 });
 

@@ -13,12 +13,12 @@
 
 import process from "node:process";
 import type { Command } from "commander";
+import type { BudgetDecision, CostEstimate } from "ultracode-core";
 import { ValidationError } from "ultracode-shared";
 import type { CliContext } from "../context.js";
-import { budgetOf, learningOf, withExtFacade } from "./ext-helpers.js";
-import type { ExtendedFacade } from "./ext-helpers.js";
 import { formatLearnReport, formatSourceList } from "./ext-format.js";
-import type { BudgetDecision, CostEstimate } from "ultracode-core";
+import type { ExtendedFacade } from "./ext-helpers.js";
+import { budgetOf, learningOf, withExtFacade } from "./ext-helpers.js";
 
 interface JsonOption {
   json?: boolean;
@@ -59,7 +59,9 @@ export function createConfirmIO(ctx: CliContext): ConfirmIO {
         const onData = (chunk: Buffer | string): void => {
           ctx.stdin.removeListener("data", onData);
           ctx.stdin.pause?.();
-          const answer = (typeof chunk === "string" ? chunk : chunk.toString("utf8")).trim().toLowerCase();
+          const answer = (typeof chunk === "string" ? chunk : chunk.toString("utf8"))
+            .trim()
+            .toLowerCase();
           resolve(AFFIRMATIVE.has(answer));
         };
         ctx.stdin.resume?.();
@@ -70,10 +72,7 @@ export function createConfirmIO(ctx: CliContext): ConfirmIO {
 
 /** Estimate → decision wrapper; falls back to a permissive decision if the
  * facade does not expose `check` (so the report still renders). */
-async function decideFor(
-  facade: ExtendedFacade,
-  estimate: CostEstimate,
-): Promise<BudgetDecision> {
+async function decideFor(facade: ExtendedFacade, estimate: CostEstimate): Promise<BudgetDecision> {
   const budget = budgetOf(facade);
   if (typeof budget.check === "function") {
     return budget.check(estimate, "learning");
@@ -128,7 +127,11 @@ export function registerLearnCommands(
           ...(opts.scope !== undefined ? { scope: opts.scope } : {}),
           ...(opts.locale !== undefined ? { localeDefault: opts.locale } : {}),
         });
-        ctx.stdout.write(opts.json ? `${JSON.stringify(source)}\n` : `✓ added source ${source.id} (${source.url})\n`);
+        ctx.stdout.write(
+          opts.json
+            ? `${JSON.stringify(source)}\n`
+            : `✓ added source ${source.id} (${source.url})\n`,
+        );
       }),
     );
 
@@ -152,7 +155,9 @@ export function registerLearnCommands(
   /* ------------------------------ run ------------------------------- */
   learn
     .command("run")
-    .description("plan and (after approval) run learning for a source — shows the cost report first")
+    .description(
+      "plan and (after approval) run learning for a source — shows the cost report first",
+    )
     .argument("[sourceId]", "source id; required unless exactly one source exists")
     .option("--yes", "approve the run without an interactive prompt")
     .option("--json", "output as JSON")
@@ -222,11 +227,15 @@ export function registerLearnCommands(
 }
 
 /** Resolve the source id, defaulting to the only source when omitted. */
-async function resolveSourceId(facade: ExtendedFacade, sourceId: string | undefined): Promise<string> {
+async function resolveSourceId(
+  facade: ExtendedFacade,
+  sourceId: string | undefined,
+): Promise<string> {
   if (sourceId !== undefined && sourceId.trim() !== "") return sourceId;
   const list = await learningOf(facade).sources.list();
   if (list.length === 1 && list[0] !== undefined) return list[0].id;
-  if (list.length === 0) throw new ValidationError("No learning sources registered. Add one with `learn sources add`.");
+  if (list.length === 0)
+    throw new ValidationError("No learning sources registered. Add one with `learn sources add`.");
   throw new ValidationError(
     `Multiple sources registered; specify one: ${list.map((s) => s.id).join(", ")}`,
   );

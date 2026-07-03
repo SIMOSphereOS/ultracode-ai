@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
 import { ToolError } from "ultracode-shared";
-import { compileGlob, expandBraces, matchGlob, MAX_GLOB_SEGMENTS } from "./globMatch.js";
+import { describe, expect, it } from "vitest";
+import { compileGlob, expandBraces, MAX_GLOB_SEGMENTS, matchGlob } from "./globMatch.js";
 
 describe("expandBraces", () => {
   it("returns the pattern unchanged without braces", () => {

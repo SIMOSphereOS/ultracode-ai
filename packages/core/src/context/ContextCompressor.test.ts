@@ -130,7 +130,9 @@ describe("ContextCompressor.compress", () => {
 
   it("truncates the top section at a word boundary when nothing fits whole", () => {
     const vocabulary = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot"];
-    const content = Array.from({ length: 500 }, (_, i) => vocabulary[i % vocabulary.length]).join(" ");
+    const content = Array.from({ length: 500 }, (_, i) => vocabulary[i % vocabulary.length]).join(
+      " ",
+    );
     const out = compressor.compress([section("only", content, 10, "Only")], {
       prompt: "",
       maxTokens: 30,
@@ -176,7 +178,8 @@ describe("ContextCompressor.compress", () => {
       maxTokens: 25,
     });
     // No lone surrogates: every high surrogate is followed by a low one and vice versa.
-    const loneSurrogate = /(?:[\uD800-\uDBFF](?![\uDC00-\uDFFF]))|(?:(?<![\uD800-\uDBFF])[\uDC00-\uDFFF])/;
+    const loneSurrogate =
+      /(?:[\uD800-\uDBFF](?![\uDC00-\uDFFF]))|(?:(?<![\uD800-\uDBFF])[\uDC00-\uDFFF])/;
     expect(loneSurrogate.test(out)).toBe(false);
   });
 

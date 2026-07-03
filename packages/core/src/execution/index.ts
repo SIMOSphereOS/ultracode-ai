@@ -7,25 +7,25 @@
  * factory mandated by the monorepo factory contract.
  */
 
-export { ExecutionEngine, DEFAULT_MAX_TURNS, isAbortError } from "./ExecutionEngine.js";
+export type { AgentManagerOptions, DelegateOptions } from "../agents/AgentManager.js";
+export {
+  AgentManager,
+  createAgentManager,
+  DEFAULT_MAX_CONCURRENT_DELEGATIONS,
+  MAX_DELEGATION_DEPTH,
+} from "../agents/AgentManager.js";
 export type {
   ExecutionEngineOptions,
   ExecutionRunInput,
   ExecutionRunResult,
   ITokenOptimizer,
 } from "./ExecutionEngine.js";
-export { QueryPipeline } from "./QueryPipeline.js";
+export { DEFAULT_MAX_TURNS, ExecutionEngine, isAbortError } from "./ExecutionEngine.js";
 export type {
   ParsedQuery,
   QueryExecutor,
   QueryPipelineOptions,
   QueryPipelineResult,
 } from "./QueryPipeline.js";
+export { QueryPipeline } from "./QueryPipeline.js";
 export type { IToolRunner } from "./types.js";
-export {
-  createAgentManager,
-  AgentManager,
-  MAX_DELEGATION_DEPTH,
-  DEFAULT_MAX_CONCURRENT_DELEGATIONS,
-} from "../agents/AgentManager.js";
-export type { AgentManagerOptions, DelegateOptions } from "../agents/AgentManager.js";

@@ -1,10 +1,10 @@
-import { describe, expect, it } from "vitest";
 import type {
   ChangeAnalysis,
   QualityReport,
   ReleasePlan,
   VersionSuggestion,
 } from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import {
   formatChangeAnalysis,
   formatQualityReport,
@@ -27,9 +27,7 @@ describe("formatChangeAnalysis", () => {
         { path: "src/a.ts", status: "modified", additions: 10, deletions: 2 },
         { path: "src/b.ts", status: "added", additions: 30, deletions: 0 },
       ],
-      commits: [
-        { hash: "abc", type: "feat", scope: null, subject: "add x", breaking: false },
-      ],
+      commits: [{ hash: "abc", type: "feat", scope: null, subject: "add x", breaking: false }],
       breakingChanges: [
         { source: "commit", description: "drop node 18", location: "package.json" },
       ],

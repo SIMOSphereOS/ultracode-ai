@@ -12,15 +12,6 @@
  *   attempts); persistent failures are reported as a non-`ok` {@link DocPage}.
  */
 
-import { extractText } from "./html.js";
-import { parseRobots, urlAllowed } from "./robots.js";
-import type { RobotsTxt } from "./robots.js";
-import { extractTocHrefs, parseSitemap } from "./sitemap.js";
-import { normalizeAndDedup, normalizeUrl, sameHost } from "./url.js";
-import { sha256 } from "./extract.js";
-import { LearnError } from "./errors.js";
-import { assertFetchAllowed } from "./urlGuard.js";
-import type { DnsLookupAll } from "./urlGuard.js";
 import {
   BACKOFF_FACTOR,
   DEFAULT_BACKOFF_BASE_MS,
@@ -32,6 +23,12 @@ import {
   DEFAULT_MAX_SHARDS,
   DEFAULT_USER_AGENT,
 } from "./defaults.js";
+import { LearnError } from "./errors.js";
+import { sha256 } from "./extract.js";
+import { extractText } from "./html.js";
+import type { RobotsTxt } from "./robots.js";
+import { parseRobots, urlAllowed } from "./robots.js";
+import { extractTocHrefs, parseSitemap } from "./sitemap.js";
 import type {
   DocIngestionProvider,
   DocPage,
@@ -41,6 +38,9 @@ import type {
   LearnSource,
   PageValidators,
 } from "./types.js";
+import { normalizeAndDedup, normalizeUrl, sameHost } from "./url.js";
+import type { DnsLookupAll } from "./urlGuard.js";
+import { assertFetchAllowed } from "./urlGuard.js";
 
 /** Options for {@link NativeCrawlerProvider}. */
 export interface NativeCrawlerOptions {
@@ -220,7 +220,11 @@ export class NativeCrawlerProvider implements DocIngestionProvider {
     if (xml === null) return [];
     const parsed = parseSitemap(xml);
     if (parsed.kind === "urlset") {
-      return normalizeAndDedup(parsed.urls.map((u) => u.loc), base, locale);
+      return normalizeAndDedup(
+        parsed.urls.map((u) => u.loc),
+        base,
+        locale,
+      );
     }
     // Index: fetch up to `maxShards` child sitemaps. Each shard <loc> is itself
     // a fetch target and is SSRF-guarded inside getText (sourceUrl = base).
@@ -278,7 +282,11 @@ export class NativeCrawlerProvider implements DocIngestionProvider {
    * GET a URL's body text, returning `null` on any non-2xx / guard block /
    * size-cap breach / error. `sourceUrl` scopes the SSRF guard.
    */
-  private async getText(url: string, sourceUrl: string, ctx: IngestionContext): Promise<string | null> {
+  private async getText(
+    url: string,
+    sourceUrl: string,
+    ctx: IngestionContext,
+  ): Promise<string | null> {
     try {
       const res = await this.fetchWithRetry(
         url,
@@ -391,7 +399,7 @@ export class NativeCrawlerProvider implements DocIngestionProvider {
 
   /** Exponential backoff sleep: base × 2^attempt. */
   private async backoff(attempt: number, signal?: AbortSignal): Promise<void> {
-    await this.sleep(this.backoffBaseMs * Math.pow(BACKOFF_FACTOR, attempt), signal);
+    await this.sleep(this.backoffBaseMs * BACKOFF_FACTOR ** attempt, signal);
   }
 }
 
@@ -404,10 +412,13 @@ function defaultSleep(ms: number, signal?: AbortSignal): Promise<void> {
       reject(abortError(signal));
       return;
     }
-    const t = setTimeout(() => {
-      signal?.removeEventListener("abort", onAbort);
-      resolve();
-    }, Math.max(0, ms));
+    const t = setTimeout(
+      () => {
+        signal?.removeEventListener("abort", onAbort);
+        resolve();
+      },
+      Math.max(0, ms),
+    );
     const onAbort = (): void => {
       clearTimeout(t);
       reject(abortError(signal as AbortSignal));

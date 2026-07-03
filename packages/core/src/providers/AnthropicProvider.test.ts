@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { ProviderError } from "ultracode-shared";
 import type { ChatMessage } from "ultracode-shared";
+import { ProviderError } from "ultracode-shared";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ANTHROPIC_BASE_URL,
   ANTHROPIC_VERSION,
@@ -83,7 +83,12 @@ describe("mapAnthropicStopReason / tools", () => {
     for (const t of ["overloaded_error", "api_error", "rate_limit_error"]) {
       expect(isRetryableAnthropicErrorType(t)).toBe(true);
     }
-    for (const t of ["invalid_request_error", "authentication_error", "permission_error", undefined]) {
+    for (const t of [
+      "invalid_request_error",
+      "authentication_error",
+      "permission_error",
+      undefined,
+    ]) {
       expect(isRetryableAnthropicErrorType(t)).toBe(false);
     }
   });
@@ -131,7 +136,10 @@ describe("AnthropicProvider.complete", () => {
       usage: { inputTokens: 11, outputTokens: 22 },
       finishReason: "tool_calls",
     });
-    const [url, init] = mock.mock.calls[0] as [string, { headers: Record<string, string>; body: string }];
+    const [url, init] = mock.mock.calls[0] as [
+      string,
+      { headers: Record<string, string>; body: string },
+    ];
     expect(url).toBe(`${ANTHROPIC_BASE_URL}/messages`);
     expect(init.headers["x-api-key"]).toBe("test-key");
     expect(init.headers["anthropic-version"]).toBe(ANTHROPIC_VERSION);
@@ -143,7 +151,11 @@ describe("AnthropicProvider.complete", () => {
 
   it("defaults max_tokens when the request omits it", async () => {
     const mock = stubFetchSequence(
-      jsonResponse({ content: [], stop_reason: "end_turn", usage: { input_tokens: 0, output_tokens: 0 } }),
+      jsonResponse({
+        content: [],
+        stop_reason: "end_turn",
+        usage: { input_tokens: 0, output_tokens: 0 },
+      }),
     );
     const provider = new AnthropicProvider(testOptions());
     await provider.complete({ messages: [{ role: "user", content: "x" }], model: "m" });
@@ -183,8 +195,14 @@ describe("AnthropicProvider.stream", () => {
       streamResponse([
         anthropicEvent("message_start", { message: { usage: { input_tokens: 7 } } }),
         anthropicEvent("content_block_start", { index: 0, content_block: { type: "text" } }),
-        anthropicEvent("content_block_delta", { index: 0, delta: { type: "text_delta", text: "Gr" } }),
-        anthropicEvent("content_block_delta", { index: 0, delta: { type: "text_delta", text: "üße 🎉" } }),
+        anthropicEvent("content_block_delta", {
+          index: 0,
+          delta: { type: "text_delta", text: "Gr" },
+        }),
+        anthropicEvent("content_block_delta", {
+          index: 0,
+          delta: { type: "text_delta", text: "üße 🎉" },
+        }),
         anthropicEvent("content_block_stop", { index: 0 }),
         anthropicEvent("content_block_start", {
           index: 1,
@@ -199,7 +217,10 @@ describe("AnthropicProvider.stream", () => {
           delta: { type: "input_json_delta", partial_json: 'th":"a.txt"}' },
         }),
         anthropicEvent("content_block_stop", { index: 1 }),
-        anthropicEvent("message_delta", { usage: { output_tokens: 13 }, delta: { stop_reason: "tool_use" } }),
+        anthropicEvent("message_delta", {
+          usage: { output_tokens: 13 },
+          delta: { stop_reason: "tool_use" },
+        }),
         anthropicEvent("message_stop", {}),
       ]),
     );
@@ -217,9 +238,15 @@ describe("AnthropicProvider.stream", () => {
     const { logger, logs } = captureLogger();
     stubFetchSequence(
       streamResponse([
-        anthropicEvent("content_block_delta", { index: 0, delta: { type: "text_delta", text: "a" } }),
+        anthropicEvent("content_block_delta", {
+          index: 0,
+          delta: { type: "text_delta", text: "a" },
+        }),
         "event: content_block_delta\ndata: {broken-json\n\n",
-        anthropicEvent("content_block_delta", { index: 0, delta: { type: "text_delta", text: "b" } }),
+        anthropicEvent("content_block_delta", {
+          index: 0,
+          delta: { type: "text_delta", text: "b" },
+        }),
       ]),
     );
     const provider = new AnthropicProvider(testOptions(), logger);
@@ -230,10 +257,14 @@ describe("AnthropicProvider.stream", () => {
 
   it("surfaces an overloaded_error mid-stream event as a RETRYABLE ProviderError", async () => {
     stubFetchSequence(
-      streamResponse([anthropicEvent("error", { error: { type: "overloaded_error", message: "busy" } })]),
+      streamResponse([
+        anthropicEvent("error", { error: { type: "overloaded_error", message: "busy" } }),
+      ]),
     );
     const provider = new AnthropicProvider(testOptions());
-    const err = await collect(provider.stream({ messages: [], model: "m" })).catch((e: unknown) => e);
+    const err = await collect(provider.stream({ messages: [], model: "m" })).catch(
+      (e: unknown) => e,
+    );
     expect(err).toBeInstanceOf(ProviderError);
     expect((err as ProviderError).message).toMatch(/busy/);
     // overloaded_error is the streamed form of a 529 → retryable so the run can
@@ -248,7 +279,9 @@ describe("AnthropicProvider.stream", () => {
       ]),
     );
     const provider = new AnthropicProvider(testOptions());
-    const err = await collect(provider.stream({ messages: [], model: "m" })).catch((e: unknown) => e);
+    const err = await collect(provider.stream({ messages: [], model: "m" })).catch(
+      (e: unknown) => e,
+    );
     expect(err).toBeInstanceOf(ProviderError);
     expect((err as ProviderError).retryable).toBe(false);
   });
@@ -259,7 +292,10 @@ describe("AnthropicProvider.stream", () => {
       streamResponse([
         anthropicEvent("message_start", { message: { usage: { input_tokens: 5 } } }),
         anthropicEvent("content_block_start", { index: 0, content_block: { type: "text" } }),
-        anthropicEvent("content_block_delta", { index: 0, delta: { type: "text_delta", text: "partial" } }),
+        anthropicEvent("content_block_delta", {
+          index: 0,
+          delta: { type: "text_delta", text: "partial" },
+        }),
       ]),
     );
     const provider = new AnthropicProvider(testOptions());
@@ -282,7 +318,10 @@ describe("AnthropicProvider.stream", () => {
         if (pulls === 1) {
           c.enqueue(
             new TextEncoder().encode(
-              anthropicEvent("content_block_delta", { index: 0, delta: { type: "text_delta", text: "x" } }),
+              anthropicEvent("content_block_delta", {
+                index: 0,
+                delta: { type: "text_delta", text: "x" },
+              }),
             ),
           );
         }

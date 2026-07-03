@@ -109,7 +109,7 @@ describe("frontmatter corruption tolerance", () => {
   it("parses inline flow lists", () => {
     const skill = makeSkill();
     const doc = serializeFrontmatter(skill).replace(
-      /triggers:\n  - DORA\n  - operational resilience/,
+      /triggers:\n {2}- DORA\n {2}- operational resilience/,
       "triggers: [DORA, operational resilience]",
     );
     expect(parseFrontmatter(doc)?.triggers).toEqual(["DORA", "operational resilience"]);

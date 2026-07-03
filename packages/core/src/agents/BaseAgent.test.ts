@@ -1,17 +1,17 @@
-import { describe, expect, it } from "vitest";
-import { AgentError, NoopLogger, ProviderError } from "ultracode-shared";
 import type {
   AgentDefinition,
+  CompletionChunk,
   CompletionRequest,
   CompletionResult,
-  CompletionChunk,
   ILLMProvider,
   Logger,
   LogMeta,
+  ToolCallRequest,
   ToolDefinition,
   ToolResult,
-  ToolCallRequest,
 } from "ultracode-shared";
+import { AgentError, NoopLogger, ProviderError } from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import type { IToolRunner } from "../execution/types.js";
 import { BaseAgent } from "./BaseAgent.js";
 import { BUILT_IN_AGENTS } from "./builtins.js";
@@ -24,7 +24,16 @@ const def = (name: string): ToolDefinition => ({
   permission: "always",
 });
 
-const ALL_TOOLS = ["read", "write_file", "edit", "delete_file", "bash", "grep", "glob", "git_status"].map(def);
+const ALL_TOOLS = [
+  "read",
+  "write_file",
+  "edit",
+  "delete_file",
+  "bash",
+  "grep",
+  "glob",
+  "git_status",
+].map(def);
 
 class RecordingRunner implements IToolRunner {
   readonly executed: string[] = [];

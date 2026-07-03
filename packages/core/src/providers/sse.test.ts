@@ -147,7 +147,9 @@ describe("parseSSEEvents", () => {
   });
 
   it("handles \\r\\n separated SSE", async () => {
-    const events = await collect(parseSSEEvents(streamFromChunks(["data: a\r\n\r\ndata: b\r\n\r\n"])));
+    const events = await collect(
+      parseSSEEvents(streamFromChunks(["data: a\r\n\r\ndata: b\r\n\r\n"])),
+    );
     expect(events).toEqual([{ data: "a" }, { data: "b" }]);
   });
 });
@@ -156,7 +158,10 @@ describe("parseSSEJson", () => {
   it("stops at the [DONE] sentinel", async () => {
     const { logger } = captureLogger();
     const events = await collect(
-      parseSSEJson(streamFromChunks(['data: {"x":1}\n\ndata: [DONE]\n\ndata: {"x":2}\n\n']), logger),
+      parseSSEJson(
+        streamFromChunks(['data: {"x":1}\n\ndata: [DONE]\n\ndata: {"x":2}\n\n']),
+        logger,
+      ),
     );
     expect(events).toEqual([{ json: { x: 1 } }]);
   });
@@ -164,7 +169,10 @@ describe("parseSSEJson", () => {
   it("logs and skips broken JSON lines without aborting the stream", async () => {
     const { logger, logs } = captureLogger();
     const events = await collect(
-      parseSSEJson(streamFromChunks(['data: {"ok":1}\n\ndata: {broken\n\ndata: {"ok":2}\n\n']), logger),
+      parseSSEJson(
+        streamFromChunks(['data: {"ok":1}\n\ndata: {broken\n\ndata: {"ok":2}\n\n']),
+        logger,
+      ),
     );
     expect(events.map((e) => e.json)).toEqual([{ ok: 1 }, { ok: 2 }]);
     expect(logs.some((l) => l.level === "warn" && l.msg.includes("malformed JSON"))).toBe(true);

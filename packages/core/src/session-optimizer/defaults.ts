@@ -73,8 +73,7 @@ export const DEDUP_MIN_CONTENT_CHARS = 80;
  * Template for the terse back-reference that replaces a collapsed duplicate
  * message. `{role}` is substituted with the message's role. Internal.
  */
-export const DEDUP_BACKREF_TEMPLATE =
-  "[duplicate of an earlier {role} message — content elided]";
+export const DEDUP_BACKREF_TEMPLATE = "[duplicate of an earlier {role} message — content elided]";
 
 /* ----------------------------------------------------------------------------
  * Summarisation (internal)
@@ -154,8 +153,7 @@ export const DECISION_RE =
   /(?:^|[\s.;])((?:decided|decide|chosen|choose|chose|use|using|adopt(?:ed)?|pick(?:ed)?|go with|selected|prefer(?:red)?)\b[^.!?\n]{0,180})/gi;
 
 /** Lines that look like an open task ("TODO: …", "FIXME …", "next step …"). Internal. */
-export const TODO_RE =
-  /\b(?:TODO|FIXME|XXX|HACK|next step|open task|action item)\b[^.\n]{0,180}/gi;
+export const TODO_RE = /\b(?:TODO|FIXME|XXX|HACK|next step|open task|action item)\b[^.\n]{0,180}/gi;
 
 /** Minimum token length for a candidate to be considered a code symbol. Internal. */
 export const CODE_SYMBOL_MIN_CHARS = 3;

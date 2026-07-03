@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
-import { ConsoleLogger, NoopLogger } from "./logger.js";
+import { describe, expect, it, vi } from "vitest";
 import type { LogSink } from "./logger.js";
+import { ConsoleLogger, NoopLogger } from "./logger.js";
 
 function makeSink(): LogSink & {
   debug: ReturnType<typeof vi.fn>;

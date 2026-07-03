@@ -5,8 +5,8 @@
  * non-interactive commands never pay the cost of loading Ink/React.
  */
 
-import React from "react";
 import { render } from "ink";
+import React from "react";
 import type { CliContext } from "../context.js";
 import { safeDispose } from "../context.js";
 import { App } from "./App.js";

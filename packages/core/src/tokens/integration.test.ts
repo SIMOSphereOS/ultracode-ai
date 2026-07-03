@@ -3,21 +3,26 @@
  * before the provider call and publishes a `tokens.optimized` event.
  */
 
-import { describe, expect, it, vi } from "vitest";
 import type {
   CompletionRequest,
   CompletionResult,
   ILLMProvider,
   ToolDefinition,
 } from "ultracode-shared";
+import { describe, expect, it, vi } from "vitest";
 import { ExecutionEngine } from "../execution/ExecutionEngine.js";
-import type { IToolRunner, ITokenOptimizer } from "../execution/index.js";
+import type { ITokenOptimizer, IToolRunner } from "../execution/index.js";
 import { createDefaultOptimizer } from "./TokenOptimizer.js";
 
 function stubProvider(capture: (req: CompletionRequest) => void): ILLMProvider {
   const complete = vi.fn(async (req: CompletionRequest): Promise<CompletionResult> => {
     capture(req);
-    return { text: "done", toolCalls: [], usage: { inputTokens: 1, outputTokens: 1 }, finishReason: "stop" };
+    return {
+      text: "done",
+      toolCalls: [],
+      usage: { inputTokens: 1, outputTokens: 1 },
+      finishReason: "stop",
+    };
   });
   return {
     name: "stub",
@@ -120,7 +125,12 @@ describe("ExecutionEngine token optimization integration", () => {
         throw new Error("boom");
       }),
     };
-    const engine = new ExecutionEngine({ provider, tools: noTools, model: "m", optimizer: failing });
+    const engine = new ExecutionEngine({
+      provider,
+      tools: noTools,
+      model: "m",
+      optimizer: failing,
+    });
     const result = await engine.run({ prompt: "go", systemPrompt: "keep" });
     expect(result.text).toBe("done");
     expect(seen?.messages.find((m) => m.role === "system")?.content).toBe("keep");

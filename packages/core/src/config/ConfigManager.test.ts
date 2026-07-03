@@ -1,9 +1,9 @@
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ConfigError } from "ultracode-shared";
 import type { Logger } from "ultracode-shared";
+import { ConfigError } from "ultracode-shared";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ConfigManager, loadConfig } from "./ConfigManager.js";
 import { parseTomlSource, tomlToOverlay } from "./mapping.js";
 
@@ -149,7 +149,7 @@ describe("ConfigManager", () => {
       const config = await manager().load();
       expect(config.core.maxTokens).toBe(9);
       expect(({} as Record<string, unknown>)["polluted"]).toBeUndefined();
-      expect(Object.prototype.hasOwnProperty.call(config, "__proto__")).toBe(false);
+      expect(Object.hasOwn(config, "__proto__")).toBe(false);
     });
 
     it("handles a huge (>= 1 MB) config file", async () => {

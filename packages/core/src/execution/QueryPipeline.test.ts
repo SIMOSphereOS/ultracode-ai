@@ -1,8 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
-import { AgentError, ProviderError, ValidationError } from "ultracode-shared";
 import type { AgentRunResult } from "ultracode-shared";
-import { QueryPipeline } from "./QueryPipeline.js";
+import { AgentError, ProviderError, ValidationError } from "ultracode-shared";
+import { describe, expect, it, vi } from "vitest";
 import type { ParsedQuery } from "./QueryPipeline.js";
+import { QueryPipeline } from "./QueryPipeline.js";
 
 const runResult = (text: string): AgentRunResult => ({
   text,
@@ -12,9 +12,7 @@ const runResult = (text: string): AgentRunResult => ({
 });
 
 const pipeline = (execute = vi.fn(async () => runResult("ok")), maxPromptLength?: number) =>
-  new QueryPipeline(
-    maxPromptLength === undefined ? { execute } : { execute, maxPromptLength },
-  );
+  new QueryPipeline(maxPromptLength === undefined ? { execute } : { execute, maxPromptLength });
 
 describe("QueryPipeline.parse", () => {
   it("trims and normalises CRLF/CR line endings", () => {

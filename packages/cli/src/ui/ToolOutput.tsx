@@ -2,8 +2,8 @@
  * Compact display of recent `tool.executed` events from the facade event bus.
  */
 
-import React from "react";
 import { Box, Text } from "ink";
+import type React from "react";
 import type { Theme } from "../themes/index.js";
 
 /** A condensed `tool.executed` event. */
@@ -28,7 +28,8 @@ export function ToolOutput({ events, theme, max = 5 }: ToolOutputProps): React.J
     <Box flexDirection="column">
       {shown.map((e, i) => (
         <Text key={i} color={theme.tool}>
-          {e.ok ? "✓" : "✗"} {e.toolName} <Text color={theme.dim}>({Math.round(e.durationMs)}ms)</Text>
+          {e.ok ? "✓" : "✗"} {e.toolName}{" "}
+          <Text color={theme.dim}>({Math.round(e.durationMs)}ms)</Text>
         </Text>
       ))}
     </Box>

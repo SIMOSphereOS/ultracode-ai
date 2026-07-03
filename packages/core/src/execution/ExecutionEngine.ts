@@ -10,15 +10,6 @@
  * stops or the configured turn budget is exhausted.
  */
 
-import {
-  AgentError,
-  isPlainObject,
-  serializeError,
-  truncate,
-  generateId,
-  NoopLogger,
-  MAX_TOOL_OUTPUT_CHARS,
-} from "ultracode-shared";
 import type {
   ChatMessage,
   CompletionChunk,
@@ -33,8 +24,17 @@ import type {
   ToolContext,
   ToolResult,
 } from "ultracode-shared";
-import type { IToolRunner } from "./types.js";
+import {
+  AgentError,
+  generateId,
+  isPlainObject,
+  MAX_TOOL_OUTPUT_CHARS,
+  NoopLogger,
+  serializeError,
+  truncate,
+} from "ultracode-shared";
 import type { OptimizeResult, PromptPayload } from "../tokens/index.js";
+import type { IToolRunner } from "./types.js";
 
 /** Default maximum number of model turns per run. */
 export const DEFAULT_MAX_TURNS = 16;

@@ -31,13 +31,12 @@
  * ```
  */
 
+import fs from "node:fs/promises";
+import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 import type { IEventBus, Logger } from "ultracode-shared";
-
-import { HeuristicTokenCounter } from "../tokens/index.js";
-import type { TokenCounter } from "../tokens/index.js";
 import { atomicWriteFile } from "../config/paths.js";
-import { BudgetError } from "./errors.js";
-import { priceFor } from "./pricing.js";
+import type { TokenCounter } from "../tokens/index.js";
+import { HeuristicTokenCounter } from "../tokens/index.js";
 import {
   ALERT_BANDS,
   BATCH_FACTOR,
@@ -64,14 +63,16 @@ import {
   WIZARD_OPERATIONS_MONTHLY_USD,
   WIZARD_OPERATIONS_PER_RUN_USD,
 } from "./defaults.js";
+import { BudgetError } from "./errors.js";
+import type { BudgetAlertEvent } from "./events.js";
 import {
   BUDGET_CHECKED_EVENT,
   BUDGET_EXCEEDED_EVENT,
   BUDGET_SPENT_EVENT,
   emitBudgetEvent,
 } from "./events.js";
-import type { BudgetAlertEvent } from "./events.js";
 import { budgetDir, ledgerFile, planFile, resolveHome } from "./paths.js";
+import { priceFor } from "./pricing.js";
 import type {
   BudgetCategory,
   BudgetDecision,
@@ -88,9 +89,6 @@ import type {
   PriceTable,
   RoutingShare,
 } from "./types.js";
-
-import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
-import fs from "node:fs/promises";
 
 /** Construction options for {@link createBudgetPlanner}. */
 export interface BudgetPlannerOptions {
@@ -211,7 +209,7 @@ export class BudgetPlanner implements IBudgetGate {
     const routing = this.normaliseRouting(input.routing, assumptions);
 
     // Derive the per-item input token count from `texts` when provided.
-    let perItemIn = nonNeg(input.perItemTokensIn);
+    const perItemIn = nonNeg(input.perItemTokensIn);
     const texts = Array.isArray(input.texts) ? input.texts : undefined;
     let textTotalIn = 0;
     if (texts) {
@@ -233,7 +231,9 @@ export class BudgetPlanner implements IBudgetGate {
     assumptions.push(`perItemTokensOut=${perItemOut} × batch=${batch}`);
 
     const safety =
-      input.safetyFactor !== undefined && Number.isFinite(input.safetyFactor) && input.safetyFactor >= 0
+      input.safetyFactor !== undefined &&
+      Number.isFinite(input.safetyFactor) &&
+      input.safetyFactor >= 0
         ? input.safetyFactor
         : DEFAULT_SAFETY_FACTOR;
     assumptions.push(
@@ -354,7 +354,11 @@ export class BudgetPlanner implements IBudgetGate {
     const spent = this.spendCache.get(category) ?? { day: 0, month: 0, total: 0 };
 
     // Hard caps: a spend that would push any period over its limit is refused.
-    const breaches: Array<{ scope: "run" | "daily" | "monthly" | "total"; cap: number; after: number }> = [];
+    const breaches: Array<{
+      scope: "run" | "daily" | "monthly" | "total";
+      cap: number;
+      after: number;
+    }> = [];
     if (env.perRunUsd !== null && usd > env.perRunUsd) {
       breaches.push({ scope: "run", cap: env.perRunUsd, after: usd });
     }
@@ -466,7 +470,10 @@ export class BudgetPlanner implements IBudgetGate {
    */
   async record(entry: LedgerEntry): Promise<void> {
     const normalised: LedgerEntry = {
-      ts: entry.ts && !Number.isNaN(new Date(entry.ts).getTime()) ? entry.ts : this.now().toISOString(),
+      ts:
+        entry.ts && !Number.isNaN(new Date(entry.ts).getTime())
+          ? entry.ts
+          : this.now().toISOString(),
       category: entry.category,
       ...(entry.model !== undefined ? { model: entry.model } : {}),
       estimatedUsd: nonNeg(entry.estimatedUsd),
@@ -502,7 +509,8 @@ export class BudgetPlanner implements IBudgetGate {
         if (!hasCode(err, "ENOENT")) throw err;
       }
       const line = JSON.stringify(entry) + "\n";
-      const next = existing.length > 0 && !existing.endsWith("\n") ? existing + "\n" + line : existing + line;
+      const next =
+        existing.length > 0 && !existing.endsWith("\n") ? existing + "\n" + line : existing + line;
       await atomicWriteFile(file, next);
     } catch (cause) {
       throw new BudgetError(`Failed to append budget ledger entry`, {
@@ -530,7 +538,11 @@ export class BudgetPlanner implements IBudgetGate {
     const env = this.envelopeFor(category);
     if (!env) return;
     const spent = this.spendCache.get(category) ?? { day: 0, month: 0, total: 0 };
-    const scopes: Array<{ scope: "daily" | "monthly" | "total"; spent: number; limit: number | null }> = [
+    const scopes: Array<{
+      scope: "daily" | "monthly" | "total";
+      spent: number;
+      limit: number | null;
+    }> = [
       { scope: "daily", spent: spent.day, limit: env.dailyUsd },
       { scope: "monthly", spent: spent.month, limit: env.monthlyUsd },
       { scope: "total", spent: spent.total, limit: env.totalUsd },
@@ -670,7 +682,8 @@ export class BudgetPlanner implements IBudgetGate {
     ): BudgetEnvelope => ({
       category,
       perRunUsd: perRun,
-      dailyUsd: monthlyUsd === null ? null : roundUsd(monthlyUsd / WIZARD_DAILY_FROM_MONTHLY_DIVISOR),
+      dailyUsd:
+        monthlyUsd === null ? null : roundUsd(monthlyUsd / WIZARD_DAILY_FROM_MONTHLY_DIVISOR),
       monthlyUsd,
       totalUsd: null,
       askThresholdUsd: threshold,
@@ -795,7 +808,8 @@ export class BudgetPlanner implements IBudgetGate {
     const lines: string[] = [];
     lines.push("Kostenschaetzung / Cost estimate");
     lines.push("================================");
-    if (estimate.pages !== undefined) lines.push(`Umfang / Scope:        ${estimate.pages} Seite(n)/Item(s)`);
+    if (estimate.pages !== undefined)
+      lines.push(`Umfang / Scope:        ${estimate.pages} Seite(n)/Item(s)`);
     lines.push(`Tokens (in/out):       ${estimate.tokensIn} / ${estimate.tokensOut}`);
     lines.push("");
     lines.push(`Kosten / Cost (EUR):   ${fmtEur(estimate.eur)}`);
@@ -818,7 +832,9 @@ export class BudgetPlanner implements IBudgetGate {
     lines.push(`Budget:                ${decision.reason}`);
     lines.push(
       `Verbleibend / Remaining: ${
-        Number.isFinite(decision.remainingUsd) ? fmtUsd(decision.remainingUsd) : "unbegrenzt / unlimited"
+        Number.isFinite(decision.remainingUsd)
+          ? fmtUsd(decision.remainingUsd)
+          : "unbegrenzt / unlimited"
       }`,
     );
     lines.push("");
@@ -852,9 +868,7 @@ export function createBudgetPlanner(opts: BudgetPlannerOptions): BudgetPlanner {
 
 /** `true` for fs errors carrying the given `code` (e.g. `"ENOENT"`). */
 function hasCode(err: unknown, code: string): boolean {
-  return (
-    typeof err === "object" && err !== null && (err as NodeJS.ErrnoException).code === code
-  );
+  return typeof err === "object" && err !== null && (err as NodeJS.ErrnoException).code === code;
 }
 
 /** Format a USD figure (2 dp, `$` suffix-free, plain). */

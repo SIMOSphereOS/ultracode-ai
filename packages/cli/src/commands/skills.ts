@@ -10,15 +10,15 @@
  * Every subcommand supports `--json`.
  */
 
+import { promises as fs } from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { promises as fs } from "node:fs";
 import type { Command } from "commander";
+import type { AuthoringProposal, KnowledgeMaterial } from "ultracode-core";
 import { ValidationError } from "ultracode-shared";
 import type { CliContext } from "../context.js";
-import { authoringOf, withExtFacade } from "./ext-helpers.js";
 import { formatBlock, formatSkillList, formatTestResult } from "./ext-format.js";
-import type { AuthoringProposal, KnowledgeMaterial } from "ultracode-core";
+import { authoringOf, withExtFacade } from "./ext-helpers.js";
 
 interface JsonOption {
   json?: boolean;

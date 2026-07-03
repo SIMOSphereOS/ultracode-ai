@@ -7,7 +7,7 @@
  * relevant sub-API — no casts, no ambient shapes.
  */
 
-import type { BudgetFacade, AuthoringFacade, LearningFacade } from "ultracode-core";
+import type { AuthoringFacade, BudgetFacade, LearningFacade } from "ultracode-core";
 import type { CliContext, UltraCodeFacade } from "../context.js";
 import { safeDispose } from "../context.js";
 

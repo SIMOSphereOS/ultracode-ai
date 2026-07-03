@@ -20,11 +20,7 @@ import type { ToolContext, ToolDefinition, ToolResult } from "ultracode-shared";
  */
 export interface IToolRunner {
   /** Execute the named tool with the given (already-parsed) arguments. */
-  execute(
-    name: string,
-    args: Record<string, unknown>,
-    ctx: ToolContext,
-  ): Promise<ToolResult>;
+  execute(name: string, args: Record<string, unknown>, ctx: ToolContext): Promise<ToolResult>;
   /** List the tool definitions available through this runner. */
   list(): ToolDefinition[];
 }

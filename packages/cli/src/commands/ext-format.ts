@@ -3,7 +3,6 @@
  * types. Mirrors `../format.ts` for the versioning subsystem. Never throws.
  */
 
-import { truncate } from "ultracode-shared";
 import type {
   BudgetStatusView,
   CostEstimate,
@@ -13,6 +12,7 @@ import type {
   SkillFrontmatter,
   AuthoringTestResult as TestResult,
 } from "ultracode-core";
+import { truncate } from "ultracode-shared";
 
 /** Cap applied to free-form blocks. */
 const MAX_BLOCK_CHARS = 10_000;
@@ -67,7 +67,9 @@ export function formatCostEstimate(e: CostEstimate): string {
 /** Format a budget ledger ({@link LedgerEntry}[]) as a chronological list. */
 export function formatLedger(entries: ReadonlyArray<LedgerEntry>): string {
   if (entries.length === 0) return "(no ledger entries)\n";
-  const lines: string[] = [`Budget History — ${entries.length} entr${entries.length === 1 ? "y" : "ies"}`];
+  const lines: string[] = [
+    `Budget History — ${entries.length} entr${entries.length === 1 ? "y" : "ies"}`,
+  ];
   for (const e of entries) {
     const model = e.model !== undefined ? ` ${e.model}` : "";
     const note = e.note !== undefined && e.note !== "" ? ` — ${truncate(e.note, 120)}` : "";
@@ -83,7 +85,9 @@ export function formatSkillList(skills: ReadonlyArray<SkillFrontmatter>): string
   if (skills.length === 0) return "(no skills)\n";
   const lines: string[] = [`Skills — ${skills.length}`];
   for (const s of skills) {
-    lines.push(`  ${s.name} v${s.version} [${s.status}] (${s.catalog}) — ${truncate(s.description, 80)}`);
+    lines.push(
+      `  ${s.name} v${s.version} [${s.status}] (${s.catalog}) — ${truncate(s.description, 80)}`,
+    );
   }
   return `${lines.join("\n")}\n`;
 }

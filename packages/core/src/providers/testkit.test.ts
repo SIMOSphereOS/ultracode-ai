@@ -5,11 +5,13 @@
  * vitest accepts the file.
  */
 
-import { describe, expect, it, vi } from "vitest";
 import type { Logger, ProviderOptions } from "ultracode-shared";
+import { describe, expect, it, vi } from "vitest";
 
 /** Build a `ReadableStream<Uint8Array>` from string/byte chunks. */
-export function streamFromChunks(chunks: ReadonlyArray<string | Uint8Array>): ReadableStream<Uint8Array> {
+export function streamFromChunks(
+  chunks: ReadonlyArray<string | Uint8Array>,
+): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
   let i = 0;
   return new ReadableStream<Uint8Array>({

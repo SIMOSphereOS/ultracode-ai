@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import type { ToolDefinition } from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import { ANTHROPIC_MAX_CACHE_BREAKPOINTS, cachePrefixHint, computePrefixKey } from "./cache.js";
 import type { PromptPayload } from "./types.js";
 

@@ -13,20 +13,11 @@
  */
 
 import os from "node:os";
-
-import { NoopLogger } from "ultracode-shared";
 import type { IEventBus, ILLMProvider, Logger } from "ultracode-shared";
-
-import { createCheckpointStore, defaultSqliteLoader } from "./checkpoint.js";
+import { NoopLogger } from "ultracode-shared";
 import type { Checkpoint, CheckpointStore, SqliteLoader } from "./checkpoint.js";
-import { LearnCapError, LearnError } from "./errors.js";
-import { completedEvent, emitLearningEvent, estimatedEvent, startedEvent } from "./events.js";
-import { distillPage } from "./extract.js";
+import { createCheckpointStore, defaultSqliteLoader } from "./checkpoint.js";
 import { Semaphore } from "./concurrency.js";
-import { NativeCrawlerProvider } from "./NativeCrawlerProvider.js";
-import { nodeDnsLookupAll } from "./urlGuard.js";
-import { SourceLibrary } from "./SourceLibrary.js";
-import { DEFAULT_ROUTING } from "./extract.js";
 import {
   CHECKPOINT_INTERVAL,
   DEFAULT_CONCURRENCY,
@@ -35,20 +26,27 @@ import {
   PER_PAGE_TOKENS_OUT,
   ROUND_USD_SCALE,
 } from "./defaults.js";
+import { LearnCapError, LearnError } from "./errors.js";
+import { completedEvent, emitLearningEvent, estimatedEvent, startedEvent } from "./events.js";
+import { DEFAULT_ROUTING, distillPage } from "./extract.js";
+import { NativeCrawlerProvider } from "./NativeCrawlerProvider.js";
+import { SourceLibrary } from "./SourceLibrary.js";
+import { nodeDnsLookupAll } from "./urlGuard.js";
 
 export {
   CHECKPOINT_INTERVAL,
   PER_PAGE_TOKENS_IN,
   PER_PAGE_TOKENS_OUT,
 } from "./defaults.js";
+
 import type {
   CostEstimate,
   DocIngestionProvider,
   DocPage,
   FetchImpl,
   IBudgetGate,
-  ISkillAuthor,
   IngestionContext,
+  ISkillAuthor,
   KnowledgeMaterial,
   LearnProgress,
   LearnRunPlan,
@@ -190,10 +188,23 @@ export class LearnAgent {
     );
 
     // Resume from checkpoint when present.
-    const store = await createCheckpointStore(sourceId, this.homeDir, this.logger, this.sqliteLoader);
+    const store = await createCheckpointStore(
+      sourceId,
+      this.homeDir,
+      this.logger,
+      this.sqliteLoader,
+    );
     let report: LearnRunReport;
     try {
-      report = await this.crawlAndLearn(source, candidatePages, estimate, store, startedAt, opts, ctx);
+      report = await this.crawlAndLearn(
+        source,
+        candidatePages,
+        estimate,
+        store,
+        startedAt,
+        opts,
+        ctx,
+      );
     } finally {
       store.close();
     }
@@ -231,7 +242,8 @@ export class LearnAgent {
 
     const pending = candidatePages.filter((u) => !processedSet.has(u));
     const sharedCache = new Map<string, string>();
-    const deadline = opts.maxRuntimeMs && opts.maxRuntimeMs > 0 ? this.now() + opts.maxRuntimeMs : Infinity;
+    const deadline =
+      opts.maxRuntimeMs && opts.maxRuntimeMs > 0 ? this.now() + opts.maxRuntimeMs : Infinity;
     const sem = new Semaphore(Math.max(1, opts.concurrency ?? DEFAULT_CONCURRENCY));
     const llmAllowed = !!this.provider && !!this.budget; // budget already approved above
 
@@ -305,7 +317,12 @@ export class LearnAgent {
       // mirroring the runtime-cap path's final checkpoint. Then re-throw so the
       // run still rejects with the abort error per the contract.
       if (isAbort(err)) {
-        usage.actualUsd = this.actualUsd(estimate, usage, counters.processed, candidatePages.length);
+        usage.actualUsd = this.actualUsd(
+          estimate,
+          usage,
+          counters.processed,
+          candidatePages.length,
+        );
         await this.checkpoint(store, source.id, processedSet, validators, usage);
       }
       throw err;
@@ -391,7 +408,9 @@ export class LearnAgent {
       validators,
       usage,
     };
-    await store.save(cp).catch((err) => this.logger.warn("learning: checkpoint save failed", { error: String(err) }));
+    await store
+      .save(cp)
+      .catch((err) => this.logger.warn("learning: checkpoint save failed", { error: String(err) }));
   }
 
   /** Stamp the source's `lastProcessed` and persist it. */
@@ -406,7 +425,8 @@ export class LearnAgent {
   /** Look up a source or throw {@link LearnError}. */
   private async requireSource(sourceId: string): Promise<LearnSource> {
     const source = await this.library.get(sourceId);
-    if (!source) throw new LearnError(`Unknown learning source: ${sourceId}`, { details: { sourceId } });
+    if (!source)
+      throw new LearnError(`Unknown learning source: ${sourceId}`, { details: { sourceId } });
     return source;
   }
 
@@ -502,7 +522,12 @@ function deriveTopic(url: string): string {
   try {
     const segs = new URL(url).pathname.split("/").filter(Boolean);
     const last = segs[segs.length - 1] ?? DEFAULT_TOPIC;
-    return last.replace(/[-_]+/g, " ").replace(/\.\w+$/, "").trim() || DEFAULT_TOPIC;
+    return (
+      last
+        .replace(/[-_]+/g, " ")
+        .replace(/\.\w+$/, "")
+        .trim() || DEFAULT_TOPIC
+    );
   } catch {
     return DEFAULT_TOPIC;
   }

@@ -1,13 +1,11 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-
+import type { Logger, LogMeta, UltraCodeConfig } from "ultracode-shared";
 import { DEFAULT_CONFIG, NoopLogger } from "ultracode-shared";
-import type { LogMeta, Logger, UltraCodeConfig } from "ultracode-shared";
 import { afterEach, describe, expect, it } from "vitest";
-
-import { ContextCollector } from "./ContextCollector.js";
 import type { ContextSection } from "./ContextCollector.js";
+import { ContextCollector } from "./ContextCollector.js";
 import { ContextCompressor } from "./ContextCompressor.js";
 import { ContextEngine, createContextEngine } from "./ContextEngine.js";
 
@@ -115,7 +113,12 @@ describe("createContextEngine / ContextEngine", () => {
   it("ranks sections mentioned in the prompt first", async () => {
     const engine = new ContextEngine(config(), new NoopLogger(), {
       collector: stubCollector([
-        { id: "tree", title: "File Tree", content: "src/\n  billing.ts\n  parser.ts", priority: 40 },
+        {
+          id: "tree",
+          title: "File Tree",
+          content: "src/\n  billing.ts\n  parser.ts",
+          priority: 40,
+        },
         { id: "sys", title: "System", content: "Platform: linux", priority: 50 },
       ]),
     });

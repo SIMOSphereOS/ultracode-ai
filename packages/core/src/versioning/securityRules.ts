@@ -61,7 +61,8 @@ export const SECURITY_RULES: readonly SecurityRule[] = [
     id: "net.insecure-http",
     severity: "low",
     description: "Insecure http:// URL in production code",
-    pattern: /\bhttp:\/\/(?!localhost\b|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|(?:www\.)?(?:example|test)\.)/i,
+    pattern:
+      /\bhttp:\/\/(?!localhost\b|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|(?:www\.)?(?:example|test)\.)/i,
   },
 ];
 
@@ -105,7 +106,9 @@ export function scanFileForFindings(path: string, content: string): SecurityFind
           rule: rule.id,
           file: path,
           line: i + 1,
-          description: dampen ? `${rule.description} (severity reduced: test file)` : rule.description,
+          description: dampen
+            ? `${rule.description} (severity reduced: test file)`
+            : rule.description,
         });
       }
     }

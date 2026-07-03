@@ -8,8 +8,8 @@
  * {@link UltraCodeError} base.
  */
 
-import { UltraCodeError } from "ultracode-shared";
 import type { UltraCodeErrorOptions } from "ultracode-shared";
+import { UltraCodeError } from "ultracode-shared";
 
 /** A budget plan/ledger operation failed (load, parse, persist, validate). */
 export class BudgetError extends UltraCodeError {

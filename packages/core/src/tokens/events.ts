@@ -10,8 +10,8 @@
  */
 
 import type { IEventBus, Logger } from "ultracode-shared";
-import type { OptimizeResult } from "./TokenOptimizer.js";
 import { TOKENS_OPTIMIZED_EVENT } from "./defaults.js";
+import type { OptimizeResult } from "./TokenOptimizer.js";
 
 export { TOKENS_OPTIMIZED_EVENT };
 

@@ -6,8 +6,8 @@
  * source of truth; silent replacement would mask wiring bugs).
  */
 
-import { ToolError } from "ultracode-shared";
 import type { ITool, ToolDefinition } from "ultracode-shared";
+import { ToolError } from "ultracode-shared";
 
 /** Any tool, regardless of its argument/output generics. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

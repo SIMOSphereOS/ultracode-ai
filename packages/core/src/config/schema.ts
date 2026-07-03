@@ -8,19 +8,12 @@
  * `ConfigError` with a precise dotted path.
  */
 
-import { z } from "zod";
-import { ConfigError } from "ultracode-shared";
 import type { ProvidersConfig, UltraCodeConfig } from "ultracode-shared";
+import { ConfigError } from "ultracode-shared";
+import { z } from "zod";
 
 /** Themes accepted by the UI (plus `"custom"` with a `[ui.colors]` palette). */
-export const KNOWN_THEMES = [
-  "dark",
-  "light",
-  "dracula",
-  "solarized",
-  "monokai",
-  "custom",
-] as const;
+export const KNOWN_THEMES = ["dark", "light", "dracula", "solarized", "monokai", "custom"] as const;
 
 const toolPermission = z.enum(["ask", "always", "never"]);
 

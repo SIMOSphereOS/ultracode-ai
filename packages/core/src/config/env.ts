@@ -14,8 +14,8 @@
  */
 
 import { DEFAULT_CONFIG, ENV_PREFIX } from "ultracode-shared";
-import { CONFIG_SPEC, DANGEROUS_KEYS, camelizeKey, type SpecNode } from "./spec.js";
 import type { ConfigOverlay, WarnFn } from "./mapping.js";
+import { CONFIG_SPEC, camelizeKey, DANGEROUS_KEYS, type SpecNode } from "./spec.js";
 
 /**
  * Minimal `.env` parser (no dependency): `KEY=VALUE` lines, `#` comments,

@@ -11,9 +11,6 @@
 
 import type { Logger } from "ultracode-shared";
 import { NoopLogger } from "ultracode-shared";
-import type { OptimizeContext, OptimizerStage, PromptPayload, TokenStats } from "./types.js";
-import type { TokenCounter } from "./TokenCounter.js";
-import { HeuristicTokenCounter } from "./TokenCounter.js";
 import {
   ConversationCompactionStage,
   DedupContextStage,
@@ -21,6 +18,9 @@ import {
   ToolSchemaSlimStage,
   WhitespaceNormalizeStage,
 } from "./stages.js";
+import type { TokenCounter } from "./TokenCounter.js";
+import { HeuristicTokenCounter } from "./TokenCounter.js";
+import type { OptimizeContext, OptimizerStage, PromptPayload, TokenStats } from "./types.js";
 
 /** Per-stage saving entry in an {@link OptimizeResult}. */
 export interface StageSaving {
@@ -111,7 +111,10 @@ export class TokenOptimizer {
    * and was configured with a summarizer, its async path is used; all other
    * stages are synchronous. Measures before/after each stage.
    */
-  public async optimize(payload: PromptPayload, ctx?: Partial<OptimizeContext>): Promise<OptimizeResult> {
+  public async optimize(
+    payload: PromptPayload,
+    ctx?: Partial<OptimizeContext>,
+  ): Promise<OptimizeResult> {
     const fullCtx: OptimizeContext = {
       counter: ctx?.counter ?? this.counter,
       ...(ctx?.prompt !== undefined ? { prompt: ctx.prompt } : {}),
@@ -190,7 +193,9 @@ export interface CreateDefaultOptimizerOptions {
  *
  * All five are safe by construction; the first four are lossless/idempotent.
  */
-export function createDefaultOptimizer(options: CreateDefaultOptimizerOptions = {}): TokenOptimizer {
+export function createDefaultOptimizer(
+  options: CreateDefaultOptimizerOptions = {},
+): TokenOptimizer {
   const counter = options.counter ?? new HeuristicTokenCounter();
   const stages: OptimizerStage[] = [
     new DedupContextStage(),

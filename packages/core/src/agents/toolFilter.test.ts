@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { NoopLogger } from "ultracode-shared";
 import type { ToolContext, ToolDefinition, ToolResult } from "ultracode-shared";
+import { NoopLogger } from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import type { IToolRunner } from "../execution/types.js";
 import {
   FilteredToolRunner,
@@ -17,7 +17,17 @@ const def = (name: string): ToolDefinition => ({
   permission: "always",
 });
 
-const ALL = ["read", "write_file", "edit", "delete_file", "bash", "grep", "glob", "git_status", "git_commit"].map(def);
+const ALL = [
+  "read",
+  "write_file",
+  "edit",
+  "delete_file",
+  "bash",
+  "grep",
+  "glob",
+  "git_status",
+  "git_commit",
+].map(def);
 
 class RecordingRunner implements IToolRunner {
   readonly executed: string[] = [];

@@ -7,8 +7,8 @@
  * with such a filter while preserving the never-throw execution contract.
  */
 
-import { serializeError, ToolNotFoundError } from "ultracode-shared";
 import type { AgentDefinition, ToolContext, ToolDefinition, ToolResult } from "ultracode-shared";
+import { serializeError, ToolNotFoundError } from "ultracode-shared";
 import type { IToolRunner } from "../execution/types.js";
 
 /** Escape all regex metacharacters except `*`. */

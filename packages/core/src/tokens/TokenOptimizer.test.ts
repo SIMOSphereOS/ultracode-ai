@@ -1,14 +1,14 @@
-import { describe, expect, it } from "vitest";
 import type { ChatMessage, ToolDefinition } from "ultracode-shared";
-import { HeuristicTokenCounter } from "./TokenCounter.js";
-import { TokenOptimizer, createDefaultOptimizer, computeStats } from "./TokenOptimizer.js";
-import type { PromptPayload } from "./types.js";
+import { describe, expect, it } from "vitest";
 import {
   DedupContextStage,
   SystemPromptMinifyStage,
   ToolSchemaSlimStage,
   WhitespaceNormalizeStage,
 } from "./stages.js";
+import { HeuristicTokenCounter } from "./TokenCounter.js";
+import { computeStats, createDefaultOptimizer, TokenOptimizer } from "./TokenOptimizer.js";
+import type { PromptPayload } from "./types.js";
 
 const counter = new HeuristicTokenCounter();
 
@@ -56,8 +56,7 @@ describe("TokenOptimizer.optimize", () => {
     expect(result.before.total).toBe(computeStats(p, counter).total);
     expect(result.after.total).toBe(computeStats(result.payload, counter).total);
     expect(result.after.total).toBeLessThanOrEqual(result.before.total);
-    const expectedPct =
-      ((result.before.total - result.after.total) / result.before.total) * 100;
+    const expectedPct = ((result.before.total - result.after.total) / result.before.total) * 100;
     expect(result.reductionPct).toBeCloseTo(Math.round(expectedPct * 10) / 10, 5);
   });
 
@@ -114,7 +113,10 @@ describe("TokenOptimizer.optimize", () => {
   it("reports a negative saving honestly when a stage inflates tokens", async () => {
     const inflating = {
       name: "inflate",
-      apply: (p: PromptPayload): PromptPayload => ({ ...p, system: `${p.system} extra words added` }),
+      apply: (p: PromptPayload): PromptPayload => ({
+        ...p,
+        system: `${p.system} extra words added`,
+      }),
     };
     const opt = new TokenOptimizer({ counter, stages: [inflating] });
     const result = await opt.optimize({ system: "x", tools: [], messages: [] });

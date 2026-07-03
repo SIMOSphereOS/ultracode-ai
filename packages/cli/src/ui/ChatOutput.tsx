@@ -3,8 +3,8 @@
  * streaming text of the in-flight assistant turn.
  */
 
-import React from "react";
 import { Box, Text } from "ink";
+import type React from "react";
 import { truncate } from "ultracode-shared";
 import type { Theme } from "../themes/index.js";
 

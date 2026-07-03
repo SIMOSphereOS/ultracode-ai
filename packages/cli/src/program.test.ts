@@ -1,20 +1,20 @@
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
-import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  type AgentDefinition,
   AgentError,
+  type ChangeAnalysis,
+  type CompletionChunk,
   ConfigError,
   DEFAULT_CONFIG,
   EventBus,
-  type AgentDefinition,
-  type ChangeAnalysis,
-  type CompletionChunk,
   type QualityReport,
   type ReleasePlan,
   type ToolDefinition,
   type VersionSuggestion,
 } from "ultracode-shared";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { CliContext, UltraCodeFacade } from "./context.js";
 import { runCli } from "./program.js";
 
@@ -238,7 +238,12 @@ describe("runCli — run command", () => {
         opts?.onChunk?.({ type: "text", text: "Hello " });
         opts?.onChunk?.({ type: "text", text: "World" });
         opts?.onChunk?.({ type: "done", usage: { inputTokens: 1, outputTokens: 1 } });
-        return { text: "Hello World", toolCallsExecuted: 0, usage: { inputTokens: 1, outputTokens: 1 }, turns: 1 };
+        return {
+          text: "Hello World",
+          toolCallsExecuted: 0,
+          usage: { inputTokens: 1, outputTokens: 1 },
+          turns: 1,
+        };
       }),
     });
     const { ctx, out } = makeCtx(facade);
@@ -451,7 +456,7 @@ describe("runCli — config", () => {
     const code = await runCli(argv("config", "show"), ctx);
     expect(code).toBe(0);
     expect(out()).not.toContain("leaky-secret-9999");
-    expect(out()).toContain("ui.theme = \"dark\"");
+    expect(out()).toContain('ui.theme = "dark"');
   });
 
   it("config show --json is valid JSON", async () => {

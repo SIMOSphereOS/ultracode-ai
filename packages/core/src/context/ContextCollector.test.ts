@@ -1,13 +1,11 @@
 import { mkdir, mkdtemp, rm, utimes, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-
+import type { Logger, LogMeta } from "ultracode-shared";
 import { NoopLogger } from "ultracode-shared";
-import type { LogMeta, Logger } from "ultracode-shared";
 import { afterEach, describe, expect, it } from "vitest";
-
-import { ContextCollector } from "./ContextCollector.js";
 import type { ContextSection, GitRunner } from "./ContextCollector.js";
+import { ContextCollector } from "./ContextCollector.js";
 
 function spyLogger(): { logger: Logger; warns: string[] } {
   const warns: string[] = [];
@@ -58,7 +56,11 @@ describe("ContextCollector", () => {
     const cwd = await tmp();
     await writeFile(
       path.join(cwd, "package.json"),
-      JSON.stringify({ name: "demo-app", version: "1.2.3", scripts: { build: "tsc", test: "vitest" } }),
+      JSON.stringify({
+        name: "demo-app",
+        version: "1.2.3",
+        scripts: { build: "tsc", test: "vitest" },
+      }),
       "utf8",
     );
     const collector = new ContextCollector(new NoopLogger(), { gitRunner: noGit });
@@ -177,7 +179,10 @@ describe("ContextCollector", () => {
     await utimes(mid, base - 1800, base - 1800);
     await utimes(fresh, base, base);
 
-    const collector = new ContextCollector(new NoopLogger(), { gitRunner: noGit, recentFilesLimit: 2 });
+    const collector = new ContextCollector(new NoopLogger(), {
+      gitRunner: noGit,
+      recentFilesLimit: 2,
+    });
     const recent = byId(await collector.collect(cwd), "recent-files");
     expect(recent?.content.split("\n")).toEqual(["fresh.ts", "mid.ts"]);
   });

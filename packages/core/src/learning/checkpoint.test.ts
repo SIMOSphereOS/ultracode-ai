@@ -3,15 +3,14 @@
  * when `node:sqlite` is unavailable, round-trip, clear and corruption.
  */
 
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { mkdtemp, rm, writeFile, mkdir } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-
-import { createCheckpointStore } from "./checkpoint.js";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Checkpoint, SqliteLoader } from "./checkpoint.js";
-import { stateFile, stateDir } from "./paths.js";
+import { createCheckpointStore } from "./checkpoint.js";
 import { LearnError } from "./errors.js";
+import { stateDir, stateFile } from "./paths.js";
 
 let home: string;
 

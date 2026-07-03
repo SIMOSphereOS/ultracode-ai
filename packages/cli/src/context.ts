@@ -8,9 +8,9 @@
  * and cross-platform.
  */
 
+import { spawn } from "node:child_process";
 import os from "node:os";
 import process from "node:process";
-import { spawn } from "node:child_process";
 import type { UltraCode, UltraCodeCreateOptions } from "ultracode-core";
 import { loadCore } from "./core-loader.js";
 

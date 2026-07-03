@@ -15,23 +15,6 @@
  * session record is never mutated.
  */
 
-export { createSessionOptimizer } from "./SessionOptimizer.js";
-export type { SessionOptimizerOptions } from "./SessionOptimizer.js";
-export {
-  dedupMessages,
-  extractiveSummary,
-  mergeSummary,
-} from "./SessionOptimizer.js";
-
-export { extractPinnedFacts, extractPinnedFromText } from "./pinned.js";
-
-export {
-  SESSION_OPTIMIZED_EVENT,
-  emitSessionOptimizedEvent,
-} from "./events.js";
-export type { SessionOptimizedEvent } from "./events.js";
-
-export { DEFAULT_THRESHOLDS } from "./types.js";
 export {
   BARE_FILE_RE,
   BUDGET_CATEGORY,
@@ -59,6 +42,20 @@ export {
   TODO_RE,
   VERSION_RE,
 } from "./defaults.js";
+export type { SessionOptimizedEvent } from "./events.js";
+export {
+  emitSessionOptimizedEvent,
+  SESSION_OPTIMIZED_EVENT,
+} from "./events.js";
+
+export { extractPinnedFacts, extractPinnedFromText } from "./pinned.js";
+export type { SessionOptimizerOptions } from "./SessionOptimizer.js";
+export {
+  createSessionOptimizer,
+  dedupMessages,
+  extractiveSummary,
+  mergeSummary,
+} from "./SessionOptimizer.js";
 export type {
   SessionOptimizationResult,
   SessionOptimizer,
@@ -66,3 +63,4 @@ export type {
   Thresholds,
   WorkingSet,
 } from "./types.js";
+export { DEFAULT_THRESHOLDS } from "./types.js";

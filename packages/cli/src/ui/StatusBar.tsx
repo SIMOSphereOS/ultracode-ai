@@ -2,8 +2,8 @@
  * Bottom status bar: active agent, model, session id and token usage.
  */
 
-import React from "react";
 import { Box, Text } from "ink";
+import type React from "react";
 import type { Theme } from "../themes/index.js";
 
 export interface StatusBarProps {

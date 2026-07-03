@@ -1,10 +1,10 @@
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Logger } from "ultracode-shared";
-import { SkillRegistry } from "./SkillRegistry.js";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createSkillInjector, SKILL_CONTEXT_HEADER } from "./SkillInjector.js";
+import { SkillRegistry } from "./SkillRegistry.js";
 import type { Skill } from "./types.js";
 
 let home: string;
@@ -56,7 +56,10 @@ describe("createSkillInjector", () => {
 
   it("returns '' when there are no active skills", async () => {
     const reg = new SkillRegistry(home);
-    await seed(reg, [makeSkill({ status: "draft" }), makeSkill({ name: "x", status: "deprecated" })]);
+    await seed(reg, [
+      makeSkill({ status: "draft" }),
+      makeSkill({ name: "x", status: "deprecated" }),
+    ]);
     const inject = createSkillInjector(reg);
     expect(await inject("dora resilience")).toBe("");
   });

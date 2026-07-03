@@ -7,9 +7,9 @@
  * their weight across the remaining gates.
  */
 
+import { spawn } from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { clamp } from "ultracode-shared";
 import type {
   ChangeAnalysis,
   Logger,
@@ -17,7 +17,7 @@ import type {
   QualityReport,
   VersioningConfig,
 } from "ultracode-shared";
-import { spawn } from "node:child_process";
+import { clamp } from "ultracode-shared";
 
 /** Result of an external command execution. */
 export interface CommandResult {
@@ -314,7 +314,11 @@ export class QualityGateSystem {
     for (const finding of analysis.securityFindings) counts[finding.severity] += 1;
     const blocking = counts.critical + counts.high;
     const score = Math.round(
-      clamp(100 - 40 * counts.critical - 25 * counts.high - 10 * counts.medium - 5 * counts.low, 0, 100),
+      clamp(
+        100 - 40 * counts.critical - 25 * counts.high - 10 * counts.medium - 5 * counts.low,
+        0,
+        100,
+      ),
     );
     return {
       gate: "security",

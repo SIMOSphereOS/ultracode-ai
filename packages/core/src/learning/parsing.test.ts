@@ -4,12 +4,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-
-import { extractText, decodeEntities } from "./html.js";
-import { parseSitemap, extractTocHrefs, decodeXml } from "./sitemap.js";
-import { normalizeUrl, normalizeAndDedup, sameHost } from "./url.js";
-import { parseRobots, isAllowed, urlAllowed } from "./robots.js";
 import { DEFAULT_USER_AGENT } from "./defaults.js";
+import { decodeEntities, extractText } from "./html.js";
+import { isAllowed, parseRobots, urlAllowed } from "./robots.js";
+import { decodeXml, extractTocHrefs, parseSitemap } from "./sitemap.js";
+import { normalizeAndDedup, normalizeUrl, sameHost } from "./url.js";
 
 describe("sitemap parser", () => {
   it("parses a sitemapindex into shard URLs", () => {
@@ -19,7 +18,8 @@ describe("sitemap parser", () => {
     </sitemapindex>`;
     const res = parseSitemap(xml);
     expect(res.kind).toBe("index");
-    if (res.kind === "index") expect(res.sitemaps).toEqual(["https://e.com/a.xml", "https://e.com/b.xml"]);
+    if (res.kind === "index")
+      expect(res.sitemaps).toEqual(["https://e.com/a.xml", "https://e.com/b.xml"]);
   });
 
   it("parses a urlset with lastmod", () => {

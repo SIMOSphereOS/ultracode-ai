@@ -24,11 +24,9 @@
  * and surfaced as a zero-saving result, never thrown to the caller.
  */
 
+import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { randomUUID } from "node:crypto";
-
-import { NoopLogger, serializeError } from "ultracode-shared";
 import type {
   ChatMessage,
   IEventBus,
@@ -37,13 +35,11 @@ import type {
   Logger,
   SessionRecord,
 } from "ultracode-shared";
-
-import { resolveHome } from "../config/paths.js";
-import { HeuristicTokenCounter } from "../tokens/TokenCounter.js";
-import type { TokenCounter } from "../tokens/TokenCounter.js";
+import { NoopLogger, serializeError } from "ultracode-shared";
 import type { IBudgetGate } from "../budget/types.js";
-import { emitSessionOptimizedEvent } from "./events.js";
-import { extractPinnedFacts } from "./pinned.js";
+import { resolveHome } from "../config/paths.js";
+import type { TokenCounter } from "../tokens/TokenCounter.js";
+import { HeuristicTokenCounter } from "../tokens/TokenCounter.js";
 import {
   BUDGET_CATEGORY,
   CHEAP_MODEL_ROUTES,
@@ -58,6 +54,8 @@ import {
   SIDECAR_FILENAME_UNSAFE_RE,
   SIDECAR_ROOT,
 } from "./defaults.js";
+import { emitSessionOptimizedEvent } from "./events.js";
+import { extractPinnedFacts } from "./pinned.js";
 import {
   DEFAULT_THRESHOLDS,
   type SessionOptimizationResult,
@@ -245,9 +243,7 @@ class SessionOptimizerImpl implements SessionOptimizer {
   async buildWorkingSetPersisted(record: SessionRecord): Promise<WorkingSet> {
     try {
       const state = await this.loadState(record.id);
-      const deduped = dedupMessages(
-        Array.isArray(record.messages) ? record.messages : [],
-      );
+      const deduped = dedupMessages(Array.isArray(record.messages) ? record.messages : []);
       if (state.durableSummary.length === 0 && state.pinnedFacts.length === 0) {
         return this.buildWorkingSet(record);
       }
@@ -401,8 +397,7 @@ class SessionOptimizerImpl implements SessionOptimizer {
         pinnedFacts: Array.isArray(parsed.pinnedFacts)
           ? parsed.pinnedFacts.filter((f): f is string => typeof f === "string")
           : [],
-        updatedAt:
-          typeof parsed.updatedAt === "string" ? parsed.updatedAt : fresh.updatedAt,
+        updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : fresh.updatedAt,
       };
     } catch {
       // Missing or corrupt sidecar → start fresh (non-fatal).
@@ -449,11 +444,7 @@ function leadingSystemCount(messages: ChatMessage[]): number {
  * Pull the recent-window start back so it never begins on a `tool` message
  * whose originating assistant tool-call sits just before the boundary.
  */
-function pullBackToKeepPairs(
-  messages: ChatMessage[],
-  recentStart: number,
-  floor: number,
-): number {
+function pullBackToKeepPairs(messages: ChatMessage[], recentStart: number, floor: number): number {
   let start = recentStart;
   while (start > floor && messages[start]?.role === "tool") {
     start--;
@@ -476,8 +467,7 @@ export function dedupMessages(messages: ChatMessage[]): ChatMessage[] {
     // messages (matched by toolCallId): collapsing such an assistant turn to a
     // back-reference would drop its `toolCalls` and orphan those results on
     // replay. Never dedup a message carrying non-empty toolCalls.
-    const carriesToolCalls =
-      Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0;
+    const carriesToolCalls = Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0;
     // Only dedup substantial tool/assistant payloads; never collapse short or
     // user turns (they carry intent).
     const dedupable =
@@ -559,7 +549,9 @@ export function mergeSummary(existing: string, chunk: string, maxChars: number):
   const cleanChunk = chunk.trim();
   if (cleanChunk.length === 0) return existing;
   if (existing.length === 0) {
-    return cleanChunk.length > maxChars ? cleanChunk.slice(cleanChunk.length - maxChars) : cleanChunk;
+    return cleanChunk.length > maxChars
+      ? cleanChunk.slice(cleanChunk.length - maxChars)
+      : cleanChunk;
   }
   if (existing.endsWith(cleanChunk)) return existing; // idempotent re-merge
   const merged = `${existing}\n${cleanChunk}`;

@@ -55,10 +55,9 @@ export abstract class UltraCodeError extends Error {
     Object.setPrototypeOf(this, new.target.prototype);
     // Capture a clean stack trace where the V8 API is available.
     if (typeof (Error as { captureStackTrace?: unknown }).captureStackTrace === "function") {
-      (Error as unknown as { captureStackTrace: (t: object, c?: unknown) => void }).captureStackTrace(
-        this,
-        new.target,
-      );
+      (
+        Error as unknown as { captureStackTrace: (t: object, c?: unknown) => void }
+      ).captureStackTrace(this, new.target);
     }
   }
 
@@ -149,7 +148,7 @@ export class ToolError extends UltraCodeError {
   constructor(a: string, b: string | ToolErrorOptions, c?: ToolErrorOptions) {
     const code = typeof c === "undefined" ? "TOOL_ERROR" : a;
     const message = typeof c === "undefined" ? a : (b as string);
-    const options = (typeof c === "undefined" ? (b as ToolErrorOptions) : c);
+    const options = typeof c === "undefined" ? (b as ToolErrorOptions) : c;
     super(code, message, options);
     this.toolName = options.toolName;
   }

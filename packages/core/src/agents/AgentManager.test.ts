@@ -1,5 +1,3 @@
-import { describe, expect, it } from "vitest";
-import { AgentError, DEFAULT_CONFIG, EventBus, NoopLogger, ProviderError } from "ultracode-shared";
 import type {
   CompletionChunk,
   CompletionRequest,
@@ -10,8 +8,10 @@ import type {
   UltraCodeConfig,
   UltraCodeEvent,
 } from "ultracode-shared";
+import { AgentError, DEFAULT_CONFIG, EventBus, NoopLogger, ProviderError } from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import type { IToolRunner } from "../execution/types.js";
-import { AgentManager, createAgentManager, MAX_DELEGATION_DEPTH } from "./AgentManager.js";
+import { type AgentManager, createAgentManager, MAX_DELEGATION_DEPTH } from "./AgentManager.js";
 import { BUILT_IN_AGENTS } from "./builtins.js";
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -96,9 +96,12 @@ function makeManager(
 describe("AgentManager registry", () => {
   it("registers all built-in agents", () => {
     const { manager } = makeManager();
-    expect(manager.list().map((d) => d.name).sort()).toEqual(
-      [...BUILT_IN_AGENTS.map((d) => d.name)].sort(),
-    );
+    expect(
+      manager
+        .list()
+        .map((d) => d.name)
+        .sort(),
+    ).toEqual([...BUILT_IN_AGENTS.map((d) => d.name)].sort());
   });
 
   it("creates agents lazily and caches instances", () => {
@@ -135,7 +138,12 @@ describe("AgentManager registry", () => {
     const { manager } = makeManager(config);
     const def = manager.list().find((d) => d.name === "mybot");
     expect(def?.type).toBe("custom");
-    expect(manager.get("mybot").listTools().map((t) => t.name)).toEqual(["read"]);
+    expect(
+      manager
+        .get("mybot")
+        .listTools()
+        .map((t) => t.name),
+    ).toEqual(["read"]);
   });
 });
 
@@ -263,9 +271,7 @@ describe("AgentManager delegation", () => {
       tools: new StubRunner(),
       provider,
     });
-    await Promise.all(
-      Array.from({ length: 6 }, (_, i) => manager.delegate("plan", `p${i}`)),
-    );
+    await Promise.all(Array.from({ length: 6 }, (_, i) => manager.delegate("plan", `p${i}`)));
     expect(provider.maxActive).toBeLessThanOrEqual(3);
     expect(provider.maxActive).toBeGreaterThan(1); // genuinely parallel
   });
