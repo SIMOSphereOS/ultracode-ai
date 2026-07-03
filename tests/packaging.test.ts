@@ -3,7 +3,7 @@
  *
  * These tests do NOT build, spawn or hit the network: they only read the
  * package manifests on disk and assert the metadata required for a clean
- * `pnpm -r publish` (see `.github/workflows/publish.yml` and `VERSIONING.md`).
+ * `pnpm -r publish` (see `.gitlab-ci.yml` and `VERSIONING.md`).
  *
  * They guard against regressions in the publish pipeline — missing
  * `files`/README/LICENSE, wrong `publishConfig.access`, or a stray
@@ -23,7 +23,7 @@ function readManifest(pkgDir: string): Record<string, unknown> {
   return JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>;
 }
 
-const REPO_URL = "git+https://github.com/AndreasSchwan-SIMO/ultracode-ai.git";
+const REPO_URL = "git+https://gitlab.simo-online.com/simo/ultracode-ai.git";
 
 describe("packaging invariants", () => {
   const publishable: Array<{ dir: string; name: string; scoped: boolean }> = [
@@ -57,15 +57,15 @@ describe("packaging invariants", () => {
         expect(scripts.prepublishOnly).toBe("tsc -b");
       });
 
-      it("points repository, homepage and bugs at the GitHub repo", () => {
+      it("points repository, homepage and bugs at the GitLab repo", () => {
         const repo = manifest.repository as { url: string; directory: string };
         expect(repo.url).toBe(REPO_URL);
         expect(repo.directory).toBe(`packages/${dir}`);
         expect(manifest.homepage).toBe(
-          "https://github.com/AndreasSchwan-SIMO/ultracode-ai#readme",
+          "https://gitlab.simo-online.com/simo/ultracode-ai#readme",
         );
         expect(manifest.bugs).toEqual({
-          url: "https://github.com/AndreasSchwan-SIMO/ultracode-ai/issues",
+          url: "https://gitlab.simo-online.com/simo/ultracode-ai/-/issues",
         });
       });
 
