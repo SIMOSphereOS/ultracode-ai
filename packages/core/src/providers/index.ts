@@ -25,6 +25,8 @@ export {
 } from "./AnthropicProvider.js";
 export type { ProviderRequestInit } from "./BaseProvider.js";
 export { BaseProvider, isRetryableStatus, parseRetryAfter } from "./BaseProvider.js";
+export type { ProviderDescriptor, WireFamily } from "./catalog.js";
+export { isKeyedProvider, isKnownProvider, PROVIDER_CATALOG, PROVIDER_IDS } from "./catalog.js";
 export { LocalProvider, OLLAMA_BASE_URL } from "./LocalProvider.js";
 export { MISTRAL_BASE_URL, MistralProvider } from "./MistralProvider.js";
 export { OPENAI_BASE_URL, OpenAIProvider } from "./OpenAIProvider.js";
@@ -40,19 +42,37 @@ export {
 export type { SSEEvent, SSEJsonEvent } from "./sse.js";
 export { parseNDJSON, parseSSEEvents, parseSSEJson, streamLines } from "./sse.js";
 
+import type { ProviderName } from "ultracode-shared";
+import { isKeyedProvider, PROVIDER_CATALOG, PROVIDER_IDS } from "./catalog.js";
+
 /** Options accepted by {@link createProvider}. */
 export type CreateProviderOptions = ProviderOptions & {
   /** Logger injected into the provider. Defaults to a no-op logger. */
   logger?: Logger;
 };
 
-/** Providers that require an `apiKey` to be constructed. */
-const KEYED_PROVIDERS = new Set<string>(["mistral", "openai", "anthropic"]);
+/**
+ * Constructor per catalog entry. Keyed by {@link ProviderName} so that adding
+ * a provider to the catalog without a factory (or vice versa) is a type error;
+ * `catalog.test.ts` additionally asserts the runtime `name` of each instance
+ * matches its catalog id.
+ */
+const FACTORIES: Readonly<
+  Record<ProviderName, (options: ProviderOptions, logger?: Logger) => ILLMProvider>
+> = {
+  mistral: (options, logger) => new MistralProvider(options, logger),
+  anthropic: (options, logger) => new AnthropicProvider(options, logger),
+  openai: (options, logger) => new OpenAIProvider(options, logger),
+  local: (options, logger) => new LocalProvider(options, logger),
+};
 
 /**
  * Create a built-in LLM provider by name.
  *
- * @param name - one of `"mistral" | "openai" | "anthropic" | "local"`.
+ * Driven by {@link PROVIDER_CATALOG}: key requirements and the set of known
+ * providers come from the catalog, not from hardcoded lists.
+ *
+ * @param name - a {@link PROVIDER_IDS} member.
  * @param options - provider options; `logger` is optional.
  * @throws {ProviderError} for an unknown provider name or a missing `apiKey`
  *   on key-requiring providers (`local` needs no key).
@@ -60,7 +80,7 @@ const KEYED_PROVIDERS = new Set<string>(["mistral", "openai", "anthropic"]);
 export function createProvider(name: ProviderId, options: CreateProviderOptions): ILLMProvider {
   const { logger, ...providerOptions } = options;
 
-  if (KEYED_PROVIDERS.has(name)) {
+  if (isKeyedProvider(name)) {
     const key = providerOptions.apiKey;
     if (key === undefined || key.trim() === "") {
       throw new ProviderError(
@@ -70,19 +90,11 @@ export function createProvider(name: ProviderId, options: CreateProviderOptions)
     }
   }
 
-  switch (name) {
-    case "mistral":
-      return new MistralProvider(providerOptions, logger);
-    case "openai":
-      return new OpenAIProvider(providerOptions, logger);
-    case "anthropic":
-      return new AnthropicProvider(providerOptions, logger);
-    case "local":
-      return new LocalProvider(providerOptions, logger);
-    default:
-      throw new ProviderError(
-        `Unknown provider "${name}". Known providers: mistral, openai, anthropic, local`,
-        { provider: String(name), retryable: false, details: { reason: "unknown_provider" } },
-      );
+  if (!Object.hasOwn(PROVIDER_CATALOG, name)) {
+    throw new ProviderError(
+      `Unknown provider "${name}". Known providers: ${PROVIDER_IDS.join(", ")}`,
+      { provider: String(name), retryable: false, details: { reason: "unknown_provider" } },
+    );
   }
+  return FACTORIES[name as ProviderName](providerOptions, logger);
 }

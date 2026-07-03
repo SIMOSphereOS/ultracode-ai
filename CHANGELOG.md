@@ -9,6 +9,13 @@ Release-Prozess / process: siehe `VERSIONING.md` (SIMO Release Management).
 ## [Unreleased]
 
 ### Hinzugefügt / Added
+- **Deklarativer Provider-Katalog** (`PROVIDER_CATALOG`): Single Source of Truth
+  für die eingebauten LLM-Provider (id, Wire-Familie, Key-Pflicht, Env-Var,
+  Base-URL). Factory, Key-Gate und Env-Mapping leiten sich daraus ab; ein
+  Contract-Test (`catalog.test.ts`) macht Drift zwischen Katalog, Factory,
+  `ProviderName`-Union und Env-Mapping zum Testfehler. /
+  Declarative provider catalog as single source of truth; factory, key gate and
+  env mapping derive from it, a contract test turns drift into a test failure.
 - **SIMO Release Management**: Pflicht-Artefakte `VERSION` und `.release.json`
   ergänzt; Konsistenz-Gate `scripts/release-check.sh` (VERSION ↔ package.json ↔
   `.release.json` ↔ CHANGELOG) und Bump-Helfer `scripts/release.sh` (Lock-Step). /
@@ -30,6 +37,10 @@ Release-Prozess / process: siehe `VERSIONING.md` (SIMO Release Management).
 - JUnit-Report wurde trotz CI-Deklaration nie erzeugt; das e2e-Test-Projekt lief in
   keinem dedizierten CI-Job. / The declared JUnit report was never produced and the
   e2e project ran in no dedicated CI job.
+- CLI-UI-Tests waren farb-instabil: eine Shell mit `FORCE_COLOR` ließ Ink ANSI-Codes
+  rendern und 6 Text-Assertions scheitern; das cli-Testprojekt pinnt Farben jetzt aus. /
+  CLI UI tests were colour-unstable under a `FORCE_COLOR` shell; the cli test project
+  now pins colours off.
 
 ## [1.3.1] - 2026-06-13
 

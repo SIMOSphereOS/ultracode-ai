@@ -14,6 +14,7 @@
  */
 
 import { DEFAULT_CONFIG, ENV_PREFIX } from "ultracode-shared";
+import { PROVIDER_CATALOG } from "../providers/catalog.js";
 import type { ConfigOverlay, WarnFn } from "./mapping.js";
 import { CONFIG_SPEC, camelizeKey, DANGEROUS_KEYS, type SpecNode } from "./spec.js";
 
@@ -54,12 +55,14 @@ export function parseDotEnv(content: string): Record<string, string> {
   return out;
 }
 
-/** Provider API key variables mapped into `providers.apiKeys`. */
-const API_KEY_VARS: ReadonlyArray<readonly [string, string]> = [
-  ["MISTRAL_API_KEY", "mistral"],
-  ["ANTHROPIC_API_KEY", "anthropic"],
-  ["OPENAI_API_KEY", "openai"],
-];
+/**
+ * Provider API key variables mapped into `providers.apiKeys` — derived from
+ * the declarative provider catalog so this mapping cannot drift from the
+ * factory's key requirements.
+ */
+const API_KEY_VARS: ReadonlyArray<readonly [string, string]> = Object.values(
+  PROVIDER_CATALOG,
+).flatMap((d) => (d.keyed && d.apiKeyEnvVar ? [[d.apiKeyEnvVar, d.id] as const] : []));
 
 /** Parses common boolean spellings; returns `undefined` when not recognised. */
 function parseBool(value: string): boolean | undefined {
