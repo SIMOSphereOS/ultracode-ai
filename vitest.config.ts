@@ -2,6 +2,12 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
+    // Emit a JUnit report in CI so GitLab renders the test report and the
+    // unit_tests/e2e_tests jobs actually have a junit.xml to upload (they
+    // declare `reports: junit`). Locally we keep only the default reporter,
+    // so no stray junit.xml is written on developer machines.
+    reporters: process.env.CI ? ["default", "junit"] : ["default"],
+    outputFile: { junit: "./junit.xml" },
     projects: [
       {
         test: {
