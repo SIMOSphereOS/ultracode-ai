@@ -7,12 +7,18 @@
  * `createSessionStore` — falls back to the JSON store.
  */
 
-import { SessionError, generateId } from "ultracode-shared";
-import type { ChatMessage, ISessionStore, Logger, SessionMeta, SessionRecord } from "ultracode-shared";
+import type {
+  ChatMessage,
+  ISessionStore,
+  Logger,
+  SessionMeta,
+  SessionRecord,
+} from "ultracode-shared";
+import { generateId, SessionError } from "ultracode-shared";
 
 import {
-  DEFAULT_SESSION_TITLE,
   applyListLimit,
+  DEFAULT_SESSION_TITLE,
   nowIso,
   selectPruneVictims,
 } from "./sessionInternals.js";
@@ -163,7 +169,9 @@ export class SqliteSessionStore implements ISessionStore {
   async get(id: string): Promise<SessionRecord | null> {
     return this.guard("load session", () => {
       const row = this.db
-        .prepare("SELECT id, title, created_at, updated_at, agent_name, messages FROM sessions WHERE id = ?")
+        .prepare(
+          "SELECT id, title, created_at, updated_at, agent_name, messages FROM sessions WHERE id = ?",
+        )
         .get(id) as SessionRow | undefined;
       if (!row) return null;
       const messages = this.parseMessages(row);
@@ -191,7 +199,9 @@ export class SqliteSessionStore implements ISessionStore {
       this.db.exec("BEGIN IMMEDIATE");
       try {
         const row = this.db
-          .prepare("SELECT id, title, created_at, updated_at, agent_name, messages FROM sessions WHERE id = ?")
+          .prepare(
+            "SELECT id, title, created_at, updated_at, agent_name, messages FROM sessions WHERE id = ?",
+          )
           .get(id) as SessionRow | undefined;
         if (!row) {
           throw new SessionError(`Cannot append messages: unknown session "${id}"`, {
@@ -200,7 +210,9 @@ export class SqliteSessionStore implements ISessionStore {
         }
         const messages = this.parseMessages(row).concat(msgs);
         this.db
-          .prepare("UPDATE sessions SET messages = ?, message_count = ?, updated_at = ? WHERE id = ?")
+          .prepare(
+            "UPDATE sessions SET messages = ?, message_count = ?, updated_at = ? WHERE id = ?",
+          )
           .run(JSON.stringify(messages), messages.length, nowIso(), id);
         this.db.exec("COMMIT");
       } catch (err) {
@@ -246,7 +258,9 @@ export class SqliteSessionStore implements ISessionStore {
   async prune(maxSessions: number): Promise<number> {
     return this.guard("prune sessions", () => {
       const rows = this.db
-        .prepare("SELECT id, title, created_at, updated_at, agent_name, message_count FROM sessions")
+        .prepare(
+          "SELECT id, title, created_at, updated_at, agent_name, message_count FROM sessions",
+        )
         .all() as Array<Omit<SessionRow, "messages"> & { message_count: number | bigint }>;
       const metas: SessionMeta[] = rows.map((row) => ({
         id: row.id,

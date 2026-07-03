@@ -1,11 +1,11 @@
-import { mkdtemp, mkdir, rename, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
 import { NoopLogger, VersioningError } from "ultracode-shared";
+import { afterEach, describe, expect, it } from "vitest";
 import { ChangeAnalysisEngine, extractExportedNames } from "./ChangeAnalysisEngine.js";
-import { defaultGitRunner } from "./GitClient.js";
 import type { GitRunner } from "./GitClient.js";
+import { defaultGitRunner } from "./GitClient.js";
 
 const logger = new NoopLogger();
 
@@ -24,7 +24,8 @@ const cleanups: string[] = [];
 afterEach(async () => {
   while (cleanups.length > 0) {
     const dir = cleanups.pop();
-    if (dir !== undefined) await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+    if (dir !== undefined)
+      await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   }
 });
 
@@ -308,7 +309,8 @@ describe("ChangeAnalysisEngine (real git repos)", () => {
       if (a[0] === "rev-parse" && a.includes("--is-inside-work-tree")) {
         return { exitCode: 0, stdout: "true\n", stderr: "" };
       }
-      if (a[0] === "rev-parse" && a.includes("HEAD")) return { exitCode: 0, stdout: "", stderr: "" };
+      if (a[0] === "rev-parse" && a.includes("HEAD"))
+        return { exitCode: 0, stdout: "", stderr: "" };
       if (a[0] === "describe") return { exitCode: 0, stdout: "v1.0.0\n", stderr: "" };
       // log / diff / show: empty results are enough to drive the analysis.
       return { exitCode: 0, stdout: "", stderr: "" };
@@ -459,7 +461,10 @@ describe("extractExportedNames", () => {
   });
 
   it("still splits call/array/object declarators alongside the generic fix", () => {
-    expect([...extractExportedNames("export const a = f(1, 2), b = 2;")].sort()).toEqual(["a", "b"]);
+    expect([...extractExportedNames("export const a = f(1, 2), b = 2;")].sort()).toEqual([
+      "a",
+      "b",
+    ]);
     expect([...extractExportedNames("export const a = [1, 2], b = 3;")].sort()).toEqual(["a", "b"]);
     expect([...extractExportedNames("export const a = { x: 1, y: 2 }, b = 3;")].sort()).toEqual([
       "a",
@@ -467,7 +472,7 @@ describe("extractExportedNames", () => {
     ]);
   });
 
-  it("records export default under the name \"default\"", () => {
+  it('records export default under the name "default"', () => {
     expect(extractExportedNames("export default function () {}").has("default")).toBe(true);
     expect(extractExportedNames("const x = 1;\nexport default x;").has("default")).toBe(true);
     expect(extractExportedNames("export default class Foo {}").has("default")).toBe(true);

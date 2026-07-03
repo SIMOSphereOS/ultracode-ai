@@ -7,11 +7,11 @@
  * The store lives in the tool instance — one list per tool system.
  */
 
-import { z } from "zod";
-import { ValidationError, generateId } from "ultracode-shared";
 import type { ToolContext, ToolDefinition } from "ultracode-shared";
-import { BaseTool } from "../BaseTool.js";
+import { generateId, ValidationError } from "ultracode-shared";
+import { z } from "zod";
 import type { ToolRunOutcome } from "../BaseTool.js";
+import { BaseTool } from "../BaseTool.js";
 
 /** Allowed todo states. */
 export type TodoStatus = "pending" | "in_progress" | "completed";

@@ -17,16 +17,6 @@
  * 8. Optional `tool.executed` event emission on the {@link IEventBus}.
  */
 
-import {
-  MAX_TOOL_OUTPUT_CHARS,
-  ToolError,
-  ToolNotFoundError,
-  ToolPermissionDeniedError,
-  ToolTimeoutError,
-  isPlainObject,
-  serializeError,
-  truncate,
-} from "ultracode-shared";
 import type {
   IEventBus,
   Logger,
@@ -34,6 +24,16 @@ import type {
   ToolPermission,
   ToolResult,
   UltraCodeConfig,
+} from "ultracode-shared";
+import {
+  isPlainObject,
+  MAX_TOOL_OUTPUT_CHARS,
+  serializeError,
+  ToolError,
+  ToolNotFoundError,
+  ToolPermissionDeniedError,
+  ToolTimeoutError,
+  truncate,
 } from "ultracode-shared";
 import type { ToolRegistry } from "./ToolRegistry.js";
 
@@ -113,7 +113,11 @@ export class ToolExecutor {
    * @param args - raw (unvalidated) arguments.
    * @param ctx - execution context (cwd, env, signal, confirm, logger).
    */
-  async execute<T = unknown>(name: string, args: unknown, ctx: ToolContext): Promise<ToolResult<T>> {
+  async execute<T = unknown>(
+    name: string,
+    args: unknown,
+    ctx: ToolContext,
+  ): Promise<ToolResult<T>> {
     const start = Date.now();
 
     const finish = (result: ToolResult<unknown>): ToolResult<T> => {
@@ -146,8 +150,7 @@ export class ToolExecutor {
 
     // (1) Permission ----------------------------------------------------------
     const toolsConfig = this.config.tools;
-    const isDisabled =
-      toolsConfig.disabled.includes(name) && !toolsConfig.enabled.includes(name);
+    const isDisabled = toolsConfig.disabled.includes(name) && !toolsConfig.enabled.includes(name);
     if (isDisabled) {
       return fail(
         new ToolPermissionDeniedError(`Tool "${name}" is disabled by configuration`, {
@@ -161,10 +164,9 @@ export class ToolExecutor {
 
     if (permission === "never") {
       return fail(
-        new ToolPermissionDeniedError(
-          `Tool "${name}" is blocked (permission "never")`,
-          { toolName: name },
-        ),
+        new ToolPermissionDeniedError(`Tool "${name}" is blocked (permission "never")`, {
+          toolName: name,
+        }),
       );
     }
 
@@ -246,10 +248,9 @@ export class ToolExecutor {
     timeoutPromise.catch(() => undefined);
 
     const timer = setTimeout(() => {
-      const err = new ToolTimeoutError(
-        `Tool "${name}" timed out after ${timeoutSeconds}s`,
-        { toolName: name },
-      );
+      const err = new ToolTimeoutError(`Tool "${name}" timed out after ${timeoutSeconds}s`, {
+        toolName: name,
+      });
       controller.abort(err);
       rejectOnTimeout(err);
     }, timeoutMs);

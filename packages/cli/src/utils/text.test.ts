@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  MAX_CELL_WIDTH,
   flattenLeaves,
   formatTable,
   getAtPath,
+  MAX_CELL_WIDTH,
   maskSecret,
   paint,
   parseCliValue,
@@ -29,7 +29,7 @@ describe("parseCliValue", () => {
   });
 
   it("parses JSON arrays/objects/quoted strings", () => {
-    expect(parseCliValue('[1,2,3]')).toEqual([1, 2, 3]);
+    expect(parseCliValue("[1,2,3]")).toEqual([1, 2, 3]);
     expect(parseCliValue('{"a":1}')).toEqual({ a: 1 });
     expect(parseCliValue('"hello"')).toBe("hello");
   });
@@ -108,7 +108,11 @@ describe("maskSecret", () => {
     const masked = maskSecret("🔑🔑🔑🔑🔑🔑🔑🔑");
     expect(masked).toBe("🔑🔑🔑***");
     // no lone surrogates
-    expect(masked.split("").some((c) => /[\uD800-\uDBFF]/.test(c) && masked[masked.indexOf(c) + 1] === "*")).toBe(false);
+    expect(
+      masked
+        .split("")
+        .some((c) => /[\uD800-\uDBFF]/.test(c) && masked[masked.indexOf(c) + 1] === "*"),
+    ).toBe(false);
   });
 });
 

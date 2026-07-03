@@ -4,11 +4,10 @@
  * formatted, budgeted system-context string.
  */
 
-import { serializeError } from "ultracode-shared";
 import type { Logger, UltraCodeConfig } from "ultracode-shared";
-
-import { ContextCollector } from "./ContextCollector.js";
+import { serializeError } from "ultracode-shared";
 import type { ContextSection } from "./ContextCollector.js";
+import { ContextCollector } from "./ContextCollector.js";
 import { ContextCompressor } from "./ContextCompressor.js";
 
 /** Request for {@link ContextEngine.collect}. */

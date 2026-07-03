@@ -1,13 +1,13 @@
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
-import { afterEach, describe, expect, it } from "vitest";
 import { ConfigError } from "ultracode-shared";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   collectDoctorReport,
+  type DoctorDeps,
   defaultCheckWritable,
   renderDoctorReport,
-  type DoctorDeps,
 } from "./doctor.js";
 
 function makeDeps(over: Partial<DoctorDeps> = {}): DoctorDeps {
@@ -170,7 +170,8 @@ describe("defaultCheckWritable", () => {
   let tmp: string | undefined;
 
   afterEach(async () => {
-    if (tmp !== undefined) await fs.rm(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+    if (tmp !== undefined)
+      await fs.rm(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
     tmp = undefined;
   });
 

@@ -75,7 +75,7 @@ export function parseRobots(content: string, userAgent: string): RobotsTxt {
 
   const ua = userAgent.toLowerCase();
   let chosen = groups.find((g) => g.agents.some((a) => a !== "*" && ua.includes(a)));
-  let matchedAgent = chosen !== undefined;
+  const matchedAgent = chosen !== undefined;
   if (!chosen) chosen = groups.find((g) => g.agents.includes("*"));
 
   return { rules: chosen?.rules ?? [], sitemaps, matchedAgent };

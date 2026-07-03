@@ -55,7 +55,11 @@ export function splitCodeFences(text: string): Array<{ kind: "prose" | "code"; t
       buffer.push(line);
       // A closing fence is a line of the same fence character (>=3) with no
       // trailing info string.
-      if (fenceMatch && (fenceMatch[1] as string)[0] === fenceToken && trimmed === (fenceMatch[1] as string)) {
+      if (
+        fenceMatch &&
+        (fenceMatch[1] as string)[0] === fenceToken &&
+        trimmed === (fenceMatch[1] as string)
+      ) {
         flush("code");
         mode = "prose";
         fenceToken = null;

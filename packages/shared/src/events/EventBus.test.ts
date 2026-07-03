@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
-import { EventBus } from "./EventBus.js";
+import { describe, expect, it, vi } from "vitest";
 import type { ToolExecutedEvent, UltraCodeEvent } from "../types/events.js";
+import { EventBus } from "./EventBus.js";
 
 const toolEvent: ToolExecutedEvent = {
   type: "tool.executed",

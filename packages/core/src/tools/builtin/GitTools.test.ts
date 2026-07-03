@@ -1,10 +1,10 @@
+import { spawnSync } from "node:child_process";
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
-import { spawnSync } from "node:child_process";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { NoopLogger } from "ultracode-shared";
 import type { ToolContext } from "ultracode-shared";
+import { NoopLogger } from "ultracode-shared";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { GitDiffTool, GitLogTool, GitStatusTool } from "./GitTools.js";
 
 const gitAvailable = spawnSync("git", ["--version"], { stdio: "ignore" }).status === 0;
@@ -147,11 +147,9 @@ describe.runIf(isPosix)("Git tools (env sanitization)", () => {
     // that execs node on the fake script (the git args are irrelevant to the
     // env dump). The wrapper inherits the same — sanitized — env as the child.
     const wrapper = path.join(root, "git-wrapper.sh");
-    await fs.writeFile(
-      wrapper,
-      `#!/bin/sh\nexec "${process.execPath}" "${fakeGit}"\n`,
-      { mode: 0o755 },
-    );
+    await fs.writeFile(wrapper, `#!/bin/sh\nexec "${process.execPath}" "${fakeGit}"\n`, {
+      mode: 0o755,
+    });
 
     const secret = "uc-git-secret-should-not-leak-98765";
     process.env.ANTHROPIC_API_KEY = secret;
@@ -166,10 +164,7 @@ describe.runIf(isPosix)("Git tools (env sanitization)", () => {
       );
       expect(result.ok).toBe(true);
 
-      const dumped = JSON.parse(await fs.readFile(dumpFile, "utf8")) as Record<
-        string,
-        string
-      >;
+      const dumped = JSON.parse(await fs.readFile(dumpFile, "utf8")) as Record<string, string>;
       // Secrets (pattern-matched) must be absent from the git child env…
       expect(dumped.ANTHROPIC_API_KEY).toBeUndefined();
       expect(dumped.SOME_GIT_TOKEN).toBeUndefined();
@@ -196,11 +191,9 @@ describe.runIf(isPosix)("Git tools (env sanitization)", () => {
       ].join("\n"),
     );
     const wrapper = path.join(root, "git-wrapper2.sh");
-    await fs.writeFile(
-      wrapper,
-      `#!/bin/sh\nexec "${process.execPath}" "${fakeGit}"\n`,
-      { mode: 0o755 },
-    );
+    await fs.writeFile(wrapper, `#!/bin/sh\nexec "${process.execPath}" "${fakeGit}"\n`, {
+      mode: 0o755,
+    });
 
     const status = new GitStatusTool({
       gitPath: wrapper,
@@ -217,10 +210,7 @@ describe.runIf(isPosix)("Git tools (env sanitization)", () => {
       }),
     );
     expect(result.ok).toBe(true);
-    const dumped = JSON.parse(await fs.readFile(dumpFile, "utf8")) as Record<
-      string,
-      string
-    >;
+    const dumped = JSON.parse(await fs.readFile(dumpFile, "utf8")) as Record<string, string>;
     expect(dumped.MY_CUSTOM_PROVIDER_VAR).toBeUndefined();
     expect(dumped.PLAIN_VAR).toBe("kept");
   });

@@ -11,9 +11,8 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-
-import { NoopLogger, serializeError } from "ultracode-shared";
 import type { Logger } from "ultracode-shared";
+import { NoopLogger, serializeError } from "ultracode-shared";
 
 import { resolveHome } from "../config/paths.js";
 import { RESERVED_SEGMENTS, SAFE_SEGMENT, SKILLS_ROOT } from "./defaults.js";
@@ -41,10 +40,9 @@ export class SkillRegistry {
   /** Absolute path to the file backing `<catalog>/<name>`. */
   private fileFor(catalog: string, name: string): string {
     if (!isSafeSegment(catalog) || !isSafeSegment(name)) {
-      throw new AuthoringError(
-        `Unsafe skill identifier: ${JSON.stringify({ catalog, name })}`,
-        { details: { catalog, name } },
-      );
+      throw new AuthoringError(`Unsafe skill identifier: ${JSON.stringify({ catalog, name })}`, {
+        details: { catalog, name },
+      });
     }
     const file = path.join(this.root, catalog, `${name}.md`);
     // Defence in depth: even with the charset/segment guards above, assert the
@@ -181,9 +179,7 @@ function isSafeSegment(segment: string): boolean {
 /** `true` for a Node `ENOENT` (file/dir not found) error. */
 function isEnoent(err: unknown): boolean {
   return (
-    typeof err === "object" &&
-    err !== null &&
-    (err as NodeJS.ErrnoException).code === "ENOENT"
+    typeof err === "object" && err !== null && (err as NodeJS.ErrnoException).code === "ENOENT"
   );
 }
 

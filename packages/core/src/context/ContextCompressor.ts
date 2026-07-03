@@ -80,8 +80,7 @@ export class ContextCompressor {
       return { section, score, index };
     });
     scored.sort(
-      (a, b) =>
-        b.score - a.score || a.section.priority - b.section.priority || a.index - b.index,
+      (a, b) => b.score - a.score || a.section.priority - b.section.priority || a.index - b.index,
     );
     return scored.map((s) => s.section);
   }

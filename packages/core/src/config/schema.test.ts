@@ -1,12 +1,12 @@
-import { describe, expect, it } from "vitest";
 import { ConfigError, DEFAULT_CONFIG, deepMerge } from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import { checkConfig, validateConfig } from "./schema.js";
 
 function candidate(extra: Record<string, unknown> = {}): Record<string, unknown> {
-  return deepMerge(
-    structuredClone(DEFAULT_CONFIG) as unknown as Record<string, unknown>,
-    { providers: { apiKeys: {} }, ...extra },
-  );
+  return deepMerge(structuredClone(DEFAULT_CONFIG) as unknown as Record<string, unknown>, {
+    providers: { apiKeys: {} },
+    ...extra,
+  });
 }
 
 describe("validateConfig", () => {
@@ -37,24 +37,20 @@ describe("validateConfig", () => {
 
   it("rejects hard type errors with the offending path", () => {
     expect(() => validateConfig(candidate({ core: { debug: "yes" } }))).toThrow(/core\.debug/);
-    expect(() =>
-      validateConfig(candidate({ sessions: { maxSessions: "many" } })),
-    ).toThrow(/sessions\.maxSessions/);
+    expect(() => validateConfig(candidate({ sessions: { maxSessions: "many" } }))).toThrow(
+      /sessions\.maxSessions/,
+    );
   });
 
   it("accepts known themes incl. custom, rejects others", () => {
     for (const theme of ["dark", "light", "dracula", "solarized", "monokai", "custom"]) {
       expect(validateConfig(candidate({ ui: { theme } })).ui.theme).toBe(theme);
     }
-    expect(() => validateConfig(candidate({ ui: { theme: "hotdog-stand" } }))).toThrow(
-      /ui\.theme/,
-    );
+    expect(() => validateConfig(candidate({ ui: { theme: "hotdog-stand" } }))).toThrow(/ui\.theme/);
   });
 
   it("restricts tool permissions to ask/always/never", () => {
-    const ok = validateConfig(
-      candidate({ tools: { perTool: { bash: { permission: "never" } } } }),
-    );
+    const ok = validateConfig(candidate({ tools: { perTool: { bash: { permission: "never" } } } }));
     expect(ok.tools.perTool["bash"]?.permission).toBe("never");
     expect(() =>
       validateConfig(candidate({ tools: { perTool: { bash: { permission: "maybe" } } } })),
@@ -69,9 +65,9 @@ describe("validateConfig", () => {
   });
 
   it("validates versioning strategy and quality bounds", () => {
-    expect(() =>
-      validateConfig(candidate({ versioning: { strategy: "vibes" } })),
-    ).toThrow(/versioning\.strategy/);
+    expect(() => validateConfig(candidate({ versioning: { strategy: "vibes" } }))).toThrow(
+      /versioning\.strategy/,
+    );
     expect(() =>
       validateConfig(candidate({ versioning: { quality: { minCoverage: 150 } } })),
     ).toThrow(/versioning\.quality\.minCoverage/);

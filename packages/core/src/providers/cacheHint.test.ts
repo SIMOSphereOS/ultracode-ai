@@ -9,8 +9,8 @@
  *    OpenAI-compatible providers set a stable `prompt_cache_key`.
  */
 
-import { afterEach, describe, expect, it, vi } from "vitest";
 import type { CompletionRequest, ToolDefinition } from "ultracode-shared";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AnthropicProvider } from "./AnthropicProvider.js";
 import { OpenAIProvider } from "./OpenAIProvider.js";
 import { jsonResponse, stubFetchSequence, testOptions } from "./testkit.test.js";
@@ -42,7 +42,11 @@ function bodyOf(mock: ReturnType<typeof vi.fn>): Record<string, unknown> {
 
 describe("Anthropic cache hint", () => {
   const anthropicResponse = (): Response =>
-    jsonResponse({ content: [], stop_reason: "end_turn", usage: { input_tokens: 0, output_tokens: 0 } });
+    jsonResponse({
+      content: [],
+      stop_reason: "end_turn",
+      usage: { input_tokens: 0, output_tokens: 0 },
+    });
 
   it("emits a plain string system and untouched tools WITHOUT a hint", async () => {
     const mock = stubFetchSequence(anthropicResponse());
@@ -51,7 +55,11 @@ describe("Anthropic cache hint", () => {
     const body = bodyOf(mock);
     expect(body.system).toBe("be precise");
     expect(body.tools).toEqual([
-      { name: "a", description: "do a thing", input_schema: { type: "object", properties: {}, required: [] } },
+      {
+        name: "a",
+        description: "do a thing",
+        input_schema: { type: "object", properties: {}, required: [] },
+      },
     ]);
     expect(JSON.stringify(body)).not.toContain("cache_control");
   });

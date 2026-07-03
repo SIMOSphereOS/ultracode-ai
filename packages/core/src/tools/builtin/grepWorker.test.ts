@@ -8,16 +8,18 @@
  * identically to the shared implementations the main thread imports.
  */
 
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { runSearch } from "./grepWorker.js";
 import type { GrepWorkerInput } from "./grepWorker.js";
+import { runSearch } from "./grepWorker.js";
 
 let root: string;
 
-function input(extra: Partial<GrepWorkerInput> & Pick<GrepWorkerInput, "pattern">): GrepWorkerInput {
+function input(
+  extra: Partial<GrepWorkerInput> & Pick<GrepWorkerInput, "pattern">,
+): GrepWorkerInput {
   return {
     flags: "",
     root,

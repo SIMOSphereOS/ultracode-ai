@@ -10,7 +10,6 @@
 import { readFile } from "node:fs/promises";
 import * as path from "node:path";
 import { clean, valid } from "semver";
-import { DEFAULT_CONFIG } from "ultracode-shared";
 import type {
   ChangeAnalysis,
   ILLMProvider,
@@ -18,28 +17,31 @@ import type {
   QualityReport,
   ReleasePlan,
   UltraCodeConfig,
-  VersionSuggestion,
   VersioningConfig,
+  VersionSuggestion,
 } from "ultracode-shared";
+import { DEFAULT_CONFIG } from "ultracode-shared";
 import { ChangeAnalysisEngine } from "./ChangeAnalysisEngine.js";
-import { GitClient } from "./GitClient.js";
 import type { GitRunner } from "./GitClient.js";
-import { QualityGateSystem } from "./QualityGateSystem.js";
+import { GitClient } from "./GitClient.js";
 import type { CommandRunner, QualityCheckInput } from "./QualityGateSystem.js";
-import { ReleasePlanningEngine } from "./ReleasePlanningEngine.js";
+import { QualityGateSystem } from "./QualityGateSystem.js";
 import type { PlanOptions } from "./ReleasePlanningEngine.js";
-import { VersionRecommender } from "./VersionRecommender.js";
+import { ReleasePlanningEngine } from "./ReleasePlanningEngine.js";
 import type { SuggestOptions } from "./VersionRecommender.js";
+import { VersionRecommender } from "./VersionRecommender.js";
 
-export { GitClient, defaultGitRunner } from "./GitClient.js";
-export type { GitClientOptions, GitCommandResult, GitRunner, GitRunnerOptions } from "./GitClient.js";
-export { ChangeAnalysisEngine, extractExportedNames } from "./ChangeAnalysisEngine.js";
 export type { ChangeAnalysisEngineOptions } from "./ChangeAnalysisEngine.js";
-export { VersionRecommender } from "./VersionRecommender.js";
-export type { SuggestOptions, VersionRecommenderOptions } from "./VersionRecommender.js";
-export { ReleasePlanningEngine } from "./ReleasePlanningEngine.js";
-export type { PlanOptions, ReleasePlanningEngineOptions } from "./ReleasePlanningEngine.js";
-export { QualityGateSystem, defaultCommandRunner } from "./QualityGateSystem.js";
+export { ChangeAnalysisEngine, extractExportedNames } from "./ChangeAnalysisEngine.js";
+export type { ParsedConventionalSubject } from "./conventional.js";
+export { hasBreakingFooter, parseConventionalSubject } from "./conventional.js";
+export type {
+  GitClientOptions,
+  GitCommandResult,
+  GitRunner,
+  GitRunnerOptions,
+} from "./GitClient.js";
+export { defaultGitRunner, GitClient } from "./GitClient.js";
 export type {
   CommandResult,
   CommandRunner,
@@ -47,15 +49,18 @@ export type {
   QualityGateSystemOptions,
   TestCommand,
 } from "./QualityGateSystem.js";
-export { parseConventionalSubject, hasBreakingFooter } from "./conventional.js";
-export type { ParsedConventionalSubject } from "./conventional.js";
+export { defaultCommandRunner, QualityGateSystem } from "./QualityGateSystem.js";
+export type { PlanOptions, ReleasePlanningEngineOptions } from "./ReleasePlanningEngine.js";
+export { ReleasePlanningEngine } from "./ReleasePlanningEngine.js";
+export type { SecurityRule, SecuritySeverity } from "./securityRules.js";
 export {
+  dampenSeverity,
+  isTestFile,
   SECURITY_RULES,
   scanFileForFindings,
-  isTestFile,
-  dampenSeverity,
 } from "./securityRules.js";
-export type { SecurityRule, SecuritySeverity } from "./securityRules.js";
+export type { SuggestOptions, VersionRecommenderOptions } from "./VersionRecommender.js";
+export { VersionRecommender } from "./VersionRecommender.js";
 
 /** Options for the system-level `suggest` call. */
 export interface SystemSuggestOptions extends SuggestOptions {

@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { reportOptimization, TOKENS_OPTIMIZED_EVENT, toTokensOptimizedEvent } from "./events.js";
 import type { OptimizeResult } from "./TokenOptimizer.js";
-import {
-  TOKENS_OPTIMIZED_EVENT,
-  reportOptimization,
-  toTokensOptimizedEvent,
-} from "./events.js";
 
 const result: OptimizeResult = {
   payload: { system: "x", tools: [], messages: [] },

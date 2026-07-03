@@ -14,9 +14,7 @@ function makeProc(): NodeJS.Process & EventEmitter {
 }
 
 function sqliteWarning(): Error {
-  const w = new Error(
-    "SQLite is an experimental feature and might change at any time",
-  );
+  const w = new Error("SQLite is an experimental feature and might change at any time");
   w.name = "ExperimentalWarning";
   return w;
 }

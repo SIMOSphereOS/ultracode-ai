@@ -12,19 +12,19 @@
  */
 
 import type {
-  BudgetCategory,
-  BudgetDecision,
-  CostEstimate,
-  EstimateInput,
-  LedgerEntry,
-} from "../budget/index.js";
-import type {
   AuthoringProposal,
   KnowledgeMaterial,
   Skill,
   SkillFrontmatter,
   TestResult,
 } from "../authoring/index.js";
+import type {
+  BudgetCategory,
+  BudgetDecision,
+  CostEstimate,
+  EstimateInput,
+  LedgerEntry,
+} from "../budget/index.js";
 import type {
   LearnProgress,
   LearnRunPlan,

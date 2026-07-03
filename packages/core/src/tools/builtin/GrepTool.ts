@@ -17,16 +17,15 @@
  * {@link ToolTimeoutError} (`ok: false`) instead of hanging.
  */
 
+import { existsSync, promises as fs } from "node:fs";
 import path from "node:path";
-import { existsSync } from "node:fs";
-import { promises as fs } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Worker } from "node:worker_threads";
-import { z } from "zod";
-import { ToolError, ToolTimeoutError } from "ultracode-shared";
 import type { ToolContext, ToolDefinition } from "ultracode-shared";
-import { BaseTool } from "../BaseTool.js";
+import { ToolError, ToolTimeoutError } from "ultracode-shared";
+import { z } from "zod";
 import type { ToolRunOutcome } from "../BaseTool.js";
+import { BaseTool } from "../BaseTool.js";
 import { PathGuard } from "../PathGuard.js";
 import type { GrepWorkerInput, GrepWorkerResult } from "./grepWorker.js";
 
@@ -136,7 +135,9 @@ export class GrepTool extends BaseTool<typeof schema, GrepToolOutput> {
         ? Math.floor(options.maxMatches)
         : DEFAULT_MAX_MATCHES;
     this.timeoutMs =
-      typeof options.timeoutMs === "number" && Number.isFinite(options.timeoutMs) && options.timeoutMs > 0
+      typeof options.timeoutMs === "number" &&
+      Number.isFinite(options.timeoutMs) &&
+      options.timeoutMs > 0
         ? options.timeoutMs
         : DEFAULT_GREP_TIMEOUT_MS;
   }
@@ -187,7 +188,11 @@ export class GrepTool extends BaseTool<typeof schema, GrepToolOutput> {
       });
     }
     return {
-      output: { matches: result.matches, count: result.matches.length, limitReached: result.limitReached },
+      output: {
+        matches: result.matches,
+        count: result.matches.length,
+        limitReached: result.limitReached,
+      },
       truncated: result.limitReached,
     };
   }

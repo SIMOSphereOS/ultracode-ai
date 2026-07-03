@@ -6,21 +6,21 @@
  * configuration, logger and optional event bus.
  */
 
-import { ENV_PREFIX } from "ultracode-shared";
 import type { IEventBus, Logger, PerToolConfig, UltraCodeConfig } from "ultracode-shared";
-import { ToolRegistry } from "./ToolRegistry.js";
-import { ToolExecutor, DEFAULT_TOOL_TIMEOUT_SECONDS } from "./ToolExecutor.js";
-import { DEFAULT_PROTECTED_EXTENSIONS, DEFAULT_READ_DENY } from "./defaults.js";
-import { ReadTool } from "./builtin/ReadTool.js";
-import { WriteFileTool } from "./builtin/WriteFileTool.js";
-import { EditTool } from "./builtin/EditTool.js";
-import { DeleteFileTool } from "./builtin/DeleteFileTool.js";
-import { GrepTool } from "./builtin/GrepTool.js";
-import { GlobTool } from "./builtin/GlobTool.js";
+import { ENV_PREFIX } from "ultracode-shared";
 import { BashTool } from "./builtin/BashTool.js";
+import { DeleteFileTool } from "./builtin/DeleteFileTool.js";
+import { EditTool } from "./builtin/EditTool.js";
 import { GitDiffTool, GitLogTool, GitStatusTool } from "./builtin/GitTools.js";
+import { GlobTool } from "./builtin/GlobTool.js";
+import { GrepTool } from "./builtin/GrepTool.js";
 import { DependenciesTool, ProjectStatusTool } from "./builtin/ProjectTools.js";
+import { ReadTool } from "./builtin/ReadTool.js";
 import { TodoTool } from "./builtin/TodoTool.js";
+import { WriteFileTool } from "./builtin/WriteFileTool.js";
+import { DEFAULT_PROTECTED_EXTENSIONS, DEFAULT_READ_DENY } from "./defaults.js";
+import { DEFAULT_TOOL_TIMEOUT_SECONDS, ToolExecutor } from "./ToolExecutor.js";
+import { ToolRegistry } from "./ToolRegistry.js";
 
 /** The assembled tool system. */
 export interface ToolSystem {
@@ -90,12 +90,13 @@ export function createToolSystem(
   // Safe-by-default hardening: apply the shipped protected-extensions /
   // read-deny lists unless the user explicitly overrides them (an override
   // replaces the default wholesale, including the empty-array opt-out).
-  const readDeny =
-    stringArrayOption(perTool["read"], "readDeny") ?? [...DEFAULT_READ_DENY];
-  const protectedExtensions =
-    stringArrayOption(perTool["write_file"], "protectedExtensions") ?? [...DEFAULT_PROTECTED_EXTENSIONS];
-  const editProtectedExtensions =
-    stringArrayOption(perTool["edit"], "protectedExtensions") ?? [...DEFAULT_PROTECTED_EXTENSIONS];
+  const readDeny = stringArrayOption(perTool["read"], "readDeny") ?? [...DEFAULT_READ_DENY];
+  const protectedExtensions = stringArrayOption(perTool["write_file"], "protectedExtensions") ?? [
+    ...DEFAULT_PROTECTED_EXTENSIONS,
+  ];
+  const editProtectedExtensions = stringArrayOption(perTool["edit"], "protectedExtensions") ?? [
+    ...DEFAULT_PROTECTED_EXTENSIONS,
+  ];
 
   registry.register(
     new ReadTool({
@@ -120,7 +121,8 @@ export function createToolSystem(
   // Grep runs its match in a worker the host hard-terminates on timeout (ReDoS
   // backstop). Mirror the executor's effective per-tool timeout so the worker
   // is killed no later than the executor would have aborted it.
-  const grepTimeoutSeconds = numberOption(perTool["grep"], "timeout") ?? DEFAULT_TOOL_TIMEOUT_SECONDS;
+  const grepTimeoutSeconds =
+    numberOption(perTool["grep"], "timeout") ?? DEFAULT_TOOL_TIMEOUT_SECONDS;
   registry.register(
     new GrepTool({
       allowedDirs: dirs("grep"),

@@ -120,7 +120,9 @@ export class ReleasePlanningEngine {
         .map((c) => parseConventionalSubject(c.subject).description.trim() || c.subject),
     );
     const notBreaking = (c: CommitInfo): boolean =>
-      !breakingDescriptions.has(parseConventionalSubject(c.subject).description.trim() || c.subject);
+      !breakingDescriptions.has(
+        parseConventionalSubject(c.subject).description.trim() || c.subject,
+      );
 
     const added = analysis.commits
       .filter((c) => c.type === "feat" && notBreaking(c))
@@ -235,7 +237,8 @@ export class ReleasePlanningEngine {
         risks.push({
           description: `Only ${conventional} of ${total} commit(s) follow Conventional Commits — automated analysis is less reliable.`,
           severity: "low",
-          mitigation: "Adopt Conventional Commits so changelogs and version bumps stay trustworthy.",
+          mitigation:
+            "Adopt Conventional Commits so changelogs and version bumps stay trustworthy.",
         });
       }
     }
@@ -266,9 +269,12 @@ export class ReleasePlanningEngine {
       this.logger.warn("versioning: provider returned an empty changelog, keeping heuristic draft");
       return draft;
     } catch (err) {
-      this.logger.warn("versioning: changelog polish via provider failed, keeping heuristic draft", {
-        error: err instanceof Error ? err.message : String(err),
-      });
+      this.logger.warn(
+        "versioning: changelog polish via provider failed, keeping heuristic draft",
+        {
+          error: err instanceof Error ? err.message : String(err),
+        },
+      );
       return draft;
     }
   }

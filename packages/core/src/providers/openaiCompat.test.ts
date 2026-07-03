@@ -1,12 +1,17 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import type {
+  ChatMessage,
+  CompletionChunk,
+  CompletionRequest,
+  ToolDefinition,
+} from "ultracode-shared";
 import { ProviderError } from "ultracode-shared";
-import type { ChatMessage, CompletionChunk, CompletionRequest, ToolDefinition } from "ultracode-shared";
-import { MistralProvider, MISTRAL_BASE_URL } from "./MistralProvider.js";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { MISTRAL_BASE_URL, MistralProvider } from "./MistralProvider.js";
 import { OpenAIProvider } from "./OpenAIProvider.js";
 import {
-  OpenAIToolCallAssembler,
   isReasoningModel,
   mapOpenAIFinishReason,
+  OpenAIToolCallAssembler,
   safeParseArgs,
   toOpenAIMessages,
   toOpenAITools,
@@ -87,7 +92,16 @@ describe("wire mapping", () => {
 
 describe("isReasoningModel", () => {
   it("matches the o1/o3/o4/gpt-5 families incl. suffixes", () => {
-    for (const id of ["o1", "o1-preview", "o3", "o3-mini", "o4-mini", "gpt-5", "gpt-5-2025-08-01", "O3-MINI"]) {
+    for (const id of [
+      "o1",
+      "o1-preview",
+      "o3",
+      "o3-mini",
+      "o4-mini",
+      "gpt-5",
+      "gpt-5-2025-08-01",
+      "O3-MINI",
+    ]) {
       expect(isReasoningModel(id)).toBe(true);
     }
   });
@@ -220,14 +234,20 @@ describe("MistralProvider.complete", () => {
       }),
     );
     const provider = new MistralProvider(testOptions());
-    const result = await provider.complete({ messages: [{ role: "user", content: "hi" }], model: "mistral-large-latest" });
+    const result = await provider.complete({
+      messages: [{ role: "user", content: "hi" }],
+      model: "mistral-large-latest",
+    });
     expect(result).toEqual({
       text: "Servus",
       toolCalls: [],
       usage: { inputTokens: 10, outputTokens: 5 },
       finishReason: "stop",
     });
-    const [url, init] = mock.mock.calls[0] as [string, { headers: Record<string, string>; body: string }];
+    const [url, init] = mock.mock.calls[0] as [
+      string,
+      { headers: Record<string, string>; body: string },
+    ];
     expect(url).toBe(`${MISTRAL_BASE_URL}/chat/completions`);
     expect(init.headers.authorization).toBe("Bearer test-key");
     expect(JSON.parse(init.body)).toMatchObject({ model: "mistral-large-latest", stream: false });
@@ -241,7 +261,11 @@ describe("MistralProvider.complete", () => {
             message: {
               content: null,
               tool_calls: [
-                { id: "c9", type: "function", function: { name: "read", arguments: '{"path":"x"}' } },
+                {
+                  id: "c9",
+                  type: "function",
+                  function: { name: "read", arguments: '{"path":"x"}' },
+                },
               ],
             },
             finish_reason: "tool_calls",
@@ -269,7 +293,9 @@ describe("MistralProvider.complete", () => {
   it("throws on structurally invalid responses (no choices)", async () => {
     stubFetchSequence(jsonResponse({ unexpected: true }));
     const provider = new MistralProvider(testOptions());
-    await expect(provider.complete({ messages: [], model: "m" })).rejects.toThrow(/invalid completion/);
+    await expect(provider.complete({ messages: [], model: "m" })).rejects.toThrow(
+      /invalid completion/,
+    );
   });
 
   it("handles a huge (>= 1 MB) completion text", async () => {
@@ -312,7 +338,10 @@ describe("OpenAI-compatible streaming", () => {
       streamResponse([
         sse(chunkDelta({ content: "Hel" })),
         sse(chunkDelta({ content: "lo 🎉" })),
-        sse({ choices: [{ delta: {}, finish_reason: "stop" }], usage: { prompt_tokens: 3, completion_tokens: 7 } }),
+        sse({
+          choices: [{ delta: {}, finish_reason: "stop" }],
+          usage: { prompt_tokens: 3, completion_tokens: 7 },
+        }),
         sse("[DONE]"),
       ]),
     );
@@ -330,7 +359,10 @@ describe("OpenAI-compatible streaming", () => {
     const provider = new OpenAIProvider(testOptions());
     await collect(provider.stream({ messages: [], model: "gpt-4o" }));
     const [, init] = mock.mock.calls[0] as [string, { body: string }];
-    expect(JSON.parse(init.body)).toMatchObject({ stream: true, stream_options: { include_usage: true } });
+    expect(JSON.parse(init.body)).toMatchObject({
+      stream: true,
+      stream_options: { include_usage: true },
+    });
   });
 
   it("assembles tool-call fragments spread over many deltas", async () => {
@@ -406,7 +438,11 @@ describe("OpenAI-compatible streaming", () => {
   it("flushes tool calls and flags incomplete when a stream ends without a finish_reason", async () => {
     stubFetchSequence(
       streamResponse([
-        sse(chunkDelta({ tool_calls: [{ index: 0, id: "c", function: { name: "x", arguments: "{}" } }] })),
+        sse(
+          chunkDelta({
+            tool_calls: [{ index: 0, id: "c", function: { name: "x", arguments: "{}" } }],
+          }),
+        ),
       ]),
     );
     const provider = new MistralProvider(testOptions());
@@ -414,7 +450,10 @@ describe("OpenAI-compatible streaming", () => {
     // The tool call is still flushed, but the terminal chunk is now flagged
     // incomplete (no finish_reason / no [DONE] was ever observed) and carries a
     // best-known finishReason rather than implying a clean stop.
-    expect(chunks[0]).toEqual({ type: "tool_call", toolCall: { id: "c", name: "x", arguments: {} } });
+    expect(chunks[0]).toEqual({
+      type: "tool_call",
+      toolCall: { id: "c", name: "x", arguments: {} },
+    });
     expect(chunks[1]).toEqual({
       type: "done",
       usage: { inputTokens: 0, outputTokens: 0 },
@@ -430,14 +469,21 @@ describe("OpenAI-compatible streaming", () => {
     // No finish_reason / no [DONE] ever arrived → the terminal chunk is flagged
     // incomplete instead of implying a clean, zero-token stop.
     expect(chunks).toEqual([
-      { type: "done", usage: { inputTokens: 0, outputTokens: 0 }, incomplete: true, finishReason: "error" },
+      {
+        type: "done",
+        usage: { inputTokens: 0, outputTokens: 0 },
+        incomplete: true,
+        finishReason: "error",
+      },
     ]);
   });
 });
 
 describe("listModels / healthCheck", () => {
   it("lists model ids", async () => {
-    stubFetchSequence(jsonResponse({ data: [{ id: "gpt-4o" }, { id: "gpt-4o-mini" }, { junk: 1 }] }));
+    stubFetchSequence(
+      jsonResponse({ data: [{ id: "gpt-4o" }, { id: "gpt-4o-mini" }, { junk: 1 }] }),
+    );
     const provider = new OpenAIProvider(testOptions());
     expect(await provider.listModels()).toEqual(["gpt-4o", "gpt-4o-mini"]);
   });

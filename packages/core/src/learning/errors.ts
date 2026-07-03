@@ -6,8 +6,8 @@
  * package is frozen, so these live here rather than in `ultracode-shared`.
  */
 
-import { UltraCodeError } from "ultracode-shared";
 import type { UltraCodeErrorOptions } from "ultracode-shared";
+import { UltraCodeError } from "ultracode-shared";
 
 /**
  * Raised when a learning operation cannot proceed: unknown source, corrupt

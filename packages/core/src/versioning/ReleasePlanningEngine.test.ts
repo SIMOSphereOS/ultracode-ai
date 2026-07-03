@@ -1,5 +1,3 @@
-import { describe, expect, it } from "vitest";
-import { NoopLogger, ProviderError } from "ultracode-shared";
 import type {
   ChangeAnalysis,
   CommitInfo,
@@ -8,6 +6,8 @@ import type {
   CompletionResult,
   ILLMProvider,
 } from "ultracode-shared";
+import { NoopLogger, ProviderError } from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import { ReleasePlanningEngine } from "./ReleasePlanningEngine.js";
 
 const logger = new NoopLogger();
@@ -50,10 +50,18 @@ const richAnalysis = analysis({
     commit({ type: "refactor", scope: "core", subject: "refactor(core): simplify loop" }),
     commit({ type: null, subject: "random drive-by commit" }),
   ],
-  breakingChanges: [{ source: "api-diff", description: 'Exported symbol "x" was removed', location: "src/x.ts" }],
+  breakingChanges: [
+    { source: "api-diff", description: 'Exported symbol "x" was removed', location: "src/x.ts" },
+  ],
   categories: { feat: 1, fix: 1, docs: 0, refactor: 1, test: 0, chore: 0, perf: 0, other: 1 },
   securityFindings: [
-    { severity: "high", rule: "secret.hardcoded-credential", file: "src/cfg.ts", line: 3, description: "credential" },
+    {
+      severity: "high",
+      rule: "secret.hardcoded-credential",
+      file: "src/cfg.ts",
+      line: 3,
+      description: "credential",
+    },
   ],
   files: [{ path: "src/x.ts", status: "modified", additions: 10, deletions: 4 }],
 });
@@ -90,7 +98,9 @@ describe("ReleasePlanningEngine.plan (heuristic, no provider)", () => {
   });
 
   it("assesses risks: breaking → high, security mapped, large diff → medium, low conv. quote → low", async () => {
-    const bigFiles = [{ path: "src/big.ts", status: "modified" as const, additions: 1500, deletions: 700 }];
+    const bigFiles = [
+      { path: "src/big.ts", status: "modified" as const, additions: 1500, deletions: 700 },
+    ];
     const messy = analysis({
       commits: [
         commit({ type: "feat" }),
@@ -150,7 +160,12 @@ describe("ReleasePlanningEngine.plan (heuristic, no provider)", () => {
   it("handles unicode subjects and huge analyses", async () => {
     const huge = analysis({
       commits: Array.from({ length: 2000 }, (_, i) =>
-        commit({ hash: `h${i}`, type: "feat", scope: "ünïcode", subject: `feat(ünïcode): ✨ nr ${i}` }),
+        commit({
+          hash: `h${i}`,
+          type: "feat",
+          scope: "ünïcode",
+          subject: `feat(ünïcode): ✨ nr ${i}`,
+        }),
       ),
       categories: { ...analysis().categories, feat: 2000 },
     });

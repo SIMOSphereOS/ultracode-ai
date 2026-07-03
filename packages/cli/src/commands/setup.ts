@@ -8,8 +8,8 @@
  * docs/GETTING-STARTED/configuration.md). The key is only ever echoed masked.
  */
 
-import path from "node:path";
 import { promises as fs } from "node:fs";
+import path from "node:path";
 import { ConfigError, USER_ENV_FILE } from "ultracode-shared";
 import type { CliContext } from "../context.js";
 import { safeDispose } from "../context.js";
@@ -118,7 +118,10 @@ export async function writeApiKey(
  * @param io - interaction surface; defaults to a raw-mode terminal reader.
  * @throws {ConfigError} when an unknown provider is chosen.
  */
-export async function runSetup(ctx: CliContext, io: SetupIO = createTerminalIO(ctx)): Promise<void> {
+export async function runSetup(
+  ctx: CliContext,
+  io: SetupIO = createTerminalIO(ctx),
+): Promise<void> {
   io.write("UltraCode Setup\n\n");
 
   const provAnswer = (await io.ask(`Provider (${SETUP_PROVIDERS.join("/")}) [mistral]: `))

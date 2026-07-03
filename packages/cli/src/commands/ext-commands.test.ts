@@ -1,12 +1,6 @@
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_CONFIG, EventBus } from "ultracode-shared";
-import type { CliContext, UltraCodeFacade } from "../context.js";
-import { runCli } from "../program.js";
-import { registerLearnCommands } from "./learn.js";
-import type { ConfirmIO } from "./learn.js";
 import type {
   AuthoringProposal,
   BudgetDecision,
@@ -20,6 +14,12 @@ import type {
   SkillFrontmatter,
   AuthoringTestResult as TestResult,
 } from "ultracode-core";
+import { DEFAULT_CONFIG, EventBus } from "ultracode-shared";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { CliContext, UltraCodeFacade } from "../context.js";
+import { runCli } from "../program.js";
+import type { ConfirmIO } from "./learn.js";
+import { registerLearnCommands } from "./learn.js";
 
 /* ------------------------------------------------------------------ */
 /* fixtures                                                            */
@@ -46,7 +46,14 @@ const statusFixture: BudgetStatusView = {
 };
 
 const ledgerFixture: LedgerEntry[] = [
-  { ts: "2026-06-12T08:00:00.000Z", category: "learning", model: "local", estimatedUsd: 0.5, actualUsd: 0.4, note: "docs" },
+  {
+    ts: "2026-06-12T08:00:00.000Z",
+    category: "learning",
+    model: "local",
+    estimatedUsd: 0.5,
+    actualUsd: 0.4,
+    note: "docs",
+  },
 ];
 
 const skillFront: SkillFrontmatter = {
@@ -77,8 +84,14 @@ const agentProposal: AuthoringProposal = {
   rationale: "Specialized research agent",
 };
 
-const testPass: TestResult = { passed: true, checks: [{ name: "frontmatter", passed: true, detail: "ok" }] };
-const testFail: TestResult = { passed: false, checks: [{ name: "frontmatter", passed: false, detail: "missing name" }] };
+const testPass: TestResult = {
+  passed: true,
+  checks: [{ name: "frontmatter", passed: true, detail: "ok" }],
+};
+const testFail: TestResult = {
+  passed: false,
+  checks: [{ name: "frontmatter", passed: false, detail: "missing name" }],
+};
 
 const source: LearnSource = {
   id: "tavily-docs",
@@ -193,8 +206,18 @@ function makeCtx(facade: UltraCodeFacade, over: Partial<CliContext> = {}) {
     env: {},
     homedir: os.tmpdir(),
     nodeVersion: "20.0.0",
-    stdout: { write: (s: string) => { out += s; }, isTTY: false },
-    stderr: { write: (s: string) => { err += s; }, isTTY: false },
+    stdout: {
+      write: (s: string) => {
+        out += s;
+      },
+      isTTY: false,
+    },
+    stderr: {
+      write: (s: string) => {
+        err += s;
+      },
+      isTTY: false,
+    },
     stdin: { isTTY: false, on: () => {}, removeListener: () => {} },
     createFacade: vi.fn(async () => facade),
     gitVersion: vi.fn(async () => "git version 2.43.0"),
@@ -372,7 +395,10 @@ describe("skills commands", () => {
     const persist = vi.fn(async () => {});
     const facade = makeFacade({ authoring: { persist } });
     const { ctx, out } = makeCtx(facade);
-    const code = await runCli(argv("skills", "create", "--topic", "T", "--catalog", "web", "--yes"), ctx);
+    const code = await runCli(
+      argv("skills", "create", "--topic", "T", "--catalog", "web", "--yes"),
+      ctx,
+    );
     expect(code).toBe(0);
     expect(persist).toHaveBeenCalledWith(proposal, { approved: true });
     expect(out()).toContain("persisted");
@@ -403,7 +429,18 @@ describe("skills commands", () => {
     const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "uc-skill-"));
     try {
       const file = path.join(tmp, "m.json");
-      await fs.writeFile(file, JSON.stringify({ catalog: "web", topic: "🚀 émoji", summary: "s", facts: [], codeSnippets: [], sources: [] }), "utf8");
+      await fs.writeFile(
+        file,
+        JSON.stringify({
+          catalog: "web",
+          topic: "🚀 émoji",
+          summary: "s",
+          facts: [],
+          codeSnippets: [],
+          sources: [],
+        }),
+        "utf8",
+      );
       const createSkill = vi.fn(async () => proposal);
       const { ctx } = makeCtx(makeFacade({ authoring: { createSkill } }), { cwd: tmp });
       const code = await runCli(argv("skills", "create", "--file", file), ctx);
@@ -434,7 +471,10 @@ describe("agents authoring commands", () => {
     const persist = vi.fn(async () => {});
     const facade = makeFacade({ authoring: { persist } });
     const { ctx } = makeCtx(facade);
-    const code = await runCli(argv("agents", "evolve", "--topic", "T", "--catalog", "ops", "--yes"), ctx);
+    const code = await runCli(
+      argv("agents", "evolve", "--topic", "T", "--catalog", "ops", "--yes"),
+      ctx,
+    );
     expect(code).toBe(0);
     expect(persist).toHaveBeenCalledWith(agentProposal, { approved: true });
   });
@@ -477,15 +517,24 @@ describe("learn sources commands", () => {
 
   it("learn sources add forwards the url and options", async () => {
     const add = vi.fn(async () => source);
-    const { ctx, out } = makeCtx(makeFacade({ learning: { sources: { list: vi.fn(), add, remove: vi.fn() } } }));
-    const code = await runCli(argv("learn", "sources", "add", "https://x.dev", "--catalog", "web", "--locale", "en-us"), ctx);
+    const { ctx, out } = makeCtx(
+      makeFacade({ learning: { sources: { list: vi.fn(), add, remove: vi.fn() } } }),
+    );
+    const code = await runCli(
+      argv("learn", "sources", "add", "https://x.dev", "--catalog", "web", "--locale", "en-us"),
+      ctx,
+    );
     expect(code).toBe(0);
-    expect(add).toHaveBeenCalledWith(expect.objectContaining({ url: "https://x.dev", catalog: "web", localeDefault: "en-us" }));
+    expect(add).toHaveBeenCalledWith(
+      expect.objectContaining({ url: "https://x.dev", catalog: "web", localeDefault: "en-us" }),
+    );
     expect(out()).toContain("added source");
   });
 
   it("learn sources remove exits 1 when not found", async () => {
-    const facade = makeFacade({ learning: { sources: { list: vi.fn(), add: vi.fn(), remove: vi.fn(async () => false) } } });
+    const facade = makeFacade({
+      learning: { sources: { list: vi.fn(), add: vi.fn(), remove: vi.fn(async () => false) } },
+    });
     const { ctx, out } = makeCtx(facade);
     const code = await runCli(argv("learn", "sources", "remove", "ghost"), ctx);
     expect(code).toBe(1);
@@ -507,7 +556,13 @@ describe("learn sources commands", () => {
 describe("learn run", () => {
   it("shows the cost report and does NOT run without approval (no TTY, no --yes)", async () => {
     const run = vi.fn(async () => learnReport);
-    const facade = makeFacade({ learning: { sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() }, plan: vi.fn(async () => learnPlan), run } });
+    const facade = makeFacade({
+      learning: {
+        sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() },
+        plan: vi.fn(async () => learnPlan),
+        run,
+      },
+    });
     const io: ConfirmIO = { interactive: false, confirm: vi.fn(async () => true) };
     const { code, out } = await runLearn(facade, io, ["learn", "run", "tavily-docs"]);
     expect(out).toContain("COST REPORT");
@@ -518,7 +573,13 @@ describe("learn run", () => {
 
   it("with --yes shows the report THEN runs", async () => {
     const run = vi.fn(async () => learnReport);
-    const facade = makeFacade({ learning: { sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() }, plan: vi.fn(async () => learnPlan), run } });
+    const facade = makeFacade({
+      learning: {
+        sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() },
+        plan: vi.fn(async () => learnPlan),
+        run,
+      },
+    });
     const io: ConfirmIO = { interactive: false, confirm: vi.fn(async () => false) };
     const { code, out } = await runLearn(facade, io, ["learn", "run", "tavily-docs", "--yes"]);
     expect(out).toContain("COST REPORT");
@@ -529,7 +590,13 @@ describe("learn run", () => {
 
   it("interactive YES approves the run; the report comes first", async () => {
     const run = vi.fn(async () => learnReport);
-    const facade = makeFacade({ learning: { sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() }, plan: vi.fn(async () => learnPlan), run } });
+    const facade = makeFacade({
+      learning: {
+        sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() },
+        plan: vi.fn(async () => learnPlan),
+        run,
+      },
+    });
     const confirm = vi.fn(async () => true);
     const io: ConfirmIO = { interactive: true, confirm };
     const { code } = await runLearn(facade, io, ["learn", "run", "tavily-docs"]);
@@ -540,7 +607,13 @@ describe("learn run", () => {
 
   it("interactive NO aborts the run before any network/LLM work", async () => {
     const run = vi.fn(async () => learnReport);
-    const facade = makeFacade({ learning: { sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() }, plan: vi.fn(async () => learnPlan), run } });
+    const facade = makeFacade({
+      learning: {
+        sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() },
+        plan: vi.fn(async () => learnPlan),
+        run,
+      },
+    });
     const io: ConfirmIO = { interactive: true, confirm: vi.fn(async () => false) };
     const { code, out } = await runLearn(facade, io, ["learn", "run", "tavily-docs"]);
     expect(run).not.toHaveBeenCalled();
@@ -552,7 +625,11 @@ describe("learn run", () => {
     const run = vi.fn(async () => learnReport);
     const facade = makeFacade({
       budget: { check: vi.fn(async () => blockDecision) },
-      learning: { sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() }, plan: vi.fn(async () => learnPlan), run },
+      learning: {
+        sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() },
+        plan: vi.fn(async () => learnPlan),
+        run,
+      },
     });
     const io: ConfirmIO = { interactive: false, confirm: vi.fn() };
     const { code, out } = await runLearn(facade, io, ["learn", "run", "tavily-docs", "--yes"]);
@@ -564,7 +641,13 @@ describe("learn run", () => {
   it("defaults to the single source when no id is given", async () => {
     const run = vi.fn(async () => learnReport);
     const plan = vi.fn(async () => learnPlan);
-    const facade = makeFacade({ learning: { sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() }, plan, run } });
+    const facade = makeFacade({
+      learning: {
+        sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() },
+        plan,
+        run,
+      },
+    });
     const io: ConfirmIO = { interactive: false, confirm: vi.fn() };
     const { code } = await runLearn(facade, io, ["learn", "run", "--yes"]);
     expect(plan).toHaveBeenCalledWith("tavily-docs");
@@ -573,16 +656,34 @@ describe("learn run", () => {
 
   it("ambiguous (multiple sources, no id) fails with ValidationError", async () => {
     const second: LearnSource = { ...source, id: "other" };
-    const facade = makeFacade({ learning: { sources: { list: vi.fn(async () => [source, second]), add: vi.fn(), remove: vi.fn() }, plan: vi.fn(), run: vi.fn() } });
+    const facade = makeFacade({
+      learning: {
+        sources: { list: vi.fn(async () => [source, second]), add: vi.fn(), remove: vi.fn() },
+        plan: vi.fn(),
+        run: vi.fn(),
+      },
+    });
     const io: ConfirmIO = { interactive: false, confirm: vi.fn() };
     const { code } = await runLearn(facade, io, ["learn", "run", "--yes"]);
     expect(code).toBe(1);
   });
 
   it("learn run --json emits the report as JSON after the cost report", async () => {
-    const facade = makeFacade({ learning: { sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() }, plan: vi.fn(async () => learnPlan), run: vi.fn(async () => learnReport) } });
+    const facade = makeFacade({
+      learning: {
+        sources: { list: vi.fn(async () => [source]), add: vi.fn(), remove: vi.fn() },
+        plan: vi.fn(async () => learnPlan),
+        run: vi.fn(async () => learnReport),
+      },
+    });
     const io: ConfirmIO = { interactive: false, confirm: vi.fn() };
-    const { code, out } = await runLearn(facade, io, ["learn", "run", "tavily-docs", "--yes", "--json"]);
+    const { code, out } = await runLearn(facade, io, [
+      "learn",
+      "run",
+      "tavily-docs",
+      "--yes",
+      "--json",
+    ]);
     expect(code).toBe(0);
     const jsonStart = out.indexOf("{");
     expect(JSON.parse(out.slice(jsonStart))).toEqual(learnReport);

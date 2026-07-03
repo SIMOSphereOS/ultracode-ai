@@ -23,9 +23,9 @@
  * still imports — so grep behaviour is identical.
  */
 
-import nodePath from "node:path";
-import { promises as fs } from "node:fs";
 import type { Dirent } from "node:fs";
+import { promises as fs } from "node:fs";
+import nodePath from "node:path";
 import { parentPort, workerData } from "node:worker_threads";
 
 /** Input handed to the worker via `workerData`. */

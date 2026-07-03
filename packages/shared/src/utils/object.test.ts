@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { deepMerge, isPlainObject, MAX_MERGE_DEPTH } from "./object.js";
+import { describe, expect, it } from "vitest";
 import { ValidationError } from "../errors.js";
+import { deepMerge, isPlainObject, MAX_MERGE_DEPTH } from "./object.js";
 
 describe("isPlainObject", () => {
   it("accepts plain objects and null-prototype objects", () => {

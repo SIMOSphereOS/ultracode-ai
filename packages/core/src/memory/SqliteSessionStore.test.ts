@@ -1,15 +1,14 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-
+import type { ChatMessage, Logger, LogMeta } from "ultracode-shared";
 import { SessionError } from "ultracode-shared";
-import type { ChatMessage, LogMeta, Logger } from "ultracode-shared";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
-  SqliteSessionStore,
   type SqliteDatabaseLike,
   type SqliteModuleLike,
+  SqliteSessionStore,
   type SqliteStatementLike,
 } from "./SqliteSessionStore.js";
 
@@ -124,9 +123,9 @@ describe("SqliteSessionStore.appendMessages (transaction)", () => {
     });
 
     const store = await SqliteSessionStore.open(":memory:", silentLogger(), loader);
-    await expect(store.appendMessages("missing", [{ role: "user", content: "x" }])).rejects.toBeInstanceOf(
-      SessionError,
-    );
+    await expect(
+      store.appendMessages("missing", [{ role: "user", content: "x" }]),
+    ).rejects.toBeInstanceOf(SessionError);
     store.close();
 
     expect(execCalls).toContain("BEGIN IMMEDIATE");
@@ -135,44 +134,47 @@ describe("SqliteSessionStore.appendMessages (transaction)", () => {
   });
 });
 
-describe.skipIf(!SQLITE_AVAILABLE)("SqliteSessionStore concurrency (two instances, same db file)", () => {
-  let dir: string | undefined;
+describe.skipIf(!SQLITE_AVAILABLE)(
+  "SqliteSessionStore concurrency (two instances, same db file)",
+  () => {
+    let dir: string | undefined;
 
-  afterEach(async () => {
-    if (dir) await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
-    dir = undefined;
-  });
+    afterEach(async () => {
+      if (dir) await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+      dir = undefined;
+    });
 
-  it("does not lose messages when two store instances append concurrently", async () => {
-    dir = await mkdtemp(path.join(os.tmpdir(), "ultracode-sqlite-concurrency-"));
-    const dbPath = path.join(dir, "sessions.db");
+    it("does not lose messages when two store instances append concurrently", async () => {
+      dir = await mkdtemp(path.join(os.tmpdir(), "ultracode-sqlite-concurrency-"));
+      const dbPath = path.join(dir, "sessions.db");
 
-    // Two independent store instances point at the same database file, mirroring
-    // two UltraCode terminals open in the same project.
-    const a = await SqliteSessionStore.open(dbPath, silentLogger());
-    const b = await SqliteSessionStore.open(dbPath, silentLogger());
+      // Two independent store instances point at the same database file, mirroring
+      // two UltraCode terminals open in the same project.
+      const a = await SqliteSessionStore.open(dbPath, silentLogger());
+      const b = await SqliteSessionStore.open(dbPath, silentLogger());
 
-    const meta = await a.create("default", "shared");
+      const meta = await a.create("default", "shared");
 
-    const total = 50;
-    const ops: Array<Promise<void>> = [];
-    for (let i = 0; i < total; i++) {
-      const store = i % 2 === 0 ? a : b;
-      const msg: ChatMessage = { role: "user", content: `m${i}` };
-      ops.push(store.appendMessages(meta.id, [msg]));
-    }
-    await Promise.all(ops);
+      const total = 50;
+      const ops: Array<Promise<void>> = [];
+      for (let i = 0; i < total; i++) {
+        const store = i % 2 === 0 ? a : b;
+        const msg: ChatMessage = { role: "user", content: `m${i}` };
+        ops.push(store.appendMessages(meta.id, [msg]));
+      }
+      await Promise.all(ops);
 
-    const record = await a.get(meta.id);
-    a.close();
-    b.close();
+      const record = await a.get(meta.id);
+      a.close();
+      b.close();
 
-    expect(record).not.toBeNull();
-    // Every concurrent append must survive — no lost updates from the race.
-    expect(record?.messageCount).toBe(total);
-    const contents = new Set((record?.messages ?? []).map((m) => m.content));
-    for (let i = 0; i < total; i++) {
-      expect(contents.has(`m${i}`)).toBe(true);
-    }
-  });
-});
+      expect(record).not.toBeNull();
+      // Every concurrent append must survive — no lost updates from the race.
+      expect(record?.messageCount).toBe(total);
+      const contents = new Set((record?.messages ?? []).map((m) => m.content));
+      for (let i = 0; i < total; i++) {
+        expect(contents.has(`m${i}`)).toBe(true);
+      }
+    });
+  },
+);

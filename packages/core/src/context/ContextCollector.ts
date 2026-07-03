@@ -12,9 +12,8 @@ import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-
-import { serializeError } from "ultracode-shared";
 import type { Logger } from "ultracode-shared";
+import { serializeError } from "ultracode-shared";
 
 /** One titled block of collected context, ready for ranking/compression. */
 export interface ContextSection {
@@ -76,7 +75,11 @@ function makeSpawnGitRunner(command: string): GitRunner {
       let stdout = "";
       let child;
       try {
-        child = spawn(command, args, { cwd, windowsHide: true, stdio: ["ignore", "pipe", "ignore"] });
+        child = spawn(command, args, {
+          cwd,
+          windowsHide: true,
+          stdio: ["ignore", "pipe", "ignore"],
+        });
       } catch {
         resolve({ ok: false, stdout: "" });
         return;
@@ -235,7 +238,10 @@ export class ContextCollector {
           lines.push(`${indent}${d.name}`);
           try {
             const st = await fs.stat(full);
-            files.push({ rel: path.relative(root, full).split(path.sep).join("/"), mtimeMs: st.mtimeMs });
+            files.push({
+              rel: path.relative(root, full).split(path.sep).join("/"),
+              mtimeMs: st.mtimeMs,
+            });
           } catch {
             // stat raced with a deletion: tree line is enough
           }

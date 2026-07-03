@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import type { ChatMessage } from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import { extractPinnedFacts, extractPinnedFromText } from "./pinned.js";
 
 describe("extractPinnedFromText", () => {

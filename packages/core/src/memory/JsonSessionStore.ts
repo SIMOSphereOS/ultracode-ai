@@ -9,16 +9,21 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-
-import { SessionError, generateId, serializeError } from "ultracode-shared";
-import type { ChatMessage, ISessionStore, Logger, SessionMeta, SessionRecord } from "ultracode-shared";
+import type {
+  ChatMessage,
+  ISessionStore,
+  Logger,
+  SessionMeta,
+  SessionRecord,
+} from "ultracode-shared";
+import { generateId, SessionError, serializeError } from "ultracode-shared";
 
 import { resolveHome } from "./paths.js";
 import {
-  DEFAULT_SESSION_TITLE,
   applyListLimit,
   cloneMessages,
   compareMetaDesc,
+  DEFAULT_SESSION_TITLE,
   isSessionRecordShape,
   nowIso,
   selectPruneVictims,
@@ -42,11 +47,7 @@ function delay(ms: number): Promise<void> {
 
 /** `true` for fs errors carrying the given `code` (e.g. `"ENOENT"`). */
 function hasFsCode(err: unknown, code: string): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    (err as NodeJS.ErrnoException).code === code
-  );
+  return typeof err === "object" && err !== null && (err as NodeJS.ErrnoException).code === code;
 }
 
 /**

@@ -8,8 +8,8 @@
  *   `durationMs` is always populated.
  */
 
-import { ValidationError, serializeError } from "ultracode-shared";
 import type { ITool, ToolContext, ToolDefinition, ToolResult } from "ultracode-shared";
+import { serializeError, ValidationError } from "ultracode-shared";
 import type { z } from "zod";
 
 /** What a concrete tool's {@link BaseTool.run} returns on success. */
@@ -26,9 +26,7 @@ export interface ToolRunOutcome<TOut> {
  * @typeParam S - zod schema describing the tool's arguments.
  * @typeParam TOut - successful output payload type.
  */
-export abstract class BaseTool<S extends z.ZodTypeAny, TOut>
-  implements ITool<z.output<S>, TOut>
-{
+export abstract class BaseTool<S extends z.ZodTypeAny, TOut> implements ITool<z.output<S>, TOut> {
   /** Static tool definition (name, category, parameters, permission). */
   abstract readonly definition: ToolDefinition;
   /** zod schema used by {@link BaseTool.validate}. */

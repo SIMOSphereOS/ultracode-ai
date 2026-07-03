@@ -14,15 +14,15 @@
  * The exit code is part of the *output* — a non-zero exit is still `ok: true`.
  */
 
-import { spawn } from "node:child_process";
 import type { ChildProcess, SpawnOptions } from "node:child_process";
+import { spawn } from "node:child_process";
 import { promises as fs } from "node:fs";
 import { StringDecoder } from "node:string_decoder";
-import { z } from "zod";
-import { MAX_TOOL_OUTPUT_CHARS, ToolError, ToolTimeoutError, truncate } from "ultracode-shared";
 import type { ToolContext, ToolDefinition } from "ultracode-shared";
-import { BaseTool } from "../BaseTool.js";
+import { MAX_TOOL_OUTPUT_CHARS, ToolError, ToolTimeoutError, truncate } from "ultracode-shared";
+import { z } from "zod";
 import type { ToolRunOutcome } from "../BaseTool.js";
+import { BaseTool } from "../BaseTool.js";
 import { PathGuard } from "../PathGuard.js";
 import { sanitizeEnv } from "../sanitizeEnv.js";
 
@@ -72,11 +72,7 @@ export interface BashToolOptions {
    * `child_process.spawn`. Injected only by tests to simulate a spawn `error`
    * event (e.g. the shell binary missing). Production never sets this.
    */
-  spawnFn?: (
-    command: string,
-    args: readonly string[],
-    options: SpawnOptions,
-  ) => ChildProcess;
+  spawnFn?: (command: string, args: readonly string[], options: SpawnOptions) => ChildProcess;
 }
 
 /** Cross-platform shell command execution with process-tree kill. */
@@ -114,8 +110,7 @@ export class BashTool extends BaseTool<typeof schema, BashToolOutput> {
     super();
     this.guard = new PathGuard({ allowedDirs: options.allowedDirs });
     this.secretEnvKeys = new Set((options.secretEnvKeys ?? []).map((k) => k.toUpperCase()));
-    this.processKill =
-      options.processKill ?? ((pid, signal) => void process.kill(pid, signal));
+    this.processKill = options.processKill ?? ((pid, signal) => void process.kill(pid, signal));
     this.spawnFn =
       options.spawnFn ?? ((command, args, opts) => spawn(command, args as string[], opts));
   }
@@ -268,10 +263,10 @@ export class BashTool extends BaseTool<typeof schema, BashToolOutput> {
       append("err", errDecoder.end());
 
       if (timedOut) {
-        throw new ToolTimeoutError(
-          `Command timed out after ${args.timeout}s and was killed`,
-          { toolName: name, details: { command: args.command, stdout, stderr } },
-        );
+        throw new ToolTimeoutError(`Command timed out after ${args.timeout}s and was killed`, {
+          toolName: name,
+          details: { command: args.command, stdout, stderr },
+        });
       }
       if (aborted) {
         throw new ToolError("Command aborted", {

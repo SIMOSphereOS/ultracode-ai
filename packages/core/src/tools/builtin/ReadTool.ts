@@ -5,13 +5,13 @@
  * Rejects binary files (NUL-byte heuristic) and files above the size limit.
  */
 
-import path from "node:path";
 import { promises as fs } from "node:fs";
-import { z } from "zod";
-import { ToolError, ToolPermissionDeniedError } from "ultracode-shared";
+import path from "node:path";
 import type { ToolContext, ToolDefinition } from "ultracode-shared";
-import { BaseTool } from "../BaseTool.js";
+import { ToolError, ToolPermissionDeniedError } from "ultracode-shared";
+import { z } from "zod";
 import type { ToolRunOutcome } from "../BaseTool.js";
+import { BaseTool } from "../BaseTool.js";
 import { PathGuard } from "../PathGuard.js";
 import { isBinaryFile, splitLines } from "./fsUtils.js";
 
@@ -112,13 +112,10 @@ export class ReadTool extends BaseTool<typeof schema, ReadToolOutput> {
   ): Promise<ToolRunOutcome<ReadToolOutput>> {
     this.throwIfAborted(ctx);
     if (this.isDenied(args.file_path)) {
-      throw new ToolPermissionDeniedError(
-        `Reading "${args.file_path}" is blocked by read_deny`,
-        {
-          toolName: this.definition.name,
-          details: { path: args.file_path, readDeny: this.readDeny },
-        },
-      );
+      throw new ToolPermissionDeniedError(`Reading "${args.file_path}" is blocked by read_deny`, {
+        toolName: this.definition.name,
+        details: { path: args.file_path, readDeny: this.readDeny },
+      });
     }
 
     const resolved = await this.guard.resolve(ctx.cwd, args.file_path, this.definition.name);
@@ -126,13 +123,10 @@ export class ReadTool extends BaseTool<typeof schema, ReadToolOutput> {
     // Re-check on the fully resolved path: catches symlinks/relative forms whose
     // basename only reveals the denied name after resolution.
     if (this.isDenied(resolved)) {
-      throw new ToolPermissionDeniedError(
-        `Reading "${args.file_path}" is blocked by read_deny`,
-        {
-          toolName: this.definition.name,
-          details: { path: resolved, readDeny: this.readDeny },
-        },
-      );
+      throw new ToolPermissionDeniedError(`Reading "${args.file_path}" is blocked by read_deny`, {
+        toolName: this.definition.name,
+        details: { path: resolved, readDeny: this.readDeny },
+      });
     }
 
     let stat;

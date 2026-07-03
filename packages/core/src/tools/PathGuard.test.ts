@@ -1,9 +1,9 @@
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ToolError } from "ultracode-shared";
-import { PathGuard, isPathInside, resolveHome, resolvePath } from "./PathGuard.js";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { isPathInside, PathGuard, resolveHome, resolvePath } from "./PathGuard.js";
 
 let root: string;
 let outside: string;
@@ -57,9 +57,7 @@ describe("resolvePath", () => {
 
   it("rejects ../ traversal", async () => {
     await expect(resolvePath(root, "../../../etc/passwd")).rejects.toThrow(ToolError);
-    await expect(
-      resolvePath(root, `..${path.sep}..${path.sep}x`),
-    ).rejects.toThrow(/outside/);
+    await expect(resolvePath(root, `..${path.sep}..${path.sep}x`)).rejects.toThrow(/outside/);
   });
 
   it("rejects absolute paths outside the sandbox", async () => {

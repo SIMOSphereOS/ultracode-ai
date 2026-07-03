@@ -11,8 +11,8 @@
  * failure is swallowed to `""`, so the agent's behaviour is exactly unchanged.
  */
 
-import { NoopLogger, serializeError } from "ultracode-shared";
 import type { Logger } from "ultracode-shared";
+import { NoopLogger, serializeError } from "ultracode-shared";
 
 import type { ContextCollector } from "../agents/BaseAgent.js";
 import {
@@ -21,11 +21,11 @@ import {
   DEFAULT_MAX_SKILLS,
   SKILL_CONTEXT_HEADER,
 } from "./defaults.js";
+import type { SkillRegistry } from "./SkillRegistry.js";
 import { findForbiddenPhrases } from "./safety.js";
-import { SkillRegistry } from "./SkillRegistry.js";
 import type { Skill } from "./types.js";
 
-export { DEFAULT_MAX_SKILLS, DEFAULT_MAX_CHARS, SKILL_CONTEXT_HEADER };
+export { DEFAULT_MAX_CHARS, DEFAULT_MAX_SKILLS, SKILL_CONTEXT_HEADER };
 
 /** Options for {@link createSkillInjector}. */
 export interface SkillInjectorOptions {

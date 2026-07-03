@@ -1,9 +1,9 @@
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { NoopLogger, ValidationError } from "ultracode-shared";
 import type { ToolContext } from "ultracode-shared";
+import { NoopLogger, ValidationError } from "ultracode-shared";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { GrepTool } from "./GrepTool.js";
 
 let root: string;
@@ -39,10 +39,7 @@ describe("GrepTool", () => {
 
   it("supports regex patterns and the i/m/s/u flags", async () => {
     await fs.writeFile(path.join(root, "f.txt"), "Foo bar\nbaz FOO");
-    const result = await tool.execute(
-      tool.validate({ pattern: "^foo", flags: "i" }),
-      ctx(),
-    );
+    const result = await tool.execute(tool.validate({ pattern: "^foo", flags: "i" }), ctx());
     expect(result.ok).toBe(true);
     expect(result.output.count).toBe(1);
     expect(result.output.matches[0]?.line).toBe(1);
@@ -134,10 +131,7 @@ describe("GrepTool", () => {
     const out = await tool.execute(tool.validate({ pattern: "x", path: "../.." }), ctx());
     expect(out.ok).toBe(false);
 
-    const missing = await tool.execute(
-      tool.validate({ pattern: "x", path: "no-such-dir" }),
-      ctx(),
-    );
+    const missing = await tool.execute(tool.validate({ pattern: "x", path: "no-such-dir" }), ctx());
     expect(missing.ok).toBe(false);
   });
 

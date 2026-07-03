@@ -112,7 +112,19 @@ e2e_tests:
       - junit.xml
     expire_in: 1 week
 
-# ── lint / typecheck ──────────────────────────────────────────────────────────
+# ── lint / format (Biome) ─────────────────────────────────────────────────────
+# Format + Lint + Import-Sortierung in einem, read-only (biome ci). Braucht kein
+# dist/, daher needs:[] → läuft sofort parallel für schnelles Feedback.
+lint:
+  <<: *node_setup
+  <<: *pnpm_cache
+  stage: test
+  needs: []
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm biome:ci
+
+# ── typecheck ─────────────────────────────────────────────────────────────────
 typecheck:
   <<: *node_setup
   <<: *pnpm_cache

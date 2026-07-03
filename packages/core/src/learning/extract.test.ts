@@ -3,11 +3,17 @@
  * {@link Semaphore} concurrency primitive.
  */
 
-import { describe, expect, it, vi } from "vitest";
-
 import type { CompletionRequest, CompletionResult, ILLMProvider } from "ultracode-shared";
-import { chunkText, distillPage, estimateTokens, routeModel, sha256, DEFAULT_ROUTING } from "./extract.js";
-import { Semaphore, mapWithConcurrency } from "./concurrency.js";
+import { describe, expect, it, vi } from "vitest";
+import { mapWithConcurrency, Semaphore } from "./concurrency.js";
+import {
+  chunkText,
+  DEFAULT_ROUTING,
+  distillPage,
+  estimateTokens,
+  routeModel,
+  sha256,
+} from "./extract.js";
 
 function fakeProvider(onComplete?: (req: CompletionRequest) => void): ILLMProvider {
   return {
@@ -52,7 +58,9 @@ describe("chunking", () => {
     const giant = "x".repeat(10_000);
     const chunks = chunkText(giant, 64, 0.1);
     expect(chunks.length).toBeGreaterThan(1);
-    expect(chunks.map((c) => c.text).join("").length).toBeGreaterThanOrEqual(10_000 - chunks.length);
+    expect(chunks.map((c) => c.text).join("").length).toBeGreaterThanOrEqual(
+      10_000 - chunks.length,
+    );
   });
 
   it("estimateTokens never returns 0 for non-empty text", () => {
@@ -78,7 +86,8 @@ describe("routing", () => {
 });
 
 describe("distillPage", () => {
-  const text = "Azure Functions run code on demand. Triggers start functions. Bindings connect data.\n" +
+  const text =
+    "Azure Functions run code on demand. Triggers start functions. Bindings connect data.\n" +
     "const x = 1;\naz functionapp create --name foo";
 
   it("uses the LLM when allowed and accounts token usage", async () => {
@@ -119,16 +128,30 @@ describe("distillPage", () => {
       llmAllowed: false,
     });
     expect(usage.calls).toBe(0);
-    expect((provider.complete as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+    expect(provider.complete as ReturnType<typeof vi.fn>).not.toHaveBeenCalled();
   });
 
   it("serves repeated chunks from the shared cache", async () => {
     const provider = fakeProvider();
     const cache = new Map<string, string>();
     const repeated = "Same sentence here. ".repeat(50);
-    await distillPage(repeated, { catalog: "c", topic: "t", sources: ["s"], provider, llmAllowed: true, cache });
+    await distillPage(repeated, {
+      catalog: "c",
+      topic: "t",
+      sources: ["s"],
+      provider,
+      llmAllowed: true,
+      cache,
+    });
     const callsAfterFirst = (provider.complete as ReturnType<typeof vi.fn>).mock.calls.length;
-    const second = await distillPage(repeated, { catalog: "c", topic: "t", sources: ["s"], provider, llmAllowed: true, cache });
+    const second = await distillPage(repeated, {
+      catalog: "c",
+      topic: "t",
+      sources: ["s"],
+      provider,
+      llmAllowed: true,
+      cache,
+    });
     // No new model calls on the identical second page.
     expect((provider.complete as ReturnType<typeof vi.fn>).mock.calls.length).toBe(callsAfterFirst);
     expect(second.usage.cacheHits).toBeGreaterThan(0);
@@ -139,7 +162,14 @@ describe("distillPage", () => {
     const provider = fakeProvider(() => controller.abort());
     const long = "Sentence number. ".repeat(2000);
     await expect(
-      distillPage(long, { catalog: "c", topic: "t", sources: ["s"], provider, llmAllowed: true, signal: controller.signal }),
+      distillPage(long, {
+        catalog: "c",
+        topic: "t",
+        sources: ["s"],
+        provider,
+        llmAllowed: true,
+        signal: controller.signal,
+      }),
     ).rejects.toMatchObject({ name: "AbortError" });
   });
 });
@@ -162,7 +192,11 @@ describe("Semaphore", () => {
 
   it("clamps invalid limits to 1 and releases on throw", async () => {
     const sem = new Semaphore(0);
-    await expect(sem.run(async () => { throw new Error("boom"); })).rejects.toThrow("boom");
+    await expect(
+      sem.run(async () => {
+        throw new Error("boom");
+      }),
+    ).rejects.toThrow("boom");
     // Still usable afterwards (permit released).
     await expect(sem.run(async () => 42)).resolves.toBe(42);
   });

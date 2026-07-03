@@ -1,11 +1,11 @@
-import os from "node:os";
-import path from "node:path";
+import type { ChildProcess } from "node:child_process";
 import { EventEmitter } from "node:events";
 import { promises as fs } from "node:fs";
-import type { ChildProcess } from "node:child_process";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { NoopLogger } from "ultracode-shared";
+import os from "node:os";
+import path from "node:path";
 import type { ToolContext } from "ultracode-shared";
+import { NoopLogger } from "ultracode-shared";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { BashTool } from "./BashTool.js";
 
 const isPosix = process.platform !== "win32";
@@ -66,10 +66,7 @@ describe("BashTool", () => {
   });
 
   it("rejects cwd outside the sandbox", async () => {
-    const result = await tool.execute(
-      tool.validate({ command: "echo hi", cwd: "../.." }),
-      ctx(),
-    );
+    const result = await tool.execute(tool.validate({ command: "echo hi", cwd: "../.." }), ctx());
     expect(result.ok).toBe(false);
     expect(result.error?.message).toContain("outside");
   });
@@ -259,10 +256,7 @@ describe("BashTool", () => {
       return emitter as unknown as ChildProcess;
     };
     const errorTool = new BashTool({ spawnFn: () => makeFakeChild() });
-    const result = await errorTool.execute(
-      errorTool.validate({ command: "echo hi" }),
-      ctx(),
-    );
+    const result = await errorTool.execute(errorTool.validate({ command: "echo hi" }), ctx());
     expect(result.ok).toBe(false);
     expect(result.error?.code).toBe("TOOL_ERROR");
     expect(result.error?.message).toContain("Failed to start shell");

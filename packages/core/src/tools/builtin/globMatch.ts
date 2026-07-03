@@ -132,10 +132,9 @@ function normaliseSegments(pattern: string): string[] {
 export function globToRegExp(pattern: string): RegExp {
   const segments = normaliseSegments(pattern);
   if (segments.length > MAX_GLOB_SEGMENTS) {
-    throw new ToolError(
-      `Glob pattern has more than ${MAX_GLOB_SEGMENTS} path segments`,
-      { toolName: "glob" },
-    );
+    throw new ToolError(`Glob pattern has more than ${MAX_GLOB_SEGMENTS} path segments`, {
+      toolName: "glob",
+    });
   }
   let re = "^";
   for (let i = 0; i < segments.length; i += 1) {

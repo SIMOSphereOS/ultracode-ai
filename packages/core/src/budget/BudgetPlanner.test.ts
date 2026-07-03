@@ -7,23 +7,23 @@
  * extreme inputs and local=0 pricing.
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import fs from "node:fs/promises";
-
-import { NoopLogger } from "ultracode-shared";
 import type { Logger } from "ultracode-shared";
 
-import { createBudgetPlanner, BudgetPlanner } from "./BudgetPlanner.js";
-import { BudgetError } from "./errors.js";
-import { ledgerFile, planFile } from "./paths.js";
+import { NoopLogger } from "ultracode-shared";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { type BudgetPlanner, createBudgetPlanner } from "./BudgetPlanner.js";
 import {
   DEFAULT_FX_RATE,
   DEFAULT_PLAN_ENVELOPES,
   USD_HIGH_FACTOR,
   USD_LOW_FACTOR,
 } from "./defaults.js";
+import { BudgetError } from "./errors.js";
+import { ledgerFile, planFile } from "./paths.js";
 import type { BudgetPlan, EstimateInput } from "./types.js";
 
 /** Lifetime cap seeded for the `learning` envelope by `installDefaultPlan`. */
@@ -209,7 +209,10 @@ describe("check — policy boundaries", () => {
     return planner;
   }
 
-  const plan = (askThresholdUsd: number | null, caps?: Partial<BudgetPlan["envelopes"][number]>): BudgetPlan => ({
+  const plan = (
+    askThresholdUsd: number | null,
+    caps?: Partial<BudgetPlan["envelopes"][number]>,
+  ): BudgetPlan => ({
     policy: "ask-threshold",
     fxRate: 0.92,
     updatedAt: "2026-06-12T10:00:00.000Z",
@@ -227,7 +230,16 @@ describe("check — policy boundaries", () => {
 
   it("auto-allows below the ask threshold", async () => {
     const planner = await plannerWithPlan(plan(1.0));
-    const est = { tokensIn: 0, tokensOut: 0, byModel: [], usdLow: 0.1, usdHigh: 0.5, eur: 0, fxRate: 0.92, assumptions: [] };
+    const est = {
+      tokensIn: 0,
+      tokensOut: 0,
+      byModel: [],
+      usdLow: 0.1,
+      usdHigh: 0.5,
+      eur: 0,
+      fxRate: 0.92,
+      assumptions: [],
+    };
     const d = planner.check(est, "development");
     expect(d.allowed).toBe(true);
     expect(d.requiresApproval).toBe(false);
@@ -235,7 +247,16 @@ describe("check — policy boundaries", () => {
 
   it("requires approval at/above the ask threshold", async () => {
     const planner = await plannerWithPlan(plan(0.5));
-    const est = { tokensIn: 0, tokensOut: 0, byModel: [], usdLow: 0.4, usdHigh: 0.5, eur: 0, fxRate: 0.92, assumptions: [] };
+    const est = {
+      tokensIn: 0,
+      tokensOut: 0,
+      byModel: [],
+      usdLow: 0.4,
+      usdHigh: 0.5,
+      eur: 0,
+      fxRate: 0.92,
+      assumptions: [],
+    };
     const d = planner.check(est, "development");
     expect(d.allowed).toBe(true);
     expect(d.requiresApproval).toBe(true);
@@ -243,14 +264,32 @@ describe("check — policy boundaries", () => {
 
   it("always requires approval when ask threshold is null", async () => {
     const planner = await plannerWithPlan(plan(null));
-    const est = { tokensIn: 0, tokensOut: 0, byModel: [], usdLow: 0, usdHigh: 0.001, eur: 0, fxRate: 0.92, assumptions: [] };
+    const est = {
+      tokensIn: 0,
+      tokensOut: 0,
+      byModel: [],
+      usdLow: 0,
+      usdHigh: 0.001,
+      eur: 0,
+      fxRate: 0.92,
+      assumptions: [],
+    };
     const d = planner.check(est, "development");
     expect(d.requiresApproval).toBe(true);
   });
 
   it("refuses on a per-run hard cap breach", async () => {
     const planner = await plannerWithPlan(plan(0.5, { perRunUsd: 1 }));
-    const est = { tokensIn: 0, tokensOut: 0, byModel: [], usdLow: 1.5, usdHigh: 2, eur: 0, fxRate: 0.92, assumptions: [] };
+    const est = {
+      tokensIn: 0,
+      tokensOut: 0,
+      byModel: [],
+      usdLow: 1.5,
+      usdHigh: 2,
+      eur: 0,
+      fxRate: 0.92,
+      assumptions: [],
+    };
     const d = planner.check(est, "development");
     expect(d.allowed).toBe(false);
     expect(d.reason).toContain("hard cap");
@@ -265,7 +304,16 @@ describe("check — policy boundaries", () => {
       estimatedUsd: 4,
       actualUsd: 4,
     });
-    const est = { tokensIn: 0, tokensOut: 0, byModel: [], usdLow: 1.5, usdHigh: 2, eur: 0, fxRate: 0.92, assumptions: [] };
+    const est = {
+      tokensIn: 0,
+      tokensOut: 0,
+      byModel: [],
+      usdLow: 1.5,
+      usdHigh: 2,
+      eur: 0,
+      fxRate: 0.92,
+      assumptions: [],
+    };
     const d = planner.check(est, "development");
     expect(d.allowed).toBe(false);
     expect(d.reason).toContain("daily");
@@ -273,7 +321,16 @@ describe("check — policy boundaries", () => {
 
   it("auto-allows uncapped categories without an envelope", async () => {
     const planner = makePlanner();
-    const est = { tokensIn: 0, tokensOut: 0, byModel: [], usdLow: 100, usdHigh: 999, eur: 0, fxRate: 0.92, assumptions: [] };
+    const est = {
+      tokensIn: 0,
+      tokensOut: 0,
+      byModel: [],
+      usdLow: 100,
+      usdHigh: 999,
+      eur: 0,
+      fxRate: 0.92,
+      assumptions: [],
+    };
     const d = planner.check(est, "operations");
     expect(d.allowed).toBe(true);
     expect(d.requiresApproval).toBe(false);
@@ -306,9 +363,24 @@ describe("alerts — 50/80/100 %", () => {
         },
       ],
     });
-    await planner.record({ ts: "2026-06-12T10:00:00.000Z", category: "learning", estimatedUsd: 55, actualUsd: 55 });
-    await planner.record({ ts: "2026-06-12T11:00:00.000Z", category: "learning", estimatedUsd: 30, actualUsd: 30 });
-    await planner.record({ ts: "2026-06-12T12:00:00.000Z", category: "learning", estimatedUsd: 20, actualUsd: 20 });
+    await planner.record({
+      ts: "2026-06-12T10:00:00.000Z",
+      category: "learning",
+      estimatedUsd: 55,
+      actualUsd: 55,
+    });
+    await planner.record({
+      ts: "2026-06-12T11:00:00.000Z",
+      category: "learning",
+      estimatedUsd: 30,
+      actualUsd: 30,
+    });
+    await planner.record({
+      ts: "2026-06-12T12:00:00.000Z",
+      category: "learning",
+      estimatedUsd: 20,
+      actualUsd: 20,
+    });
 
     const alerts = events.filter((e) => e.type === "budget.alert");
     const bands = alerts.map((a) => a.pct).sort((x, y) => Number(x) - Number(y));
@@ -319,8 +391,18 @@ describe("alerts — 50/80/100 %", () => {
 describe("ledger — atomic + corrupt-tolerant", () => {
   it("appends entries as JSON lines and reloads them", async () => {
     const planner = makePlanner();
-    await planner.record({ ts: "2026-06-12T10:00:00.000Z", category: "development", estimatedUsd: 1, actualUsd: 1 });
-    await planner.record({ ts: "2026-06-12T10:05:00.000Z", category: "development", estimatedUsd: 2, actualUsd: 2.5 });
+    await planner.record({
+      ts: "2026-06-12T10:00:00.000Z",
+      category: "development",
+      estimatedUsd: 1,
+      actualUsd: 1,
+    });
+    await planner.record({
+      ts: "2026-06-12T10:05:00.000Z",
+      category: "development",
+      estimatedUsd: 2,
+      actualUsd: 2.5,
+    });
 
     const raw = await fs.readFile(ledgerFile(homeDir), "utf8");
     const lines = raw.trim().split("\n");
@@ -340,10 +422,20 @@ describe("ledger — atomic + corrupt-tolerant", () => {
     await fs.writeFile(
       file,
       [
-        JSON.stringify({ ts: "2026-06-12T10:00:00.000Z", category: "learning", estimatedUsd: 1, actualUsd: 1 }),
+        JSON.stringify({
+          ts: "2026-06-12T10:00:00.000Z",
+          category: "learning",
+          estimatedUsd: 1,
+          actualUsd: 1,
+        }),
         "{ this is not json",
         JSON.stringify({ category: "learning" }), // malformed (missing fields)
-        JSON.stringify({ ts: "2026-06-12T11:00:00.000Z", category: "learning", estimatedUsd: 2, actualUsd: 2 }),
+        JSON.stringify({
+          ts: "2026-06-12T11:00:00.000Z",
+          category: "learning",
+          estimatedUsd: 2,
+          actualUsd: 2,
+        }),
         "",
       ].join("\n"),
       "utf8",
@@ -373,9 +465,16 @@ describe("ledger — atomic + corrupt-tolerant", () => {
 
   it("wraps a filesystem failure in a BudgetError", async () => {
     const planner = makePlanner();
-    const spy = vi.spyOn(fs, "mkdir").mockRejectedValue(Object.assign(new Error("EACCES"), { code: "EACCES" }));
+    const spy = vi
+      .spyOn(fs, "mkdir")
+      .mockRejectedValue(Object.assign(new Error("EACCES"), { code: "EACCES" }));
     await expect(
-      planner.record({ ts: "2026-06-12T10:00:00.000Z", category: "development", estimatedUsd: 1, actualUsd: 1 }),
+      planner.record({
+        ts: "2026-06-12T10:00:00.000Z",
+        category: "development",
+        estimatedUsd: 1,
+        actualUsd: 1,
+      }),
     ).rejects.toBeInstanceOf(BudgetError);
     spy.mockRestore();
   });
@@ -394,8 +493,18 @@ describe("period rollover", () => {
     await fs.writeFile(
       file,
       [
-        JSON.stringify({ ts: "2026-06-30T10:00:00.000Z", category: "development", estimatedUsd: 5, actualUsd: 5 }),
-        JSON.stringify({ ts: "2026-07-01T08:00:00.000Z", category: "development", estimatedUsd: 3, actualUsd: 3 }),
+        JSON.stringify({
+          ts: "2026-06-30T10:00:00.000Z",
+          category: "development",
+          estimatedUsd: 5,
+          actualUsd: 5,
+        }),
+        JSON.stringify({
+          ts: "2026-07-01T08:00:00.000Z",
+          category: "development",
+          estimatedUsd: 3,
+          actualUsd: 3,
+        }),
       ].join("\n") + "\n",
       "utf8",
     );
@@ -413,7 +522,11 @@ describe("plan management", () => {
     const planner = makePlanner();
     await planner.installDefaultPlan();
     const plan = planner.getPlan();
-    expect(plan.envelopes.map((e) => e.category)).toEqual(["development", "learning", "operations"]);
+    expect(plan.envelopes.map((e) => e.category)).toEqual([
+      "development",
+      "learning",
+      "operations",
+    ]);
     const learning = plan.envelopes.find((e) => e.category === "learning")!;
     expect(learning.totalUsd).toBe(LEARNING_TOTAL_USD);
 
@@ -422,7 +535,9 @@ describe("plan management", () => {
 
     const reloaded = makePlanner();
     const loaded = await reloaded.loadPlan();
-    expect(loaded.envelopes.find((e) => e.category === "learning")!.totalUsd).toBe(LEARNING_TOTAL_USD);
+    expect(loaded.envelopes.find((e) => e.category === "learning")!.totalUsd).toBe(
+      LEARNING_TOTAL_USD,
+    );
   });
 
   it("setPlan round-trips through TOML persistence", async () => {
@@ -432,7 +547,14 @@ describe("plan management", () => {
       fxRate: 0.9,
       updatedAt: "x",
       envelopes: [
-        { category: "development", perRunUsd: 3, dailyUsd: null, monthlyUsd: 50, totalUsd: null, askThresholdUsd: 1 },
+        {
+          category: "development",
+          perRunUsd: 3,
+          dailyUsd: null,
+          monthlyUsd: 50,
+          totalUsd: null,
+          askThresholdUsd: 1,
+        },
       ],
     });
     const reloaded = makePlanner();
@@ -534,10 +656,19 @@ describe("events", () => {
       homeDir,
       now: fixedClock("2026-06-12T10:00:00.000Z"),
     });
-    const est: EstimateInput = { category: "development", perItemTokensIn: 100, perItemTokensOut: 100 };
+    const est: EstimateInput = {
+      category: "development",
+      perItemTokensIn: 100,
+      perItemTokensOut: 100,
+    };
     const estimate = planner.estimate(est);
     planner.check(estimate, "development");
-    await planner.record({ ts: "2026-06-12T10:00:00.000Z", category: "development", estimatedUsd: 1, actualUsd: 1 });
+    await planner.record({
+      ts: "2026-06-12T10:00:00.000Z",
+      category: "development",
+      estimatedUsd: 1,
+      actualUsd: 1,
+    });
     expect(events.some((e) => e.type === "budget.checked")).toBe(true);
     expect(events.some((e) => e.type === "budget.spent")).toBe(true);
   });
@@ -555,7 +686,11 @@ describe("events", () => {
       homeDir,
       now: fixedClock("2026-06-12T10:00:00.000Z"),
     });
-    const est = planner.estimate({ category: "development", perItemTokensIn: 1, perItemTokensOut: 1 });
+    const est = planner.estimate({
+      category: "development",
+      perItemTokensIn: 1,
+      perItemTokensOut: 1,
+    });
     expect(() => planner.check(est, "development")).not.toThrow();
   });
 });

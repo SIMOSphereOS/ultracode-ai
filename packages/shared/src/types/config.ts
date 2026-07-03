@@ -16,11 +16,12 @@ import type { ToolPermission } from "./tool.js";
  * where each layer only specifies the keys it overrides. Arrays are treated as
  * leaves (replaced wholesale, never deep-merged).
  */
-export type DeepPartial<T> = T extends ReadonlyArray<unknown>
-  ? T
-  : T extends object
-    ? { [K in keyof T]?: DeepPartial<T[K]> }
-    : T;
+export type DeepPartial<T> =
+  T extends ReadonlyArray<unknown>
+    ? T
+    : T extends object
+      ? { [K in keyof T]?: DeepPartial<T[K]> }
+      : T;
 
 /** `[core]` — global behaviour. */
 export interface CoreConfig {

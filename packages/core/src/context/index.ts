@@ -8,14 +8,14 @@
  * - {@link ContextCompressor} — token estimation, ranking and trimming.
  */
 
-export { ContextCollector, DEFAULT_IGNORE } from "./ContextCollector.js";
 export type {
-  ContextSection,
   ContextCollectorOptions,
+  ContextSection,
   GitRunner,
   GitRunResult,
 } from "./ContextCollector.js";
-export { ContextCompressor, CONTEXT_HEADER, cutAtWordBoundary } from "./ContextCompressor.js";
+export { ContextCollector, DEFAULT_IGNORE } from "./ContextCollector.js";
 export type { CompressOptions } from "./ContextCompressor.js";
-export { ContextEngine, createContextEngine } from "./ContextEngine.js";
+export { CONTEXT_HEADER, ContextCompressor, cutAtWordBoundary } from "./ContextCompressor.js";
 export type { ContextCollectRequest, ContextEngineDeps } from "./ContextEngine.js";
+export { ContextEngine, createContextEngine } from "./ContextEngine.js";

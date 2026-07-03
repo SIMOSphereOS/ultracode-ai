@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 /**
  * Minimal, self-contained example: ask the UltraCode AI versioning system for the
  * next SemVer version of the *current* repository.
@@ -25,8 +26,8 @@
  *     - 3 feature commit(s) since the base version
  */
 
-import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Import the built core package. When `ultracode-core` is installed as a
 // dependency this is simply `import { createVersioningSystem } from

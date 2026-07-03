@@ -7,8 +7,8 @@
  * they would start are resolved as failed results without executing.
  */
 
-import { ToolError, serializeError } from "ultracode-shared";
 import type { ToolContext, ToolResult } from "ultracode-shared";
+import { serializeError, ToolError } from "ultracode-shared";
 import type { ToolExecutor } from "./ToolExecutor.js";
 
 /** A single queued tool invocation. */

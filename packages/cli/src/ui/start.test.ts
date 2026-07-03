@@ -8,8 +8,8 @@
  * exits, and always disposes the facade.
  */
 
-import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_CONFIG } from "ultracode-shared";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 /* ------------------------------------------------------------------------- */
 /* Mocks                                                                      */
@@ -33,22 +33,24 @@ vi.mock("ink", () => ({
   Text: () => null,
   useApp: () => ({ exit: vi.fn() }),
   useInput: () => {},
-  render: vi.fn((element: { props: Record<string, unknown> }, options?: { exitOnCtrlC?: boolean }) => {
-    renderState.element = element;
-    renderState.options = options;
-    return {
-      waitUntilExit: renderState.waitUntilExit,
-      unmount: vi.fn(),
-      clear: vi.fn(),
-      rerender: vi.fn(),
-    };
-  }),
+  render: vi.fn(
+    (element: { props: Record<string, unknown> }, options?: { exitOnCtrlC?: boolean }) => {
+      renderState.element = element;
+      renderState.options = options;
+      return {
+        waitUntilExit: renderState.waitUntilExit,
+        unmount: vi.fn(),
+        clear: vi.fn(),
+        rerender: vi.fn(),
+      };
+    },
+  ),
 }));
 
 // Import after the mock is registered.
 import { render as inkRender } from "ink";
-import { startInteractive } from "./start.js";
 import type { CliContext, UltraCodeFacade } from "../context.js";
+import { startInteractive } from "./start.js";
 
 /* ------------------------------------------------------------------------- */
 /* Fixtures                                                                   */

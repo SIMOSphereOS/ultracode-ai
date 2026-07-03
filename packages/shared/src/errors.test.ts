@@ -1,16 +1,16 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  UltraCodeError,
+  AgentError,
   ConfigError,
   ProviderError,
+  SessionError,
   ToolError,
+  ToolNotFoundError,
   ToolPermissionDeniedError,
   ToolTimeoutError,
-  ToolNotFoundError,
-  AgentError,
-  SessionError,
-  VersioningError,
+  UltraCodeError,
   ValidationError,
+  VersioningError,
 } from "./errors.js";
 
 describe("error hierarchy", () => {

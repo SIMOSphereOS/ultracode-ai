@@ -101,7 +101,11 @@ function tokenize(key: string): string[] {
  * (`config.providers.apiKeys`).
  */
 export function isSecretEnvKey(key: string, extraSecretKeys?: ReadonlySet<string>): boolean {
-  if (extraSecretKeys !== undefined && extraSecretKeys.size > 0 && extraSecretKeys.has(key.toUpperCase())) {
+  if (
+    extraSecretKeys !== undefined &&
+    extraSecretKeys.size > 0 &&
+    extraSecretKeys.has(key.toUpperCase())
+  ) {
     return true;
   }
 

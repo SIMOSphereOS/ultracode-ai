@@ -16,11 +16,24 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "vitest run --project e2e",
-    "typecheck": "tsc -b packages/shared packages/core packages/cli"
+    "typecheck": "tsc -b packages/shared packages/core packages/cli",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "biome:ci": "biome ci .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,json,jsonc}": [
+      "biome check --write --no-errors-on-unmatched"
+    ]
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.2",
     "@types/node": "^22.10.0",
     "@vitest/coverage-v8": "^3.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
     "typescript": "^5.6.0",
     "vitest": "^3.0.0"
   }

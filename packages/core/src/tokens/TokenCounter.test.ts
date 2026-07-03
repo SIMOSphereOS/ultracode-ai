@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import type { ChatMessage } from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import { HeuristicTokenCounter } from "./TokenCounter.js";
 
 const counter = new HeuristicTokenCounter();

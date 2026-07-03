@@ -15,35 +15,8 @@
  * - All public types/contracts.
  */
 
-export { Authoring, createAuthoring, DEFAULT_ALLOWED_TOOLS } from "./Authoring.js";
 export type { AuthoringOptions, Clock } from "./Authoring.js";
-
-export { SkillRegistry } from "./SkillRegistry.js";
-
-export {
-  createSkillInjector,
-  DEFAULT_MAX_SKILLS,
-  DEFAULT_MAX_CHARS as SKILL_INJECTOR_DEFAULT_MAX_CHARS,
-  SKILL_CONTEXT_HEADER,
-} from "./SkillInjector.js";
-export type { SkillInjectorOptions } from "./SkillInjector.js";
-
-export {
-  parseFrontmatter,
-  serializeFrontmatter,
-  splitDocument,
-} from "./frontmatter.js";
-
-export {
-  findForbiddenPhrases,
-  checkNoEscalation,
-  clampToAllowed,
-  FORBIDDEN_PHRASES,
-} from "./safety.js";
-export type { PermissionCheck } from "./safety.js";
-
-export { skillSchema, agentSchema } from "./schema.js";
-
+export { Authoring, createAuthoring, DEFAULT_ALLOWED_TOOLS } from "./Authoring.js";
 export {
   AGENTS_DIR,
   AUDIT_FILENAME,
@@ -75,35 +48,54 @@ export {
   STOPWORDS,
   UNKNOWN_FROM_VERSION,
 } from "./defaults.js";
-
 export { AuthoringError } from "./errors.js";
-
-export {
-  emitAuthoringEvent,
-  SKILL_CREATED_EVENT,
-  SKILL_UPDATED_EVENT,
-  AGENT_CREATED_EVENT,
-} from "./events.js";
 export type {
+  AgentCreatedEvent,
   AuthoringEvent,
   SkillCreatedEvent,
   SkillUpdatedEvent,
-  AgentCreatedEvent,
 } from "./events.js";
+export {
+  AGENT_CREATED_EVENT,
+  emitAuthoringEvent,
+  SKILL_CREATED_EVENT,
+  SKILL_UPDATED_EVENT,
+} from "./events.js";
+export {
+  parseFrontmatter,
+  serializeFrontmatter,
+  splitDocument,
+} from "./frontmatter.js";
+export type { SkillInjectorOptions } from "./SkillInjector.js";
+export {
+  createSkillInjector,
+  DEFAULT_MAX_CHARS as SKILL_INJECTOR_DEFAULT_MAX_CHARS,
+  DEFAULT_MAX_SKILLS,
+  SKILL_CONTEXT_HEADER,
+} from "./SkillInjector.js";
+export { SkillRegistry } from "./SkillRegistry.js";
+export type { PermissionCheck } from "./safety.js";
+export {
+  checkNoEscalation,
+  clampToAllowed,
+  FORBIDDEN_PHRASES,
+  findForbiddenPhrases,
+} from "./safety.js";
+export { agentSchema, skillSchema } from "./schema.js";
 
 export type {
+  AuthoringKind,
+  AuthoringProposal,
+  BudgetDecision,
+  CostEstimate,
+  EstimateInput,
+  IBudgetGate,
+  ISkillAuthor,
+  KnowledgeMaterial,
+  ModelSpend,
   Skill,
   SkillFrontmatter,
   SkillStatus,
-  KnowledgeMaterial,
-  AuthoringProposal,
-  AuthoringKind,
-  TestResult,
   TestCheck,
-  ISkillAuthor,
-  IBudgetGate,
-  CostEstimate,
-  ModelSpend,
-  BudgetDecision,
-  EstimateInput,
+  TestResult,
 } from "./types.js";

@@ -1,16 +1,16 @@
-import { describe, expect, it, vi } from "vitest";
 import type { ChatMessage, CompletionResult, ILLMProvider, ToolDefinition } from "ultracode-shared";
-import { HeuristicTokenCounter } from "./TokenCounter.js";
-import type { OptimizeContext, PromptPayload } from "./types.js";
+import { describe, expect, it, vi } from "vitest";
 import {
   ConversationCompactionStage,
   DEDUP_PLACEHOLDER,
   DedupContextStage,
+  omittedNote,
   SystemPromptMinifyStage,
   ToolSchemaSlimStage,
   WhitespaceNormalizeStage,
-  omittedNote,
 } from "./stages.js";
+import { HeuristicTokenCounter } from "./TokenCounter.js";
+import type { OptimizeContext, PromptPayload } from "./types.js";
 
 const counter = new HeuristicTokenCounter();
 const baseCtx: OptimizeContext = { counter };
@@ -255,7 +255,9 @@ describe("ConversationCompactionStage", () => {
     expect(out.messages.length).toBeLessThan(messages.length);
     // First and last preserved.
     expect(out.messages[0]?.content).toBe(messages[0]?.content);
-    expect(out.messages[out.messages.length - 1]?.content).toBe(messages[messages.length - 1]?.content);
+    expect(out.messages[out.messages.length - 1]?.content).toBe(
+      messages[messages.length - 1]?.content,
+    );
   });
 
   it("never separates a tool-call from its tool-result pair", () => {

@@ -26,7 +26,11 @@ describe("MetadataCache", () => {
 
   it("overwrites existing keys and refreshes their TTL", () => {
     const clock = fakeClock();
-    const cache = new MetadataCache<string, string>({ maxEntries: 5, ttlMs: 100, clock: clock.now });
+    const cache = new MetadataCache<string, string>({
+      maxEntries: 5,
+      ttlMs: 100,
+      clock: clock.now,
+    });
     cache.set("k", "v1");
     clock.advance(90);
     cache.set("k", "v2"); // refreshes TTL
@@ -63,7 +67,11 @@ describe("MetadataCache", () => {
   it("treats ttlMs <= 0 and NaN as immediately stale", () => {
     const clock = fakeClock(10);
     for (const ttl of [0, -100, Number.NaN]) {
-      const cache = new MetadataCache<string, string>({ maxEntries: 2, ttlMs: ttl, clock: clock.now });
+      const cache = new MetadataCache<string, string>({
+        maxEntries: 2,
+        ttlMs: ttl,
+        clock: clock.now,
+      });
       cache.set("k", "v");
       expect(cache.get("k")).toBeUndefined();
       expect(cache.has("k")).toBe(false);

@@ -10,24 +10,19 @@
  * mapping are all exercised end-to-end.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
-
-import { NoopLogger } from "ultracode-shared";
 import type { Logger } from "ultracode-shared";
 
-import { createBudgetPlanner, type BudgetPlanner } from "../budget/BudgetPlanner.js";
+import { NoopLogger } from "ultracode-shared";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { type Authoring, createAuthoring } from "../authoring/Authoring.js";
+import { type BudgetPlanner, createBudgetPlanner } from "../budget/BudgetPlanner.js";
 import { ledgerFile } from "../budget/paths.js";
-import { createAuthoring, type Authoring } from "../authoring/Authoring.js";
-import { createLearnAgent, type LearnAgent } from "../learning/index.js";
 import { LearnError } from "../learning/errors.js";
-import {
-  buildBudgetFacade,
-  buildAuthoringFacade,
-  buildLearningFacade,
-} from "./index.js";
+import { createLearnAgent, type LearnAgent } from "../learning/index.js";
+import { buildAuthoringFacade, buildBudgetFacade, buildLearningFacade } from "./index.js";
 
 const RM = { recursive: true, force: true, maxRetries: 10, retryDelay: 50 } as const;
 const logger: Logger = new NoopLogger();
@@ -361,9 +356,9 @@ describe("buildLearningFacade — source library", () => {
 
   it("rejects an SSRF-blocked host literal at add time", async () => {
     const facade = buildLearningFacade(makeLearn(), logger);
-    await expect(
-      facade.sources.add({ url: "http://127.0.0.1/internal" }),
-    ).rejects.toBeInstanceOf(LearnError);
+    await expect(facade.sources.add({ url: "http://127.0.0.1/internal" })).rejects.toBeInstanceOf(
+      LearnError,
+    );
   });
 });
 

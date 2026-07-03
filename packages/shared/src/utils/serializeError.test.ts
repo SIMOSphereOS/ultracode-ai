@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { serializeError } from "./serializeError.js";
+import { describe, expect, it } from "vitest";
 import { ConfigError, ProviderError } from "../errors.js";
+import { serializeError } from "./serializeError.js";
 
 describe("serializeError", () => {
   it("delegates to UltraCodeError.toJSON", () => {

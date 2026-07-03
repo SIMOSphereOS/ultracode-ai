@@ -1,11 +1,3 @@
-import { describe, expect, it } from "vitest";
-import {
-  AgentError,
-  EventBus,
-  NoopLogger,
-  ProviderError,
-  MAX_TOOL_OUTPUT_CHARS,
-} from "ultracode-shared";
 import type {
   ChatMessage,
   CompletionChunk,
@@ -21,6 +13,14 @@ import type {
   ToolResult,
   UltraCodeEvent,
 } from "ultracode-shared";
+import {
+  AgentError,
+  EventBus,
+  MAX_TOOL_OUTPUT_CHARS,
+  NoopLogger,
+  ProviderError,
+} from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import { DEFAULT_NO_PROGRESS_LIMIT, ExecutionEngine, isAbortError } from "./ExecutionEngine.js";
 import type { IToolRunner } from "./types.js";
 
@@ -40,10 +40,7 @@ const stop = (text: string, u: TokenUsage = usage(1, 2)): CompletionResult => ({
   finishReason: "stop",
 });
 
-const toolTurn = (
-  calls: ToolCallRequest[],
-  u: TokenUsage = usage(1, 2),
-): CompletionResult => ({
+const toolTurn = (calls: ToolCallRequest[], u: TokenUsage = usage(1, 2)): CompletionResult => ({
   text: "",
   toolCalls: calls,
   usage: u,
@@ -284,9 +281,9 @@ describe("ExecutionEngine", () => {
     const controller = new AbortController();
     controller.abort();
 
-    await expect(
-      engine.run({ prompt: "x", signal: controller.signal }),
-    ).rejects.toSatisfy((err: unknown) => isAbortError(err));
+    await expect(engine.run({ prompt: "x", signal: controller.signal })).rejects.toSatisfy(
+      (err: unknown) => isAbortError(err),
+    );
     expect(provider.requests).toHaveLength(0);
   });
 
@@ -302,9 +299,9 @@ describe("ExecutionEngine", () => {
     const tools = new FakeToolRunner();
     const engine = makeEngine(provider, tools);
 
-    await expect(
-      engine.run({ prompt: "x", signal: controller.signal }),
-    ).rejects.toSatisfy((err: unknown) => isAbortError(err));
+    await expect(engine.run({ prompt: "x", signal: controller.signal })).rejects.toSatisfy(
+      (err: unknown) => isAbortError(err),
+    );
     // The second turn's tool calls must never execute.
     expect(tools.calls).toHaveLength(1);
   });
@@ -318,9 +315,9 @@ describe("ExecutionEngine", () => {
     const provider = new FakeProvider([toolTurn([call("c1", "echo")]), stop("never")]);
     const engine = makeEngine(provider, tools);
 
-    await expect(
-      engine.run({ prompt: "x", signal: controller.signal }),
-    ).rejects.toSatisfy((err: unknown) => isAbortError(err));
+    await expect(engine.run({ prompt: "x", signal: controller.signal })).rejects.toSatisfy(
+      (err: unknown) => isAbortError(err),
+    );
     expect(provider.requests).toHaveLength(1);
   });
 
@@ -362,9 +359,9 @@ describe("ExecutionEngine", () => {
     const engine = makeEngine(provider, tools);
 
     const started = Date.now();
-    await expect(
-      engine.run({ prompt: "x", signal: controller.signal }),
-    ).rejects.toSatisfy((err: unknown) => isAbortError(err));
+    await expect(engine.run({ prompt: "x", signal: controller.signal })).rejects.toSatisfy(
+      (err: unknown) => isAbortError(err),
+    );
     const elapsed = Date.now() - started;
 
     // Rejected well before the 5s slow tool could ever settle.
@@ -483,7 +480,10 @@ describe("ExecutionEngine", () => {
         { type: "tool_call", toolCall: call("c1", "echo", { v: "final" }) },
         { type: "done", usage: usage(1, 1) },
       ],
-      [{ type: "text", text: "ok" }, { type: "done", usage: usage(1, 1) }],
+      [
+        { type: "text", text: "ok" },
+        { type: "done", usage: usage(1, 1) },
+      ],
     ]);
     const tools = new FakeToolRunner();
     const engine = makeEngine(provider, tools);
@@ -532,7 +532,12 @@ describe("ExecutionEngine", () => {
     events.on("tool.executed", (e) => seen.push(e));
     const failing = new FakeToolRunner([toolDef("echo")], (name, args) =>
       args["fail"] === true
-        ? { ok: false, output: null, error: { name: "E", message: "x", code: "TOOL_ERROR" }, durationMs: 2 }
+        ? {
+            ok: false,
+            output: null,
+            error: { name: "E", message: "x", code: "TOOL_ERROR" },
+            durationMs: 2,
+          }
         : okResult("fine", 5),
     );
     const provider = new FakeProvider([

@@ -6,7 +6,6 @@
  * security findings for a git revision range.
  */
 
-import { VersioningError } from "ultracode-shared";
 import type {
   BreakingChange,
   ChangeAnalysis,
@@ -15,9 +14,10 @@ import type {
   Logger,
   SecurityFinding,
 } from "ultracode-shared";
-import { GitClient } from "./GitClient.js";
-import type { GitRunner } from "./GitClient.js";
+import { VersioningError } from "ultracode-shared";
 import { hasBreakingFooter, parseConventionalSubject } from "./conventional.js";
+import type { GitRunner } from "./GitClient.js";
+import { GitClient } from "./GitClient.js";
 import { scanFileForFindings } from "./securityRules.js";
 
 /** Well-known SHA-1 hash of git's empty tree (used to diff a full history). */
@@ -365,7 +365,16 @@ export class ChangeAnalysisEngine {
 
   /** Counts commits per conventional category. */
   private tally(commits: CommitInfo[]): ChangeAnalysis["categories"] {
-    const categories = { feat: 0, fix: 0, docs: 0, refactor: 0, test: 0, chore: 0, perf: 0, other: 0 };
+    const categories = {
+      feat: 0,
+      fix: 0,
+      docs: 0,
+      refactor: 0,
+      test: 0,
+      chore: 0,
+      perf: 0,
+      other: 0,
+    };
     for (const commit of commits) {
       switch (commit.type) {
         case "feat":

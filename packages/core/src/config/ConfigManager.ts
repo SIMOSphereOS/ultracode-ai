@@ -14,16 +14,18 @@
  * profiles and schema violations raise `ConfigError`.
  */
 
-import * as os from "node:os";
 import { readFile } from "node:fs/promises";
+import * as os from "node:os";
+import type { DeepPartial, Logger, UltraCodeConfig } from "ultracode-shared";
 import {
   ConfigError,
   DEFAULT_CONFIG,
-  NoopLogger,
   deepMerge,
   isPlainObject,
+  NoopLogger,
 } from "ultracode-shared";
-import type { DeepPartial, Logger, UltraCodeConfig } from "ultracode-shared";
+import { envToOverlay, parseDotEnv } from "./env.js";
+import { type ConfigOverlay, configToToml, parseTomlSource, tomlToOverlay } from "./mapping.js";
 import {
   atomicWriteFile,
   profileFile,
@@ -31,19 +33,8 @@ import {
   userConfigFile,
   userEnvFile,
 } from "./paths.js";
-import {
-  configToToml,
-  parseTomlSource,
-  tomlToOverlay,
-  type ConfigOverlay,
-} from "./mapping.js";
-import { envToOverlay, parseDotEnv } from "./env.js";
-import {
-  checkConfig,
-  validateConfig,
-  type ResolvedUltraCodeConfig,
-} from "./schema.js";
-import { CONFIG_SPEC, DANGEROUS_KEYS, camelizeKey, type SpecNode } from "./spec.js";
+import { checkConfig, type ResolvedUltraCodeConfig, validateConfig } from "./schema.js";
+import { CONFIG_SPEC, camelizeKey, DANGEROUS_KEYS, type SpecNode } from "./spec.js";
 
 /** Options accepted by {@link ConfigManager} and {@link loadConfig}. */
 export interface ConfigManagerOptions {
@@ -127,9 +118,7 @@ export class ConfigManager {
     const applyFile = async (file: string): Promise<void> => {
       const source = await readFileIfExists(file);
       if (source === null) return;
-      const overlay = tomlToOverlay(parseTomlSource(source, file), (m) =>
-        warn(`${m} (${file})`),
-      );
+      const overlay = tomlToOverlay(parseTomlSource(source, file), (m) => warn(`${m} (${file})`));
       merged = deepMerge(merged, overlay);
       this.logger.debug(`Applied config layer: ${file}`);
     };
@@ -158,9 +147,7 @@ export class ConfigManager {
           details: { profile: this.profile, file },
         });
       }
-      const overlay = tomlToOverlay(parseTomlSource(source, file), (m) =>
-        warn(`${m} (${file})`),
-      );
+      const overlay = tomlToOverlay(parseTomlSource(source, file), (m) => warn(`${m} (${file})`));
       merged = deepMerge(merged, overlay);
       this.logger.debug(`Applied profile: ${this.profile}`);
     }
@@ -370,9 +357,7 @@ export class ConfigManager {
  * Convenience wrapper around {@link ConfigManager}: construct, `load()`,
  * return the merged + validated config.
  */
-export async function loadConfig(
-  options: ConfigManagerOptions = {},
-): Promise<UltraCodeConfig> {
+export async function loadConfig(options: ConfigManagerOptions = {}): Promise<UltraCodeConfig> {
   const manager = new ConfigManager(options);
   return manager.load();
 }

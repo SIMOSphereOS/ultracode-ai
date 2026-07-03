@@ -1,12 +1,3 @@
-import { describe, expect, it } from "vitest";
-import {
-  DEFAULT_CONFIG,
-  EventBus,
-  MAX_TOOL_OUTPUT_CHARS,
-  NoopLogger,
-  ValidationError,
-  sleep,
-} from "ultracode-shared";
 import type {
   ITool,
   ToolContext,
@@ -14,8 +5,17 @@ import type {
   ToolPermission,
   UltraCodeConfig,
 } from "ultracode-shared";
-import { ToolRegistry } from "./ToolRegistry.js";
+import {
+  DEFAULT_CONFIG,
+  EventBus,
+  MAX_TOOL_OUTPUT_CHARS,
+  NoopLogger,
+  sleep,
+  ValidationError,
+} from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import { ToolExecutor } from "./ToolExecutor.js";
+import { ToolRegistry } from "./ToolRegistry.js";
 
 function makeCtx(extra: Partial<ToolContext> = {}): ToolContext {
   return { cwd: process.cwd(), env: {}, logger: new NoopLogger(), ...extra };
@@ -44,9 +44,7 @@ function fakeTool(name: string, options: FakeToolOptions = {}): ITool {
   return {
     definition,
     validate: options.validate ?? ((args) => (args ?? {}) as Record<string, unknown>),
-    execute:
-      options.execute ??
-      (async () => ({ ok: true, output: "done", durationMs: 0 })),
+    execute: options.execute ?? (async () => ({ ok: true, output: "done", durationMs: 0 })),
   };
 }
 
@@ -93,22 +91,14 @@ describe("ToolExecutor", () => {
 
   it("denies 'ask' tools when confirm resolves false", async () => {
     const executor = makeExecutor([fakeTool("asky", { permission: "ask" })]);
-    const result = await executor.execute(
-      "asky",
-      {},
-      makeCtx({ confirm: async () => false }),
-    );
+    const result = await executor.execute("asky", {}, makeCtx({ confirm: async () => false }));
     expect(result.ok).toBe(false);
     expect(result.error?.code).toBe("TOOL_PERMISSION_DENIED");
   });
 
   it("runs 'ask' tools when confirm resolves true", async () => {
     const executor = makeExecutor([fakeTool("asky", { permission: "ask" })]);
-    const result = await executor.execute(
-      "asky",
-      {},
-      makeCtx({ confirm: async () => true }),
-    );
+    const result = await executor.execute("asky", {}, makeCtx({ confirm: async () => true }));
     expect(result.ok).toBe(true);
   });
 

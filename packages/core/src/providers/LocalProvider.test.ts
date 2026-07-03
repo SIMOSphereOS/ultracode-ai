@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProviderError } from "ultracode-shared";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { LocalProvider, OLLAMA_BASE_URL } from "./LocalProvider.js";
 import {
   captureLogger,
@@ -145,7 +145,10 @@ describe("LocalProvider.stream (NDJSON)", () => {
     const chunks = await collect(provider.stream({ messages: [], model: "llama3.2" }));
     expect(chunks[0]).toEqual({ type: "text", text: "Hal" });
     expect(chunks[1]).toEqual({ type: "text", text: "lo 🦙" });
-    expect(chunks[2]).toMatchObject({ type: "tool_call", toolCall: { name: "read", arguments: { path: "x" } } });
+    expect(chunks[2]).toMatchObject({
+      type: "tool_call",
+      toolCall: { name: "read", arguments: { path: "x" } },
+    });
     expect(chunks[3]).toEqual({ type: "done", usage: { inputTokens: 5, outputTokens: 17 } });
   });
 
@@ -183,7 +186,9 @@ describe("LocalProvider.stream (NDJSON)", () => {
   it("surfaces in-band Ollama errors as ProviderError", async () => {
     stubFetchSequence(streamResponse([ndjson({ error: "model 'nope' not found" })]));
     const provider = new LocalProvider(testOptions());
-    const err = await collect(provider.stream({ messages: [], model: "nope" })).catch((e: unknown) => e);
+    const err = await collect(provider.stream({ messages: [], model: "nope" })).catch(
+      (e: unknown) => e,
+    );
     expect(err).toBeInstanceOf(ProviderError);
     expect((err as ProviderError).message).toMatch(/not found/);
   });
@@ -194,7 +199,8 @@ describe("LocalProvider.stream (NDJSON)", () => {
     const body = new ReadableStream<Uint8Array>({
       pull(c) {
         pulls += 1;
-        if (pulls === 1) c.enqueue(new TextEncoder().encode(ndjson({ message: { content: "x" }, done: false })));
+        if (pulls === 1)
+          c.enqueue(new TextEncoder().encode(ndjson({ message: { content: "x" }, done: false })));
       },
     });
     stubFetchSequence(new Response(body, { status: 200 }));

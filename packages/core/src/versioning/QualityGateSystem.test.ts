@@ -1,11 +1,11 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG, NoopLogger } from "ultracode-shared";
 import type { ChangeAnalysis, QualityReport, VersioningConfig } from "ultracode-shared";
-import { QualityGateSystem } from "./QualityGateSystem.js";
+import { DEFAULT_CONFIG, NoopLogger } from "ultracode-shared";
+import { afterEach, describe, expect, it } from "vitest";
 import type { CommandRunner } from "./QualityGateSystem.js";
+import { QualityGateSystem } from "./QualityGateSystem.js";
 
 const logger = new NoopLogger();
 const cleanups: string[] = [];
@@ -13,7 +13,8 @@ const cleanups: string[] = [];
 afterEach(async () => {
   while (cleanups.length > 0) {
     const dir = cleanups.pop();
-    if (dir !== undefined) await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+    if (dir !== undefined)
+      await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   }
 });
 
@@ -42,7 +43,11 @@ function emptyAnalysis(partial: Partial<ChangeAnalysis> = {}): ChangeAnalysis {
 }
 
 const passRunner: CommandRunner = async () => ({ exitCode: 0, stdout: "ok", stderr: "" });
-const failRunner: CommandRunner = async () => ({ exitCode: 1, stdout: "", stderr: "2 tests failed" });
+const failRunner: CommandRunner = async () => ({
+  exitCode: 1,
+  stdout: "",
+  stderr: "2 tests failed",
+});
 
 function gate(report: QualityReport, name: string): QualityReport["gates"][number] {
   const found = report.gates.find((g) => g.gate === name);

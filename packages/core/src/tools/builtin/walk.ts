@@ -6,9 +6,9 @@
  * honours an optional `AbortSignal`.
  */
 
-import path from "node:path";
-import { promises as fs } from "node:fs";
 import type { Dirent } from "node:fs";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 
 /** Directory names skipped during traversal. */
 export const DEFAULT_IGNORED_DIRS: ReadonlySet<string> = new Set([
@@ -38,10 +38,7 @@ export interface WalkOptions {
  * @param root - absolute directory to walk.
  * @param options - ignore list, abort signal, file cap.
  */
-export async function* walkFiles(
-  root: string,
-  options: WalkOptions = {},
-): AsyncGenerator<string> {
+export async function* walkFiles(root: string, options: WalkOptions = {}): AsyncGenerator<string> {
   const ignore = options.ignoreDirs ?? DEFAULT_IGNORED_DIRS;
   const maxFiles = options.maxFiles ?? 100_000;
   let yielded = 0;

@@ -14,18 +14,18 @@
  * benign variable (PATH) must.
  */
 
-import { describe, expect, it } from "vitest";
-import { EventBus, NoopLogger, DEFAULT_CONFIG } from "ultracode-shared";
 import type {
+  ChatMessage,
   CompletionRequest,
   CompletionResult,
-  ChatMessage,
   ILLMProvider,
   UltraCodeConfig,
 } from "ultracode-shared";
+import { DEFAULT_CONFIG, EventBus, NoopLogger } from "ultracode-shared";
+import { describe, expect, it } from "vitest";
+import { createToolSystem } from "../tools/createToolSystem.js";
 import { ExecutionEngine } from "./ExecutionEngine.js";
 import type { IToolRunner } from "./types.js";
-import { createToolSystem } from "../tools/createToolSystem.js";
 
 /** Cross-platform: print a few env vars via the running node binary. */
 function printEnvCommand(): string {
@@ -59,9 +59,7 @@ class BashRequestingProvider implements ILLMProvider {
     if (this.turn === 1) {
       return {
         text: "",
-        toolCalls: [
-          { id: "c1", name: "bash", arguments: { command: printEnvCommand() } },
-        ],
+        toolCalls: [{ id: "c1", name: "bash", arguments: { command: printEnvCommand() } }],
         usage: { inputTokens: 1, outputTokens: 1 },
         finishReason: "tool_calls",
       };

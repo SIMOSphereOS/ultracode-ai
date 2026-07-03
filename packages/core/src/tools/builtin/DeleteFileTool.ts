@@ -5,11 +5,11 @@
  */
 
 import { promises as fs } from "node:fs";
-import { z } from "zod";
-import { ToolError } from "ultracode-shared";
 import type { ToolContext, ToolDefinition } from "ultracode-shared";
-import { BaseTool } from "../BaseTool.js";
+import { ToolError } from "ultracode-shared";
+import { z } from "zod";
 import type { ToolRunOutcome } from "../BaseTool.js";
+import { BaseTool } from "../BaseTool.js";
 import { PathGuard } from "../PathGuard.js";
 
 const schema = z.object({

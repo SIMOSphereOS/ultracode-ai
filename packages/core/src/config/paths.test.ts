@@ -1,8 +1,8 @@
+import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
-import { afterEach, describe, expect, it } from "vitest";
 import { ConfigError } from "ultracode-shared";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   atomicWriteFile,
   profileFile,
@@ -56,9 +56,7 @@ describe("user-level paths", () => {
 
 describe("profileFile", () => {
   it("builds the profile path", () => {
-    expect(profileFile("work", HOME)).toBe(
-      path.join(HOME, ".ultracode", "profiles", "work.toml"),
-    );
+    expect(profileFile("work", HOME)).toBe(path.join(HOME, ".ultracode", "profiles", "work.toml"));
   });
 
   it("rejects traversal and separator characters", () => {
@@ -83,7 +81,8 @@ describe("atomicWriteFile", () => {
   let dir: string;
 
   afterEach(async () => {
-    if (dir !== undefined) await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+    if (dir !== undefined)
+      await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   });
 
   it("writes content and creates parent directories", async () => {

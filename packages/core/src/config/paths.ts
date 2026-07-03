@@ -7,16 +7,11 @@
  * {@link resolveHome}, because `~` has no meaning outside POSIX shells.
  */
 
-import * as os from "node:os";
-import * as path from "node:path";
 import { randomUUID } from "node:crypto";
 import { mkdir, rename, unlink, writeFile } from "node:fs/promises";
-import {
-  CONFIG_FILE_NAMES,
-  USER_CONFIG_FILE,
-  USER_ENV_FILE,
-  ConfigError,
-} from "ultracode-shared";
+import * as os from "node:os";
+import * as path from "node:path";
+import { CONFIG_FILE_NAMES, ConfigError, USER_CONFIG_FILE, USER_ENV_FILE } from "ultracode-shared";
 
 /**
  * Expands a leading `~` to the user's home directory.

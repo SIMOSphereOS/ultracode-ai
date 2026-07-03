@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG, VersioningError } from "ultracode-shared";
 import type { ChangeAnalysis, CommitInfo, VersioningConfig } from "ultracode-shared";
+import { DEFAULT_CONFIG, VersioningError } from "ultracode-shared";
+import { describe, expect, it } from "vitest";
 import { VersionRecommender } from "./VersionRecommender.js";
 
 function commit(partial: Partial<CommitInfo>): CommitInfo {
@@ -164,7 +164,11 @@ describe("VersionRecommender.suggest", () => {
 
   it("handles huge analyses without slowing to a crawl", () => {
     const commits = Array.from({ length: 5000 }, (_, i) =>
-      commit({ hash: `h${i}`, type: i % 2 === 0 ? "feat" : null, subject: `c${i} ${"y".repeat(200)}` }),
+      commit({
+        hash: `h${i}`,
+        type: i % 2 === 0 ? "feat" : null,
+        subject: `c${i} ${"y".repeat(200)}`,
+      }),
     );
     const result = recommender.suggest(
       analysis({

@@ -2,8 +2,8 @@
  * Small file-system helpers shared by the file tools.
  */
 
-import path from "node:path";
 import { promises as fs } from "node:fs";
+import path from "node:path";
 import { generateId } from "ultracode-shared";
 
 /** Number of leading bytes inspected by {@link isBinaryFile}. */

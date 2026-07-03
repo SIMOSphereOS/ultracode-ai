@@ -1,9 +1,9 @@
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG, EventBus, NoopLogger } from "ultracode-shared";
 import type { ToolContext, UltraCodeConfig } from "ultracode-shared";
+import { DEFAULT_CONFIG, EventBus, NoopLogger } from "ultracode-shared";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createToolSystem } from "./createToolSystem.js";
 
 let root: string;
@@ -117,11 +117,7 @@ describe("createToolSystem", () => {
       expect(blocked.ok).toBe(false);
       expect(blocked.error?.code).toBe("TOOL_PERMISSION_DENIED");
 
-      const allowed = await executor.execute(
-        "write_file",
-        { path: "ok.txt", content: "x" },
-        ctx(),
-      );
+      const allowed = await executor.execute("write_file", { path: "ok.txt", content: "x" }, ctx());
       expect(allowed.ok).toBe(true);
 
       // grep: maxMatches cap from config

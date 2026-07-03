@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { splitCodeFences, splitBlocks, truncateAtWord, normalizeProseWhitespace } from "./internal.js";
+import {
+  normalizeProseWhitespace,
+  splitBlocks,
+  splitCodeFences,
+  truncateAtWord,
+} from "./internal.js";
 
 describe("splitCodeFences", () => {
   it("reconstructs the input exactly", () => {

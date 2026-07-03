@@ -6,14 +6,14 @@
  * name, version, scripts and dependencies. TOML parsing via `smol-toml`.
  */
 
-import path from "node:path";
 import { promises as fs } from "node:fs";
-import { z } from "zod";
+import path from "node:path";
 import { parse as parseToml } from "smol-toml";
-import { ToolError } from "ultracode-shared";
 import type { ToolContext, ToolDefinition } from "ultracode-shared";
-import { BaseTool } from "../BaseTool.js";
+import { ToolError } from "ultracode-shared";
+import { z } from "zod";
 import type { ToolRunOutcome } from "../BaseTool.js";
+import { BaseTool } from "../BaseTool.js";
 import { PathGuard } from "../PathGuard.js";
 
 /** Manifest kinds recognised by the project tools. */

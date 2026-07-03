@@ -4,15 +4,10 @@
  * background compaction pass runs after a successful turn without ever breaking
  * the run.
  */
+
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  DEFAULT_CONFIG,
-  EventBus,
-  NoopLogger,
-} from "ultracode-shared";
 import type {
   ChatMessage,
   CompletionRequest,
@@ -23,9 +18,11 @@ import type {
   SessionRecord,
   UltraCodeConfig,
 } from "ultracode-shared";
-import { UltraCode } from "../UltraCode.js";
-import type { UltraCodeParts, VersioningFacade } from "../UltraCode.js";
+import { DEFAULT_CONFIG, EventBus, NoopLogger } from "ultracode-shared";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createAgentManager } from "../agents/AgentManager.js";
+import type { UltraCodeParts, VersioningFacade } from "../UltraCode.js";
+import { UltraCode } from "../UltraCode.js";
 import { createSessionOptimizer } from "./SessionOptimizer.js";
 
 let home: string;
@@ -177,7 +174,10 @@ function build(
   if (mutate) mutate(config);
   const logger = new NoopLogger();
   const events = new EventBus();
-  const tools = { execute: async () => ({ ok: true, output: null, durationMs: 0 }), list: () => [] };
+  const tools = {
+    execute: async () => ({ ok: true, output: null, durationMs: 0 }),
+    list: () => [],
+  };
   const agents = createAgentManager({ config, logger, tools, provider, events });
   const parts: UltraCodeParts = {
     config,
@@ -440,7 +440,11 @@ describe("UltraCode + SessionOptimizer integration", () => {
     const provider = new StubProvider();
     const optimizer = {
       buildWorkingSet: vi.fn(() => ({ messages: [], durableSummary: "", pinnedFacts: [] })),
-      buildWorkingSetPersisted: vi.fn(async () => ({ messages: [], durableSummary: "", pinnedFacts: [] })),
+      buildWorkingSetPersisted: vi.fn(async () => ({
+        messages: [],
+        durableSummary: "",
+        pinnedFacts: [],
+      })),
       processIncremental: vi.fn(async () => ({
         sessionId: "s",
         beforeTokens: 0,
@@ -454,8 +458,17 @@ describe("UltraCode + SessionOptimizer integration", () => {
     const config = structuredClone(DEFAULT_CONFIG);
     config.sessions.enablePersistence = true;
     const events = new EventBus();
-    const tools = { execute: async () => ({ ok: true, output: null, durationMs: 0 }), list: () => [] };
-    const agents = createAgentManager({ config, logger: new NoopLogger(), tools, provider, events });
+    const tools = {
+      execute: async () => ({ ok: true, output: null, durationMs: 0 }),
+      list: () => [],
+    };
+    const agents = createAgentManager({
+      config,
+      logger: new NoopLogger(),
+      tools,
+      provider,
+      events,
+    });
     const ultra = new UltraCode({
       config,
       logger: new NoopLogger(),

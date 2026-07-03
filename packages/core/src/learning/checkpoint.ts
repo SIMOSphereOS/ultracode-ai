@@ -8,15 +8,14 @@
  * atomically-written JSON file in the same directory.
  */
 
-import { mkdir, readFile, rename, writeFile, unlink } from "node:fs/promises";
-import path from "node:path";
 import { randomUUID } from "node:crypto";
-
-import { NoopLogger } from "ultracode-shared";
+import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
+import path from "node:path";
 import type { Logger } from "ultracode-shared";
+import { NoopLogger } from "ultracode-shared";
 
 import { LearnError } from "./errors.js";
-import { stateDir, stateFile, sanitizeId } from "./paths.js";
+import { sanitizeId, stateDir, stateFile } from "./paths.js";
 import type { PageValidators } from "./types.js";
 
 /** Persisted checkpoint for one source's in-progress (or completed) run. */
@@ -120,7 +119,10 @@ class SqliteCheckpointStore implements CheckpointStore {
       if (!row) return null;
       return parseCheckpoint(row.data, this.sourceId);
     } catch (err) {
-      throw new LearnError("Failed to load checkpoint", { cause: err, details: { sourceId: this.sourceId } });
+      throw new LearnError("Failed to load checkpoint", {
+        cause: err,
+        details: { sourceId: this.sourceId },
+      });
     }
   }
 
@@ -132,7 +134,10 @@ class SqliteCheckpointStore implements CheckpointStore {
         )
         .run(this.sourceId, JSON.stringify(cp));
     } catch (err) {
-      throw new LearnError("Failed to save checkpoint", { cause: err, details: { sourceId: this.sourceId } });
+      throw new LearnError("Failed to save checkpoint", {
+        cause: err,
+        details: { sourceId: this.sourceId },
+      });
     }
   }
 
@@ -167,7 +172,10 @@ class JsonCheckpointStore implements CheckpointStore {
       raw = await readFile(this.file, "utf8");
     } catch (err) {
       if ((err as NodeJS.ErrnoException)?.code === "ENOENT") return null;
-      throw new LearnError("Failed to read checkpoint file", { cause: err, details: { file: this.file } });
+      throw new LearnError("Failed to read checkpoint file", {
+        cause: err,
+        details: { file: this.file },
+      });
     }
     return parseCheckpoint(raw, this.sourceId);
   }
@@ -180,7 +188,10 @@ class JsonCheckpointStore implements CheckpointStore {
       await rename(tmp, this.file);
     } catch (err) {
       await unlink(tmp).catch(() => undefined);
-      throw new LearnError("Failed to write checkpoint file", { cause: err, details: { file: this.file } });
+      throw new LearnError("Failed to write checkpoint file", {
+        cause: err,
+        details: { file: this.file },
+      });
     }
   }
 
@@ -205,8 +216,13 @@ function parseCheckpoint(raw: string, sourceId: string): Checkpoint {
   return {
     sourceId,
     updatedAt: typeof p.updatedAt === "string" ? p.updatedAt : new Date(0).toISOString(),
-    processed: Array.isArray(p.processed) ? p.processed.filter((x): x is string => typeof x === "string") : [],
-    validators: p.validators && typeof p.validators === "object" ? (p.validators as Record<string, PageValidators>) : {},
+    processed: Array.isArray(p.processed)
+      ? p.processed.filter((x): x is string => typeof x === "string")
+      : [],
+    validators:
+      p.validators && typeof p.validators === "object"
+        ? (p.validators as Record<string, PageValidators>)
+        : {},
     usage: {
       tokensIn: numeric(p.usage?.tokensIn),
       tokensOut: numeric(p.usage?.tokensOut),

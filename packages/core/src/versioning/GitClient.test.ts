@@ -1,13 +1,17 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { VersioningError } from "ultracode-shared";
-import { GitClient, defaultGitRunner } from "./GitClient.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { GitCommandResult, GitRunner } from "./GitClient.js";
+import { defaultGitRunner, GitClient } from "./GitClient.js";
 
 const ok = (stdout: string): GitCommandResult => ({ exitCode: 0, stdout, stderr: "" });
-const fail = (stderr: string, exitCode = 128): GitCommandResult => ({ exitCode, stdout: "", stderr });
+const fail = (stderr: string, exitCode = 128): GitCommandResult => ({
+  exitCode,
+  stdout: "",
+  stderr,
+});
 
 describe("GitClient (fake runner)", () => {
   it("run() returns the runner result for any exit code", async () => {

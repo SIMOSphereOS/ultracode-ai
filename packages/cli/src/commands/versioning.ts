@@ -7,8 +7,8 @@
  * All subcommands support `--json` for machine-readable output.
  */
 
-import type { Command } from "commander";
 import process from "node:process";
+import type { Command } from "commander";
 import type { CliContext, UltraCodeFacade } from "../context.js";
 import { safeDispose } from "../context.js";
 import {
@@ -36,7 +36,9 @@ async function withFacade<T>(
 
 /** Register `version`, `release` and `quality` commands on `program`. */
 export function registerVersioningCommands(program: Command, ctx: CliContext): void {
-  const version = program.command("version").description("AI versioning: change analysis and version suggestions");
+  const version = program
+    .command("version")
+    .description("AI versioning: change analysis and version suggestions");
 
   version
     .command("analyze")
@@ -46,7 +48,9 @@ export function registerVersioningCommands(program: Command, ctx: CliContext): v
     .action(async (range: string | undefined, opts: JsonOption) =>
       withFacade(ctx, async (facade) => {
         const analysis = await facade.versioning.analyze(range);
-        ctx.stdout.write(opts.json ? `${JSON.stringify(analysis)}\n` : formatChangeAnalysis(analysis));
+        ctx.stdout.write(
+          opts.json ? `${JSON.stringify(analysis)}\n` : formatChangeAnalysis(analysis),
+        );
       }),
     );
 
@@ -58,7 +62,9 @@ export function registerVersioningCommands(program: Command, ctx: CliContext): v
     .action(async (range: string | undefined, opts: JsonOption) =>
       withFacade(ctx, async (facade) => {
         const suggestion = await facade.versioning.suggest(range);
-        ctx.stdout.write(opts.json ? `${JSON.stringify(suggestion)}\n` : formatVersionSuggestion(suggestion));
+        ctx.stdout.write(
+          opts.json ? `${JSON.stringify(suggestion)}\n` : formatVersionSuggestion(suggestion),
+        );
       }),
     );
 

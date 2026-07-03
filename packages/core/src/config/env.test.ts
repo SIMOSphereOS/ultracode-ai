@@ -121,10 +121,7 @@ describe("envToOverlay", () => {
   });
 
   it("splits comma lists for array-typed slots", () => {
-    const overlay = envToOverlay(
-      { ULTRACODE_TOOLS__DISABLED: "bash, write_file ,," },
-      noWarn,
-    );
+    const overlay = envToOverlay({ ULTRACODE_TOOLS__DISABLED: "bash, write_file ,," }, noWarn);
     expect(overlay).toEqual({ tools: { disabled: ["bash", "write_file"] } });
   });
 
@@ -148,9 +145,7 @@ describe("envToOverlay", () => {
 
   it("warns when a numeric slot receives a non-number", () => {
     const warnings: string[] = [];
-    const overlay = envToOverlay({ ULTRACODE_CORE__MAX_TOKENS: "many" }, (m) =>
-      warnings.push(m),
-    );
+    const overlay = envToOverlay({ ULTRACODE_CORE__MAX_TOKENS: "many" }, (m) => warnings.push(m));
     expect(overlay).toEqual({});
     expect(warnings).toHaveLength(1);
   });
@@ -160,7 +155,7 @@ describe("envToOverlay", () => {
       string,
       unknown
     >;
-    expect(Object.prototype.hasOwnProperty.call(overlay, "__proto__")).toBe(false);
+    expect(Object.hasOwn(overlay, "__proto__")).toBe(false);
     expect(overlay).toEqual({});
     expect(({} as Record<string, unknown>)["x"]).toBeUndefined();
   });

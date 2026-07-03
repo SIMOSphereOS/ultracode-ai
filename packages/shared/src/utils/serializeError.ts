@@ -9,7 +9,9 @@ import type { SerializedError } from "../errors.js";
 import { UltraCodeError } from "../errors.js";
 
 /** Type guard for objects that look like an `Error`. */
-function isErrorLike(value: unknown): value is { name?: unknown; message?: unknown; stack?: unknown; code?: unknown } {
+function isErrorLike(
+  value: unknown,
+): value is { name?: unknown; message?: unknown; stack?: unknown; code?: unknown } {
   return typeof value === "object" && value !== null;
 }
 
@@ -46,8 +48,7 @@ export function serializeError(err: unknown): SerializedError {
   // Error-shaped plain objects (e.g. structured-clone survivors).
   if (isErrorLike(err)) {
     const name = typeof err.name === "string" ? err.name : "Error";
-    const message =
-      typeof err.message === "string" ? err.message : safeStringify(err);
+    const message = typeof err.message === "string" ? err.message : safeStringify(err);
     const out: SerializedError = {
       name,
       message,

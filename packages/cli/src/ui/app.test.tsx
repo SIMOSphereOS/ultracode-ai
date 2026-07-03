@@ -1,15 +1,15 @@
-import React from "react";
-import { describe, expect, it, vi } from "vitest";
 import { render } from "ink-testing-library";
+import React from "react";
 import {
-  AgentError,
-  DEFAULT_CONFIG,
-  EventBus,
   type AgentDefinition,
+  AgentError,
   type AgentRunResult,
   type CompletionChunk,
+  DEFAULT_CONFIG,
+  EventBus,
   type ToolDefinition,
 } from "ultracode-shared";
+import { describe, expect, it, vi } from "vitest";
 import type { UltraCodeFacade } from "../context.js";
 import { App } from "./App.js";
 
@@ -173,10 +173,7 @@ describe("App — running prompts", () => {
     await tick();
     expect(lastFrame()).toContain("final answer");
     expect(lastFrame()).toContain("tokens 10/5");
-    expect(run).toHaveBeenCalledWith(
-      "hi there",
-      expect.objectContaining({ agent: "default" }),
-    );
+    expect(run).toHaveBeenCalledWith("hi there", expect.objectContaining({ agent: "default" }));
   });
 
   it("shows an error entry when the run rejects", async () => {

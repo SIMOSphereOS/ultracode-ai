@@ -7,11 +7,11 @@
  */
 
 import path from "node:path";
-import { z } from "zod";
-import { ToolPermissionDeniedError } from "ultracode-shared";
 import type { ToolContext, ToolDefinition } from "ultracode-shared";
-import { BaseTool } from "../BaseTool.js";
+import { ToolPermissionDeniedError } from "ultracode-shared";
+import { z } from "zod";
 import type { ToolRunOutcome } from "../BaseTool.js";
+import { BaseTool } from "../BaseTool.js";
 import { PathGuard } from "../PathGuard.js";
 import { writeFileAtomic } from "./fsUtils.js";
 
@@ -65,9 +65,7 @@ export class WriteFileTool extends BaseTool<typeof schema, WriteFileToolOutput> 
   constructor(options: WriteFileToolOptions = {}) {
     super();
     this.guard = new PathGuard({ allowedDirs: options.allowedDirs });
-    this.protectedExtensions = (options.protectedExtensions ?? []).map((e) =>
-      e.toLowerCase(),
-    );
+    this.protectedExtensions = (options.protectedExtensions ?? []).map((e) => e.toLowerCase());
   }
 
   /**

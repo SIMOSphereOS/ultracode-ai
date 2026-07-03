@@ -11,7 +11,6 @@
  * - `listModels` via `GET /models` and a fetch-based `healthCheck`.
  */
 
-import { ProviderError } from "ultracode-shared";
 import type {
   ChatMessage,
   CompletionChunk,
@@ -24,6 +23,7 @@ import type {
   ToolCallRequest,
   ToolDefinition,
 } from "ultracode-shared";
+import { ProviderError } from "ultracode-shared";
 import { BaseProvider } from "./BaseProvider.js";
 import type { TerminalCompletionChunk } from "./sse.js";
 import { parseSSEJson } from "./sse.js";
@@ -117,9 +117,7 @@ const REASONING_MODEL_PREFIXES = ["o1", "o3", "o4", "gpt-5"] as const;
  */
 export function isReasoningModel(model: string): boolean {
   const id = model.toLowerCase();
-  return REASONING_MODEL_PREFIXES.some(
-    (prefix) => id === prefix || id.startsWith(`${prefix}-`),
-  );
+  return REASONING_MODEL_PREFIXES.some((prefix) => id === prefix || id.startsWith(`${prefix}-`));
 }
 
 /** Map {@link ChatMessage}s onto OpenAI-compatible wire messages. */
@@ -149,7 +147,10 @@ export function toOpenAITools(tools: ToolDefinition[]): Record<string, unknown>[
 }
 
 /** Map an OpenAI `finish_reason` onto the contract {@link FinishReason}. */
-export function mapOpenAIFinishReason(reason: string | undefined, hasToolCalls: boolean): FinishReason {
+export function mapOpenAIFinishReason(
+  reason: string | undefined,
+  hasToolCalls: boolean,
+): FinishReason {
   if (hasToolCalls) return "tool_calls";
   switch (reason) {
     case "stop":
@@ -383,7 +384,12 @@ export abstract class OpenAICompatProvider extends BaseProvider {
     let sawFinish = false;
     let finishReason: FinishReason | undefined;
     try {
-      for await (const evt of parseSSEJson(body, this.logger, req.signal, this.streamIdleTimeoutMs())) {
+      for await (const evt of parseSSEJson(
+        body,
+        this.logger,
+        req.signal,
+        this.streamIdleTimeoutMs(),
+      )) {
         const root = asRecord(evt.json);
         if (root === undefined) continue;
         usage = parseOpenAIUsage(root.usage) ?? usage;

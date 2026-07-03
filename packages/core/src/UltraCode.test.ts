@@ -1,19 +1,8 @@
+import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { promises as fs } from "node:fs";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  DEFAULT_CONFIG,
-  EventBus,
-  NoopLogger,
-  ProviderError,
-  SessionError,
-  ValidationError,
-} from "ultracode-shared";
-import type { AgentRunResult } from "ultracode-shared";
-import type { AgentManager } from "./agents/AgentManager.js";
-import { createTaskTool } from "./UltraCode.js";
 import type {
+  AgentRunResult,
   ChangeAnalysis,
   ChatMessage,
   CompletionChunk,
@@ -30,15 +19,21 @@ import type {
   UltraCodeConfig,
   VersionSuggestion,
 } from "ultracode-shared";
+import {
+  DEFAULT_CONFIG,
+  EventBus,
+  NoopLogger,
+  ProviderError,
+  SessionError,
+  ValidationError,
+} from "ultracode-shared";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { AgentManager } from "./agents/AgentManager.js";
 import { createAgentManager } from "./agents/AgentManager.js";
 import type { IToolRunner } from "./execution/types.js";
-import { UltraCode } from "./UltraCode.js";
+import type { AuthoringFacade, BudgetFacade, LearningFacade } from "./facade/ext-types.js";
 import type { UltraCodeParts, VersioningFacade } from "./UltraCode.js";
-import type {
-  AuthoringFacade,
-  BudgetFacade,
-  LearningFacade,
-} from "./facade/ext-types.js";
+import { createTaskTool, UltraCode } from "./UltraCode.js";
 
 /* ----------------------------------------------------------------------------
  * Fakes
@@ -410,9 +405,7 @@ describe("UltraCode facade", () => {
     const controller = new AbortController();
     controller.abort();
     const h = makeHarness([stop("never")]);
-    const err = await h.ultra
-      .run("x", { signal: controller.signal })
-      .catch((e: unknown) => e);
+    const err = await h.ultra.run("x", { signal: controller.signal }).catch((e: unknown) => e);
     expect((err as Error).name).toBe("AbortError");
   });
 
@@ -431,7 +424,12 @@ describe("UltraCode facade", () => {
     const quality = await h.ultra.versioning.quality();
     expect(suggestion.suggestedVersion).toBe("1.1.0");
     expect(quality.passed).toBe(true);
-    expect(h.versioning.calls).toEqual(["analyze:v1.0.0..HEAD", "suggest", "plan:2.0.0", "quality"]);
+    expect(h.versioning.calls).toEqual([
+      "analyze:v1.0.0..HEAD",
+      "suggest",
+      "plan:2.0.0",
+      "quality",
+    ]);
   });
 
   it("dispose() runs all disposables, tolerates failures and is idempotent", async () => {
@@ -496,7 +494,8 @@ describe("UltraCode.create", () => {
       if (v === undefined) delete process.env[k];
       else process.env[k] = v;
     }
-    if (cwd !== undefined) await fs.rm(cwd, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+    if (cwd !== undefined)
+      await fs.rm(cwd, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   });
 
   function clearKey(name: string): void {

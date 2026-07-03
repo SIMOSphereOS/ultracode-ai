@@ -1,15 +1,14 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-
+import type { Logger, LogMeta, UltraCodeConfig } from "ultracode-shared";
 import { DEFAULT_CONFIG } from "ultracode-shared";
-import type { LogMeta, Logger, UltraCodeConfig } from "ultracode-shared";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { InMemorySessionStore } from "./InMemorySessionStore.js";
+import { createSessionStore, SESSION_DB_FILENAME } from "./index.js";
 import { JsonSessionStore } from "./JsonSessionStore.js";
 import { SqliteSessionStore } from "./SqliteSessionStore.js";
-import { SESSION_DB_FILENAME, createSessionStore } from "./index.js";
 
 // node:sqlite exists only on Node >= 22.5; on older supported runtimes the
 // factory deliberately falls back to JSON. Detect which backend the *default*
@@ -61,7 +60,10 @@ describe("createSessionStore", () => {
   }
 
   it("returns an in-memory store when persistence is disabled", async () => {
-    const store = await createSessionStore(configWith("/should/not/be/used", false), spyLogger().logger);
+    const store = await createSessionStore(
+      configWith("/should/not/be/used", false),
+      spyLogger().logger,
+    );
     expect(store).toBeInstanceOf(InMemorySessionStore);
   });
 

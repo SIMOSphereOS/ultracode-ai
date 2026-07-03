@@ -7,23 +7,24 @@
  * hard-stop at the runtime cap, abort, and the `learn.*` events.
  */
 
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // The production wiring passes the real `nodeDnsLookupAll` into the default
 // crawler. Mock only that symbol so the DNS-rebinding layer can be exercised
 // without a real network lookup; everything else in the guard stays real.
-const dnsResolved = vi.fn<(hostname: string) => Promise<Array<{ address: string; family: number }>>>();
+const dnsResolved =
+  vi.fn<(hostname: string) => Promise<Array<{ address: string; family: number }>>>();
 vi.mock("./urlGuard.js", async () => {
   const actual = await vi.importActual<typeof import("./urlGuard.js")>("./urlGuard.js");
   return { ...actual, nodeDnsLookupAll: (hostname: string) => dnsResolved(hostname) };
 });
 
-import { createLearnAgent, SEED_SOURCES } from "./index.js";
-import { LearnError } from "./errors.js";
 import { createCheckpointStore, defaultSqliteLoader } from "./checkpoint.js";
+import { LearnError } from "./errors.js";
+import { createLearnAgent, SEED_SOURCES } from "./index.js";
 import type {
   AuthoringProposal,
   BudgetDecision,
@@ -41,7 +42,9 @@ import type {
 
 /* --------------------------- fakes --------------------------------------- */
 
-function fakeBudget(overrides: Partial<{ allowed: boolean; record: (e: LedgerEntry) => void }> = {}): IBudgetGate {
+function fakeBudget(
+  overrides: Partial<{ allowed: boolean; record: (e: LedgerEntry) => void }> = {},
+): IBudgetGate {
   const recorded: LedgerEntry[] = [];
   return {
     estimate(input: EstimateInput): CostEstimate {
@@ -50,7 +53,9 @@ function fakeBudget(overrides: Partial<{ allowed: boolean; record: (e: LedgerEnt
         pages,
         tokensIn: pages * 1200,
         tokensOut: pages * 300,
-        byModel: [{ model: "cheap", tokensIn: pages * 1200, tokensOut: pages * 300, usd: pages * 0.001 }],
+        byModel: [
+          { model: "cheap", tokensIn: pages * 1200, tokensOut: pages * 300, usd: pages * 0.001 },
+        ],
         usdLow: pages * 0.0008,
         usdHigh: pages * 0.0012,
         eur: pages * 0.001,
@@ -75,7 +80,10 @@ function fakeBudget(overrides: Partial<{ allowed: boolean; record: (e: LedgerEnt
   };
 }
 
-function fakeAuthor(): ISkillAuthor & { proposals: AuthoringProposal[]; persisted: AuthoringProposal[] } {
+function fakeAuthor(): ISkillAuthor & {
+  proposals: AuthoringProposal[];
+  persisted: AuthoringProposal[];
+} {
   const proposals: AuthoringProposal[] = [];
   const persisted: AuthoringProposal[] = [];
   return {
@@ -158,7 +166,12 @@ describe("LearnAgent.plan", () => {
       author,
       provider: { complete: completeSpy } as never,
       ingestion,
-      fetchImpl: (async () => ({ status: 200, ok: true, headers: { get: () => null }, text: async () => "" })) as never,
+      fetchImpl: (async () => ({
+        status: 200,
+        ok: true,
+        headers: { get: () => null },
+        text: async () => "",
+      })) as never,
       now,
     });
     const plan = await agent.plan(SOURCE_ID);
@@ -170,7 +183,10 @@ describe("LearnAgent.plan", () => {
   });
 
   it("rejects an unknown source", async () => {
-    const agent = createLearnAgent({ homeDir: home, ingestion: fakeIngestion([], () => ({ url: "", status: 200, changed: false })) });
+    const agent = createLearnAgent({
+      homeDir: home,
+      ingestion: fakeIngestion([], () => ({ url: "", status: 200, changed: false })),
+    });
     await expect(agent.plan("does-not-exist")).rejects.toBeInstanceOf(LearnError);
   });
 });
@@ -187,8 +203,18 @@ describe("LearnAgent.run approval gate", () => {
   });
 
   it("refuses when the budget gate denies the run", async () => {
-    const ingestion = fakeIngestion(["https://e.com/a"], (url) => ({ url, status: 200, changed: true, text: "t" }));
-    const agent = createLearnAgent({ homeDir: home, budget: fakeBudget({ allowed: false }), ingestion, now });
+    const ingestion = fakeIngestion(["https://e.com/a"], (url) => ({
+      url,
+      status: 200,
+      changed: true,
+      text: "t",
+    }));
+    const agent = createLearnAgent({
+      homeDir: home,
+      budget: fakeBudget({ allowed: false }),
+      ingestion,
+      now,
+    });
     await expect(agent.run(SOURCE_ID, { approved: true })).rejects.toBeInstanceOf(LearnError);
   });
 });
@@ -198,8 +224,20 @@ describe("LearnAgent.run end-to-end", () => {
     const author = fakeAuthor();
     const budgetRecords: LedgerEntry[] = [];
     const pages: Record<string, DocPage> = {
-      "https://e.com/a": { url: "https://e.com/a", status: 200, changed: true, text: "Azure A. Detail.", contentHash: "ha" },
-      "https://e.com/b": { url: "https://e.com/b", status: 200, changed: false, text: "B", contentHash: "hb" },
+      "https://e.com/a": {
+        url: "https://e.com/a",
+        status: 200,
+        changed: true,
+        text: "Azure A. Detail.",
+        contentHash: "ha",
+      },
+      "https://e.com/b": {
+        url: "https://e.com/b",
+        status: 200,
+        changed: false,
+        text: "B",
+        contentHash: "hb",
+      },
       "https://e.com/c": { url: "https://e.com/c", status: 304, changed: false },
     };
     const ingestion = fakeIngestion(Object.keys(pages), (url) => pages[url]!);
@@ -211,7 +249,9 @@ describe("LearnAgent.run end-to-end", () => {
       ingestion,
       events: { emit: (e: { type: string }) => events.push(e), on: () => () => {} } as never,
       now,
-      sqliteLoader: async () => { throw new Error("force json"); },
+      sqliteLoader: async () => {
+        throw new Error("force json");
+      },
     });
 
     const report = await agent.run(SOURCE_ID, { approved: true, concurrency: 2 });
@@ -244,14 +284,22 @@ describe("LearnAgent.run end-to-end", () => {
     });
     store.close();
 
-    const ingestion = fakeIngestion(urls, (url) => ({ url, status: 200, changed: true, text: `text ${url}`, contentHash: url }));
+    const ingestion = fakeIngestion(urls, (url) => ({
+      url,
+      status: 200,
+      changed: true,
+      text: `text ${url}`,
+      contentHash: url,
+    }));
     const agent = createLearnAgent({
       homeDir: home,
       budget: fakeBudget(),
       author: fakeAuthor(),
       ingestion,
       now,
-      sqliteLoader: async () => { throw new Error("json"); },
+      sqliteLoader: async () => {
+        throw new Error("json");
+      },
     });
     const report = await agent.run(SOURCE_ID, { approved: true, concurrency: 1 });
     // Only the two un-processed pages were fetched this run.
@@ -261,7 +309,13 @@ describe("LearnAgent.run end-to-end", () => {
 
   it("hard-stops at the runtime cap and can throw LearnCapError", async () => {
     const urls = Array.from({ length: 5 }, (_, i) => `https://e.com/${i}`);
-    const ingestion = fakeIngestion(urls, (url) => ({ url, status: 200, changed: true, text: "t", contentHash: url }));
+    const ingestion = fakeIngestion(urls, (url) => ({
+      url,
+      status: 200,
+      changed: true,
+      text: "t",
+      contentHash: url,
+    }));
     // Clock advances by 1000ms each read so the very first page is already past a 1ms cap.
     let ticks = 0;
     const tickingNow = (): number => {
@@ -274,7 +328,9 @@ describe("LearnAgent.run end-to-end", () => {
       author: fakeAuthor(),
       ingestion,
       now: tickingNow,
-      sqliteLoader: async () => { throw new Error("json"); },
+      sqliteLoader: async () => {
+        throw new Error("json");
+      },
     });
     await expect(
       agent.run(SOURCE_ID, { approved: true, maxRuntimeMs: 1, throwOnCap: true, concurrency: 1 }),
@@ -295,7 +351,13 @@ describe("LearnAgent.run end-to-end", () => {
         throw err;
       },
     };
-    const agent = createLearnAgent({ homeDir: home, budget: fakeBudget(), author: fakeAuthor(), ingestion, now });
+    const agent = createLearnAgent({
+      homeDir: home,
+      budget: fakeBudget(),
+      author: fakeAuthor(),
+      ingestion,
+      now,
+    });
     await expect(
       agent.run(SOURCE_ID, { approved: true, signal: controller.signal, concurrency: 1 }),
     ).rejects.toMatchObject({ name: "AbortError" });
@@ -326,7 +388,9 @@ describe("LearnAgent.run end-to-end", () => {
       author: fakeAuthor(),
       ingestion,
       now,
-      sqliteLoader: async () => { throw new Error("json"); },
+      sqliteLoader: async () => {
+        throw new Error("json");
+      },
     });
 
     await expect(
@@ -358,7 +422,9 @@ describe("LearnAgent.run end-to-end", () => {
       author: fakeAuthor(),
       ingestion: resumeIngestion,
       now,
-      sqliteLoader: async () => { throw new Error("json"); },
+      sqliteLoader: async () => {
+        throw new Error("json");
+      },
     });
     const report = await agent2.run(SOURCE_ID, { approved: true, concurrency: 1 });
     expect(fetchedResume.sort()).toEqual(["https://e.com/c", "https://e.com/d"]);
@@ -373,7 +439,14 @@ describe("LearnAgent.run end-to-end", () => {
       text: "Some doc text. Another sentence.",
       contentHash: "h",
     }));
-    const agent = createLearnAgent({ homeDir: home, ingestion, now, sqliteLoader: async () => { throw new Error("json"); } });
+    const agent = createLearnAgent({
+      homeDir: home,
+      ingestion,
+      now,
+      sqliteLoader: async () => {
+        throw new Error("json");
+      },
+    });
     const plan = await agent.plan(SOURCE_ID);
     expect(plan.estimate.usdHigh).toBe(0);
     const report = await agent.run(SOURCE_ID, { approved: true });
@@ -414,7 +487,9 @@ describe("module wiring", () => {
       homeDir: home,
       fetchImpl,
       now,
-      sqliteLoader: async () => { throw new Error("json"); },
+      sqliteLoader: async () => {
+        throw new Error("json");
+      },
     });
 
     const report = await agent.run(SOURCE_ID, { approved: true, concurrency: 1 });

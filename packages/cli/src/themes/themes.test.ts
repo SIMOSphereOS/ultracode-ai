@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ThemeManager, dark, dracula, light } from "./index.js";
+import { dark, dracula, light, ThemeManager } from "./index.js";
 
 describe("ThemeManager", () => {
   it("registers the three built-in themes", () => {

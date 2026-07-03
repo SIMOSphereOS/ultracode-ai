@@ -20,14 +20,7 @@ import type { Logger } from "../logger.js";
 export type ToolPermission = "ask" | "always" | "never";
 
 /** Logical grouping of tools, used for filtering and default permissions. */
-export type ToolCategory =
-  | "file"
-  | "search"
-  | "system"
-  | "project"
-  | "ai"
-  | "utility"
-  | "mcp";
+export type ToolCategory = "file" | "search" | "system" | "project" | "ai" | "utility" | "mcp";
 
 /**
  * JSON-Schema-like description of a tool's accepted arguments.
