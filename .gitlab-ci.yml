@@ -124,6 +124,18 @@ lint:
     - pnpm install --frozen-lockfile
     - pnpm biome:ci
 
+# ── suppression gate ──────────────────────────────────────────────────────────
+# Verbietet stille TS-Suppressions (@ts-ignore/@ts-nocheck überall; @ts-expect-
+# error nur in Tests). Braucht nur git (git grep), kein pnpm → needs:[], schlank.
+suppressions:
+  stage: test
+  needs: []
+  image: node:${NODE_VERSION}-slim
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq git
+  script:
+    - bash scripts/check-suppressions.sh
+
 # ── typecheck ─────────────────────────────────────────────────────────────────
 typecheck:
   <<: *node_setup
@@ -169,6 +181,18 @@ sast:
 secret_detection:
   stage: security
   needs: []
+
+# ── dependency audit ──────────────────────────────────────────────────────────
+# Dependency-Vulnerability-Scan (uv-audit-Analog). Scheitert bei high/critical.
+# needs:[] → parallel, kein dist/ nötig. Aktuell sauber (nur 1 low).
+audit:
+  <<: *node_setup
+  <<: *pnpm_cache
+  stage: security
+  needs: []
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm audit --audit-level=high
 
 # ── publish (npm) ─────────────────────────────────────────────────────────────
 # Portiert aus GitHub Actions (.github/workflows/publish.yml). Läuft nur bei
