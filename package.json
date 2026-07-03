@@ -22,6 +22,8 @@
     "format": "biome format --write .",
     "biome:ci": "biome ci .",
     "check:suppressions": "bash scripts/check-suppressions.sh",
+    "release:check": "bash scripts/release-check.sh",
+    "release": "bash scripts/release.sh",
     "ci:local": "bash scripts/ci.sh",
     "prepare": "husky"
   },

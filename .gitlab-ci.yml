@@ -136,6 +136,16 @@ suppressions:
   script:
     - bash scripts/check-suppressions.sh
 
+# ── release consistency (SIMO Release Management) ─────────────────────────────
+# Erzwingt, dass VERSION ↔ package.json (×4) ↔ .release.json ↔ CHANGELOG nicht
+# auseinanderdriften. Braucht nur node (kein pnpm) → needs:[], schlank.
+release_consistency:
+  stage: test
+  needs: []
+  image: node:${NODE_VERSION}-slim
+  script:
+    - bash scripts/release-check.sh
+
 # ── typecheck ─────────────────────────────────────────────────────────────────
 typecheck:
   <<: *node_setup
