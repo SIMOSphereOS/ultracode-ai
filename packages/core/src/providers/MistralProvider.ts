@@ -6,10 +6,11 @@
  */
 
 import type { Logger, ProviderOptions } from "ultracode-shared";
+import { MISTRAL_BASE_URL } from "./catalog.js";
 import { OpenAICompatProvider } from "./openaiCompat.js";
 
-/** Default Mistral API base URL. */
-export const MISTRAL_BASE_URL = "https://api.mistral.ai/v1";
+/** Re-exported for backwards compatibility; canonical home is the catalog. */
+export { MISTRAL_BASE_URL };
 
 /** LLM provider for the Mistral AI platform. */
 export class MistralProvider extends OpenAICompatProvider {

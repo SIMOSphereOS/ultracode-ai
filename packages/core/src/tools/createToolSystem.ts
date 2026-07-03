@@ -8,6 +8,7 @@
 
 import type { IEventBus, Logger, PerToolConfig, UltraCodeConfig } from "ultracode-shared";
 import { ENV_PREFIX } from "ultracode-shared";
+import { defaultApiKeyEnvVar } from "../providers/catalog.js";
 import { BashTool } from "./builtin/BashTool.js";
 import { DeleteFileTool } from "./builtin/DeleteFileTool.js";
 import { EditTool } from "./builtin/EditTool.js";
@@ -60,7 +61,7 @@ function secretEnvKeysFromConfig(config: UltraCodeConfig): string[] {
   if (apiKeys === undefined) return [];
   const keys: string[] = [];
   for (const provider of Object.keys(apiKeys)) {
-    const varName = `${provider.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_API_KEY`;
+    const varName = defaultApiKeyEnvVar(provider);
     keys.push(varName, `${ENV_PREFIX}${varName}`);
   }
   return keys;

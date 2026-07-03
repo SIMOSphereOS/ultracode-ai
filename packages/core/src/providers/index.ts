@@ -6,9 +6,16 @@
  * base class, the streaming parsers and the {@link createProvider} factory.
  */
 
-import type { ILLMProvider, Logger, ProviderId, ProviderOptions } from "ultracode-shared";
+import type {
+  ILLMProvider,
+  Logger,
+  ProviderId,
+  ProviderName,
+  ProviderOptions,
+} from "ultracode-shared";
 import { ProviderError } from "ultracode-shared";
 import { AnthropicProvider } from "./AnthropicProvider.js";
+import { isKeyedProvider, PROVIDER_CATALOG, PROVIDER_IDS } from "./catalog.js";
 import { LocalProvider } from "./LocalProvider.js";
 import { MistralProvider } from "./MistralProvider.js";
 import { OpenAIProvider } from "./OpenAIProvider.js";
@@ -26,7 +33,13 @@ export {
 export type { ProviderRequestInit } from "./BaseProvider.js";
 export { BaseProvider, isRetryableStatus, parseRetryAfter } from "./BaseProvider.js";
 export type { ProviderDescriptor, WireFamily } from "./catalog.js";
-export { isKeyedProvider, isKnownProvider, PROVIDER_CATALOG, PROVIDER_IDS } from "./catalog.js";
+export {
+  defaultApiKeyEnvVar,
+  isKeyedProvider,
+  isKnownProvider,
+  PROVIDER_CATALOG,
+  PROVIDER_IDS,
+} from "./catalog.js";
 export { LocalProvider, OLLAMA_BASE_URL } from "./LocalProvider.js";
 export { MISTRAL_BASE_URL, MistralProvider } from "./MistralProvider.js";
 export { OPENAI_BASE_URL, OpenAIProvider } from "./OpenAIProvider.js";
@@ -41,9 +54,6 @@ export {
 } from "./openaiCompat.js";
 export type { SSEEvent, SSEJsonEvent } from "./sse.js";
 export { parseNDJSON, parseSSEEvents, parseSSEJson, streamLines } from "./sse.js";
-
-import type { ProviderName } from "ultracode-shared";
-import { isKeyedProvider, PROVIDER_CATALOG, PROVIDER_IDS } from "./catalog.js";
 
 /** Options accepted by {@link createProvider}. */
 export type CreateProviderOptions = ProviderOptions & {

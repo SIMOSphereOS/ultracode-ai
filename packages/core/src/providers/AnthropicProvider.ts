@@ -30,12 +30,13 @@ import type {
 import { ProviderError } from "ultracode-shared";
 import type { ProviderRequestInit } from "./BaseProvider.js";
 import { BaseProvider } from "./BaseProvider.js";
+import { ANTHROPIC_BASE_URL } from "./catalog.js";
 import { asArray, asNumber, asRecord, asString, safeParseArgs } from "./openaiCompat.js";
 import type { TerminalCompletionChunk } from "./sse.js";
 import { parseSSEJson } from "./sse.js";
 
-/** Default Anthropic API base URL. */
-export const ANTHROPIC_BASE_URL = "https://api.anthropic.com/v1";
+/** Re-exported for backwards compatibility; canonical home is the catalog. */
+export { ANTHROPIC_BASE_URL };
 
 /** Pinned Anthropic API version header. */
 export const ANTHROPIC_VERSION = "2023-06-01";

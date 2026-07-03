@@ -13,12 +13,37 @@
  */
 
 import type { ProviderName } from "ultracode-shared";
-import { ANTHROPIC_BASE_URL } from "./AnthropicProvider.js";
-import { OLLAMA_BASE_URL } from "./LocalProvider.js";
-import { MISTRAL_BASE_URL } from "./MistralProvider.js";
-import { OPENAI_BASE_URL } from "./OpenAIProvider.js";
 
-/** Wire protocol family a provider speaks. */
+/*
+ * Default base URLs live HERE (not in the provider classes) so that this
+ * module stays a leaf: consumers like `config/env.ts` can read the catalog
+ * without transitively loading any transport code. The provider modules
+ * import and re-export these constants for backwards compatibility.
+ */
+
+/** Default Anthropic Messages API base URL. */
+export const ANTHROPIC_BASE_URL = "https://api.anthropic.com/v1";
+/** Default Mistral chat-completions base URL. */
+export const MISTRAL_BASE_URL = "https://api.mistral.ai/v1";
+/** Default OpenAI chat-completions base URL. */
+export const OPENAI_BASE_URL = "https://api.openai.com/v1";
+/** Default local Ollama base URL. */
+export const OLLAMA_BASE_URL = "http://localhost:11434";
+
+/**
+ * Canonical `<PROVIDER>_API_KEY` env-var convention. The single definition
+ * used by the catalog entries (pinned by contract test), the facade's
+ * fallback key resolution and the tool system's secret-env stripping.
+ */
+export function defaultApiKeyEnvVar(provider: string): string {
+  return `${provider.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_API_KEY`;
+}
+
+/**
+ * Wire protocol family a provider speaks. Documents the transport family per
+ * provider and is pinned by the contract test; the factory itself maps ids to
+ * concrete classes (a `wire`-driven transport selection is a later step).
+ */
 export type WireFamily = "openai-chat" | "anthropic-messages" | "ollama";
 
 /** Declarative description of one built-in provider. */
@@ -27,7 +52,7 @@ export interface ProviderDescriptor {
   readonly id: ProviderName;
   /** Human-readable label for docs/CLI output. */
   readonly label: string;
-  /** Wire protocol family (decides the transport implementation). */
+  /** Wire protocol family (see {@link WireFamily}; pinned by contract test). */
   readonly wire: WireFamily;
   /** Whether the provider requires an `apiKey` to be constructed. */
   readonly keyed: boolean;

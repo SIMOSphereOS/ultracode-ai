@@ -9,7 +9,13 @@
 
 import { describe, expect, it } from "vitest";
 import { envToOverlay } from "../config/env.js";
-import { isKeyedProvider, isKnownProvider, PROVIDER_CATALOG, PROVIDER_IDS } from "./catalog.js";
+import {
+  defaultApiKeyEnvVar,
+  isKeyedProvider,
+  isKnownProvider,
+  PROVIDER_CATALOG,
+  PROVIDER_IDS,
+} from "./catalog.js";
 import { createProvider } from "./index.js";
 
 const DUMMY_OPTIONS = { timeoutMs: 1000, maxRetries: 0, retryDelayMs: 1 };
@@ -41,17 +47,27 @@ describe("provider catalog contract", () => {
     }
   });
 
-  it("pairs keyed with apiKeyEnvVar and follows the <PROVIDER>_API_KEY convention", () => {
+  it("pairs keyed with apiKeyEnvVar and follows the canonical convention helper", () => {
     for (const descriptor of Object.values(PROVIDER_CATALOG)) {
       if (descriptor.keyed) {
-        // Same convention as the facade's apiKeyEnvVar() fallback resolution.
-        expect(descriptor.apiKeyEnvVar).toBe(
-          `${descriptor.id.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_API_KEY`,
-        );
+        // defaultApiKeyEnvVar() is the same function the facade's fallback
+        // resolution and the tool system's secret stripping use — asserting
+        // against it (not a private copy) ties catalog and facade together.
+        expect(descriptor.apiKeyEnvVar).toBe(defaultApiKeyEnvVar(descriptor.id));
       } else {
         expect(descriptor.apiKeyEnvVar).toBeUndefined();
       }
     }
+  });
+
+  it("pins the wire family of every provider", () => {
+    const wires = Object.fromEntries(Object.values(PROVIDER_CATALOG).map((d) => [d.id, d.wire]));
+    expect(wires).toEqual({
+      mistral: "openai-chat",
+      openai: "openai-chat",
+      anthropic: "anthropic-messages",
+      local: "ollama",
+    });
   });
 
   it("declares a non-empty default base URL for every provider", () => {
@@ -75,6 +91,12 @@ describe("provider catalog contract", () => {
         expect(apiKeys?.[descriptor.id]).toBe(`key-${descriptor.id}`);
       }
     }
+    // Negative: exactly the keyed ids are mapped — no key-less or spurious entries.
+    const keyedIds = Object.values(PROVIDER_CATALOG)
+      .filter((d) => d.keyed)
+      .map((d) => d.id)
+      .sort();
+    expect(Object.keys(apiKeys ?? {}).sort()).toEqual(keyedIds);
   });
 
   it("exposes coherent helper guards", () => {
