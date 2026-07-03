@@ -377,7 +377,7 @@ ultracode-ai --compat opencode
    - [MCP-Integration →](../DEVELOPMENT/architecture.md#mcp-server-integration)
    - [LSP-Integration →](../DEVELOPMENT/architecture.md#lsp-integration)
 3. **Feedback geben:**
-   - [GitHub Issues](https://github.com/AndreasSchwan-SIMO/ultracode-ai/issues) (Label: `migration`)
+   - [GitLab Issues](https://gitlab.simo-online.com/simo/ultracode-ai/-/issues) (Label: `migration`)
    - [Discord #migration](https://discord.gg/ultracode)
 
 ---

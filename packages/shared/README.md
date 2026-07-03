@@ -2,7 +2,7 @@
 
 > Shared types, contracts, errors and utilities for UltraCode AI.
 
-Part of the [UltraCode AI](https://github.com/AndreasSchwan-SIMO/ultracode-ai) monorepo.
+Part of the [UltraCode AI](https://gitlab.simo-online.com/simo/ultracode-ai) monorepo.
 This is an internal foundation package consumed by
 [`ultracode-core`](https://www.npmjs.com/package/ultracode-core) and the
 [`ultracode`](https://www.npmjs.com/package/ultracode) CLI.

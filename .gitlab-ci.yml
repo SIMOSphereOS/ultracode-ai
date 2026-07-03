@@ -47,6 +47,7 @@ stages:
   - test
   - coverage
   - security
+  - publish         # npm publish, nur bei v*-Tags
 
 # ── install + build ───────────────────────────────────────────────────────────
 # WHY single job: pnpm workspace: symlinks live inside node_modules/.pnpm and
@@ -135,3 +136,22 @@ sast:
 secret_detection:
   stage: security
   needs: []
+
+# ── publish (npm) ─────────────────────────────────────────────────────────────
+# Portiert aus GitHub Actions (.github/workflows/publish.yml). Läuft nur bei
+# Version-Tags v* (workflow.rules lassen Tag-Pipelines zu). Voraussetzung:
+# CI/CD-Variable NPM_TOKEN (protected + masked) mit npm-Publish-Rechten.
+# pnpm ersetzt workspace:^-Specifier beim Publish durch reale Versionen; die
+# Tarballs enthalten keine "workspace:*"/"workspace:^"-Ranges.
+publish:
+  <<: *node_setup
+  <<: *pnpm_cache
+  stage: publish
+  needs: [install_and_build]
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+/
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm build
+    - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+    - pnpm -r publish --no-git-checks --access public

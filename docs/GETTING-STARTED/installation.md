@@ -51,7 +51,7 @@ Für Mitentwicklung oder den neuesten `main`-Stand:
 
 ```bash
 # Repository klonen (Klon-Verzeichnis heißt ultracode-ai)
-git clone https://github.com/AndreasSchwan-SIMO/ultracode-ai.git
+git clone https://gitlab.simo-online.com/simo/ultracode-ai.git
 cd ultracode-ai
 
 # Abhängigkeiten installieren
@@ -158,7 +158,7 @@ rm -rf ~/.ultracode
 | `SQLITE`-Hinweis beim Start | Informativ — `node:sqlite` ist experimentell; die Warnung wird intern unterdrückt. |
 | Build aus Quellcode schlägt fehl | `pnpm --version` (`11.5.2`?) und Node-Version prüfen, dann `pnpm install && pnpm build`. |
 
-Bei Bugs: [Issues](https://github.com/AndreasSchwan-SIMO/ultracode-ai/issues).
+Bei Bugs: [Issues](https://gitlab.simo-online.com/simo/ultracode-ai/-/issues).
 
 ---
 

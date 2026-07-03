@@ -2,7 +2,7 @@
 
 > **Open-Source AI Code Assistant für das Terminal — mit KI-gestützter Versionierung und Release-Planung.**
 
-[![CI](https://github.com/AndreasSchwan-SIMO/ultracode-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/AndreasSchwan-SIMO/ultracode-ai/actions/workflows/ci.yml)
+[![CI](https://gitlab.simo-online.com/simo/ultracode-ai/badges/main/pipeline.svg)](https://gitlab.simo-online.com/simo/ultracode-ai/-/pipelines)
 [![Coverage](https://img.shields.io/badge/coverage-~93%25%20stmts%20%7C%20~86%25%20branches-brightgreen.svg)](#teststatus)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22.13-339933.svg)](#installation)
