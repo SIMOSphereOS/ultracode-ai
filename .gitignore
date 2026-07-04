@@ -10,3 +10,4 @@ junit.xml
 .ultracode/
 .vibe/
 tmp/
+.uc-ai/scheduled_tasks.lock

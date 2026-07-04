@@ -6,7 +6,7 @@
 
 ## 📚 Dokumentationsübersicht
 
-UltraCode AI kombiniert das Beste aus **OpenCode**, **Mistral Vibe** und **Claude Code** mit einem einzigartigen **AI-gesteuerten Versionierungs- und Release-Planungssystem**.
+UltraCode AI kombiniert das Beste aus **OpenCode**, **Mistral Vibe** und modernen AI-Coding-Assistenten mit einem einzigartigen **AI-gesteuerten Versionierungs- und Release-Planungssystem**.
 
 Diese Dokumentation ist in logische Abschnitte unterteilt, um Entwicklern, Nutzern und Contributors den besten Einstieg zu bieten.
 
@@ -28,12 +28,17 @@ docs/
 │   ├── core-system.md             # Kernsystem-Details
 │   ├── ai-versioning.md           # AI-Versionierungssystem
 │   ├── tools-reference.md         # Tool-Referenz (14 Tools)
-│   └── agents-reference.md        # Agenten-Referenz
+│   ├── agents-reference.md        # Agenten-Referenz
+│   └── standards.md               # Entwicklungsstandards (Skills, Agenten, Gates)
+│
+├── 📐 decisions/                  # Architecture Decision Records (ADRs)
+│
+├── 🧠 lessons-learned/            # Fehler nur einmal / Mistakes only once
 │
 ├── 🔧 INTEGRATION/                # Integration
 │   ├── opencode-migration.md      # Migration von OpenCode
 │   ├── vibe-migration.md          # Migration von Mistral Vibe
-│   ├── claude-migration.md        # Migration von Claude Code
+│   ├── assistant-migration.md     # Migration von anderen AI-Coding-Assistenten
 │   └── plugin-development.md      # Plug-in-Entwicklung
 │
 ├── 🏢 ENTERPRISE/                 # Enterprise-Features
@@ -70,6 +75,9 @@ docs/
 | **Erste Schritte** | [GETTING-STARTED/quick-start.md](./GETTING-STARTED/quick-start.md) | 5-Minuten-Tutorial |
 | **Installation** | [GETTING-STARTED/installation.md](./GETTING-STARTED/installation.md) | Alle Installationsmethoden |
 | **Architektur** | [DEVELOPMENT/architecture.md](./DEVELOPMENT/architecture.md) | Systemdesign und Komponenten |
+| **Entwicklungsstandards** | [DEVELOPMENT/standards.md](./DEVELOPMENT/standards.md) | Skills, Agenten und Quality Gates |
+| **Entscheidungen (ADRs)** | [decisions/](./decisions/README.md) | Architecture Decision Records |
+| **Lessons Learned** | [lessons-learned/](./lessons-learned/README.md) | Fehler nur einmal / Mistakes only once |
 | **AI-Versionierung** | [AI-FEATURES/versioning-system.md](./AI-FEATURES/versioning-system.md) | Einzigartiges USP verstehen |
 | **CLI-Referenz** | [REFERENCE/cli-commands.md](./REFERENCE/cli-commands.md) | Alle CLI-Kommandos |
 | **API** | [REFERENCE/api.md](./REFERENCE/api.md) | REST API Dokumentation |

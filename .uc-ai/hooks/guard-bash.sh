@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # PreToolUse(Bash)-Hook: blockt offensichtlich destruktive Shell-Befehle.
-# Kontrakt: exit 0 = erlauben, exit 2 = blockieren (stderr geht an Claude).
+# Kontrakt: exit 0 = erlauben, exit 2 = blockieren (stderr geht an den Assistenten).
 # Bewusst konservativ gehalten (geringe False-Positive-Rate).
 set -uo pipefail
 payload="$(cat)"
@@ -14,13 +14,16 @@ except Exception:
 
 [ -z "$cmd" ] && exit 0
 
-deny() { echo "guard-bash: blockiert ($1). Falls beabsichtigt: Befehl anpassen oder manuell ausfuehren." >&2; exit 2; }
+deny() {
+  echo "guard-bash: blockiert ($1). Falls beabsichtigt: Befehl anpassen oder manuell ausfuehren." >&2
+  exit 2
+}
 
 # Hart destruktiv
 case "$cmd" in
-  *"rm -rf /"*|*"rm -rf /*"*|*"rm -rf ~"*|*"rm -fr /"*) deny "rm -rf auf Root/Home" ;;
-  *":(){ :|:& };:"*)                                    deny "Fork-Bomb" ;;
-  *"mkfs"*|*"> /dev/sd"*|*"of=/dev/sd"*)                deny "Datentraeger-Ueberschreibung" ;;
+*"rm -rf /"* | *"rm -rf /*"* | *"rm -rf ~"* | *"rm -fr /"*) deny "rm -rf auf Root/Home" ;;
+*":(){ :|:& };:"*) deny "Fork-Bomb" ;;
+*"mkfs"* | *"> /dev/sd"* | *"of=/dev/sd"*) deny "Datentraeger-Ueberschreibung" ;;
 esac
 
 # Git-Schutz

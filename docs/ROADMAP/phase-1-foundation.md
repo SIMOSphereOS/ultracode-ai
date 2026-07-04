@@ -52,7 +52,7 @@
 | DOC-012 | INTEGRATION/ README | P0 | ✅ | @william-salespear |
 | DOC-013 | INTEGRATION/ opencode-migration.md | P0 | ✅ | @william-salespear |
 | DOC-014 | INTEGRATION/ vibe-migration.md | P0 | ✅ | @william-salespear |
-| DOC-015 | INTEGRATION/ claude-migration.md | P0 | ✅ | @william-salespear |
+| DOC-015 | INTEGRATION/ assistant-migration.md | P0 | ✅ | @william-salespear |
 | DOC-016 | INTEGRATION/ plugin-development.md | P0 | ✅ | @william-salespear |
 | DOC-017 | AI-FEATURES/ README | P0 | ✅ | @william-salespear |
 | DOC-018 | AI-FEATURES/ versioning-system.md | P0 | ✅ | @william-salespear |
@@ -127,7 +127,7 @@ UltraCode AI Phase 1 Architektur
 ├── Integration Layer (TypeScript/Python)
 │   ├── OpenCode/           # OpenCode Integration
 │   ├── Vibe/               # Mistral Vibe Integration
-│   ├── ClaudeCode/         # Claude Code Integration
+│   ├── UcAi/               # UC-AI Assistant-Kern
 │   └── Legacy/             # Legacy Tool Integration
 │
 ├── CLI (TypeScript)

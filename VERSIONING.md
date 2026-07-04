@@ -4,10 +4,16 @@
 > abgebildet auf das Monorepo und die GitLab-Infrastruktur dieses Projekts.
 > Kein Release ohne Version, kein Version-Bump ohne CHANGELOG, kein CHANGELOG ohne Inhalt.
 
+Die Schritt-für-Schritt-Prozessanleitung zu dieser Policy liefert der Projekt-Skill
+[`release-management`](./.uc-ai/skills/release-management/SKILL.md); der Agent
+[`release-manager`](./.uc-ai/agents/release-manager.md) führt Prüfung und Bump aus. /
+The step-by-step process guide for this policy is the project skill
+`release-management`; the `release-manager` agent runs the check and the bump.
+
 ## Grundsätze
 
 - **SemVer 2.0** für alle Module und das Gesamtsystem.
-- **Lock-Step-Monorepo**: `ultracode-shared`, `ultracode-core` und `ultracode` (CLI)
+- **Lock-Step-Monorepo**: `ultracode-shared`, `ultracode-core` und `ultracode-ai` (CLI)
   tragen stets **dieselbe** Version wie die System-Version in `VERSION`.
 - Das **Root-`CHANGELOG.md`** dokumentiert die Releases des Gesamtsystems
   (Monorepo-Tag `vX.Y.Z`), zweisprachig (DE + EN, Keep a Changelog).
@@ -35,8 +41,8 @@ und mit einem CHANGELOG-Abschnitt übereinstimmen.
 | Breaking Change / Major-Anpassung | **major** |
 | `docs:` / `style:` / `refactor:` / `test:` / `ci:` | kein Bump |
 
-Der KI-gestützte Versionierungs-Kern von UltraCode (`ultracode version suggest`,
-`ultracode release plan`) leitet einen Bump-Vorschlag deterministisch aus den
+Der KI-gestützte Versionierungs-Kern von UltraCode (`ultracode-ai version suggest`,
+`ultracode-ai release plan`) leitet einen Bump-Vorschlag deterministisch aus den
 Git-Commits ab; die SIMO-Artefakte oben halten die Entscheidung fest und erzwingbar.
 
 ## Ablauf eines Releases
@@ -57,10 +63,10 @@ Der Push eines Git-Tags `vX.Y.Z` ist zugleich der Auslöser für die npm-Publika
 - Pipeline: **`.gitlab-ci.yml`**, Job `publish` (Stage `publish`), Regel `$CI_COMMIT_TAG =~ /^v\d+/`.
 - Schritte: `pnpm install --frozen-lockfile` → `pnpm build` → `pnpm -r publish --no-git-checks --access public`.
 - Authentifizierung über die CI/CD-Variable **`NPM_TOKEN`** (protected + masked).
-- Publizierte Pakete in dieser Reihenfolge: `ultracode-shared` → `ultracode-core` → `ultracode` (CLI).
+- Publizierte Pakete in dieser Reihenfolge: `ultracode-shared` → `ultracode-core` → `ultracode-ai` (CLI).
 - **Workspace-Auflösung:** `workspace:^`-Abhängigkeiten werden von pnpm beim Publish auf die realen
   veröffentlichten Versionen umgeschrieben; die Tarballs enthalten **keine** `workspace:*`-Spezifizierer.
-  Manuelle Verifikation vor einem Release: `pnpm --filter ultracode pack` und die `package.json` im
+  Manuelle Verifikation vor einem Release: `pnpm --filter ultracode-ai pack` und die `package.json` im
   Tarball prüfen.
 - Jedes publizierbare Paket bringt `dist`, `README.md` und `LICENSE` mit (`files`-Feld) und führt
   über `prepublishOnly` (`tsc -b`) einen Build vor der Veröffentlichung aus.

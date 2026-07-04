@@ -6,7 +6,7 @@
 
 ## 🚀 Vision
 
-UltraCode AI soll der **beste Open-Source AI-Coding-Assistent der Welt** werden. Durch die Kombination der Stärken von **OpenCode**, **Mistral Vibe** und **Claude Code** mit unserem einzigartigen **AI-gesteuerten Versionierungs- und Release-Planungssystem** schaffen wir ein Tool, das Entwickler produktiver, Teams effizienter und Projekte erfolgreicher macht.
+UltraCode AI soll der **beste Open-Source AI-Coding-Assistent der Welt** werden. Durch die Kombination der Stärken von **OpenCode**, **Mistral Vibe** und führenden AI-Coding-Assistenten mit unserem einzigartigen **AI-gesteuerten Versionierungs- und Release-Planungssystem** schaffen wir ein Tool, das Entwickler produktiver, Teams effizienter und Projekte erfolgreicher macht.
 
 ---
 
@@ -15,7 +15,7 @@ UltraCode AI soll der **beste Open-Source AI-Coding-Assistent der Welt** werden.
 | **Dokument** | **Beschreibung** | **Phase** |
 |--------------|------------------|-----------|
 | [phase-1-foundation.md](./phase-1-foundation.md) | Foundation: Core-System, Architektur, Basis-Features | ✅ Phase 1 |
-| [phase-2-integration.md](./phase-2-integration.md) | Integration: OpenCode, Vibe, Claude Code Migration | Phase 2 |
+| [phase-2-integration.md](./phase-2-integration.md) | Integration: OpenCode, Vibe, UC-AI Assistant-Kern | Phase 2 |
 | [phase-3-ai-versioning.md](./phase-3-ai-versioning.md) | AI-Versionierung: Einzigartiges USP implementieren | Phase 3 |
 | [phase-4-advanced.md](./phase-4-advanced.md) | Advanced Features: Kollaboration, Plugins, Cloud | Phase 4 |
 | [phase-5-beta.md](./phase-5-beta.md) | Beta & Release: Testing, Dokumentation, Launch | Phase 5 |
@@ -38,7 +38,7 @@ UltraCode AI Development Phases
 ├── Phase 2: Integration (0%) 🔄
 │   ├── OpenCode Migration
 │   ├── Mistral Vibe Integration
-│   ├── Claude Code Integration
+│   ├── UC-AI Assistant-Kern
 │   └── Unified Interface
 │
 ├── Phase 3: AI Versioning (0%) 📋
@@ -109,7 +109,7 @@ UltraCode AI Development Phases
 ### Q4 2026
 - 🎯 **Meilenstein 10**: OpenCode-Integration
 - 🎯 **Meilenstein 11**: Mistral Vibe-Integration
-- 🎯 **Meilenstein 12**: Claude Code-Integration
+- 🎯 **Meilenstein 12**: UC-AI Assistant-Kern
 - 🎯 **Meilenstein 13**: Private Beta starten
 
 ### Q1 2027
@@ -138,7 +138,7 @@ UltraCode AI Development Phases
 ### P1 - Hoch (Sollte für Launch)
 - [ ] OpenCode-Integration
 - [ ] Mistral Vibe-Integration
-- [ ] Claude Code-Integration
+- [ ] UC-AI Assistant-Kern
 - [ ] Team-Kollaboration
 - [ ] Qualitätsgates
 
@@ -175,7 +175,7 @@ UltraCode AI Development Phases
 | Phase 1 Code implementieren | Phase 1 | P0 | 🎯 |
 | OpenCode integrieren | Phase 2 | P1 | 📋 |
 | Mistral Vibe integrieren | Phase 2 | P1 | 📋 |
-| Claude Code integrieren | Phase 2 | P1 | 📋 |
+| UC-AI Assistant-Kern integrieren | Phase 2 | P1 | 📋 |
 | AI-Versionierung implementieren | Phase 3 | P0 | 📋 |
 
 ---

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # SessionStart-Hook: kurzer Repo-Statusabriss als Kontext.
-# stdout wird von Claude Code als Session-Kontext eingespeist. Immer exit 0.
+# stdout wird vom UC-AI-Assistenten als Session-Kontext eingespeist. Immer exit 0.
 set -uo pipefail
-cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null || exit 0
+cd "${UC_AI_PROJECT_DIR:-.}" 2>/dev/null || exit 0
 
 branch="$(git branch --show-current 2>/dev/null || echo '?')"
 last="$(git log --oneline -1 2>/dev/null || echo '?')"
