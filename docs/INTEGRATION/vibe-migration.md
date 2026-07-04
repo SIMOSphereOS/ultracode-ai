@@ -2,6 +2,8 @@
 
 > **Komplette Anleitung für die Migration von Mistral Vibe zu UltraCode AI**
 
+> **⚠️ Reifegrad-Hinweis / Maturity note:** Teile dieser Anleitung sind aspirativ. Der verbindliche, tatsächlich implementierte Funktionsstand steht in [`docs/comparison.md`](../comparison.md) und im [README](../../README.md). **Nicht implementiert:** LSP (geplant), Desktop-App und IDE-Plugins (bewusst nicht geplant — UltraCode ist CLI/TUI). Einige Tool-/Command-Beispiele unten beschreiben geplante oder generische Konzepte. **Real:** 13 Built-in-Tools (plus beliebig viele über MCP), 6 eingebaute Agenten, 5 LLM-Provider (inkl. LM Studio via OpenAI-kompatiblem Endpoint). / Parts of this guide are aspirational; the authoritative implemented state is in `docs/comparison.md` and the README.
+
 ---
 
 ## 🎯 Übersicht
@@ -15,15 +17,15 @@ Diese Anleitung hilft dir, **nahtlos von Mistral Vibe zu UltraCode AI zu migrier
 | **Feature** | **Mistral Vibe** | **UltraCode AI** | **Hinweise** |
 |-------------|------------------|---------------|--------------|
 | **Sprache** | Python | TypeScript (+ Python) | ✅ Multi-Language in UltraCode AI |
-| **Runtime** | Python 3.12+ | Node.js 22.13+ (+ Bun) | ⚠️ Runtime-Wechsel |
+| **Runtime** | Python 3.12+ | Node.js 22.13+ | ⚠️ Runtime-Wechsel |
 | **UI** | React + Rich | React + Ink | ⚠️ Unterschiedliche UI-Bibliothek |
-| **Agenten** | ❌ (begrenzt) | ✅++ (10+ Agenten) | ✅ Volles Agenten-System |
-| **Tools** | ~25 | **80+** | ✅ Alle Vibe-Tools + viele mehr |
-| **Skills** | ✅ | ✅++ (erweitert) | ✅ Kompatibel |
-| **MCP Support** | ✅ | ✅ | ✅ Voll unterstützt |
-| **LSP Support** | ❌ | ✅ | ✅ Neu in UltraCode AI |
+| **Agenten** | Modi + Remote-Agenten | 6 eingebaut + projektlokale | ⚠️ Vibe hat async/Remote-Agenten; UltraCode 6 Built-in + `.ultracode/agents` |
+| **Tools** | ~25 | 13 eingebaut + MCP | ✅ 13 Built-in-Tools plus beliebig viele über MCP-Server |
+| **Skills** | ✅ | ✅ (SKILL.md + Loader) | ✅ Kompatibles Format |
+| **MCP Support** | ✅ | ✅ | ✅ MCP-Client (stdio/http) |
+| **LSP Support** | ❌ | ❌ (geplant) | Noch nicht implementiert |
 | **AI-Versionierung** | ❌ | ✅ **UNIQUE** | ✅ UltraCode AI USP |
-| **Multi-Model** | ✅ | ✅ (Mistral, Anthropic, OpenAI, lokal) | ✅ Erweitert |
+| **Multi-Model** | ✅ | ✅ (Anthropic, OpenAI, Mistral, Ollama, OpenAI-kompatibel) | ✅ 5 Provider inkl. LM Studio |
 | **Konfiguration** | TOML | TOML | ✅ Kompatibel |
 | **Session Management** | ✅ | ✅++ | ✅ Verbessert |
 
@@ -326,8 +328,8 @@ ultracode-ai --compat vibe
 | **CLI** | Python CLI | TypeScript CLI | UltraCode AI CLI verwenden |
 | **Skills** | Python-basiert | TypeScript + Python | Beide unterstützt |
 | **Agenten** | Begrenzt | Vollständig | UltraCode AI-Agenten verwenden |
-| **Tools** | ~25 | 80+ | Neue Tools entdecken |
-| **LSP** | ❌ | ✅ | LSP-Tools verwenden |
+| **Tools** | ~25 | 13 + MCP | 13 Built-in-Tools plus MCP-Server |
+| **LSP** | ❌ | ❌ (geplant) | Noch nicht implementiert |
 | **AI-Versionierung** | ❌ | ✅ | Neue Features nutzen |
 
 ---
@@ -341,7 +343,7 @@ ultracode-ai --compat vibe
 - [ ] **Skills** migriert
 - [ ] **Prompts** migriert
 - [ ] **Trusted Folders** migriert
-- [ ] **Neue Features** ausprobiert (Agenten, AI-Versionierung, LSP)
+- [ ] **Neue Features** ausprobiert (Agenten, AI-Versionierung, MCP)
 - [ ] **Alte Konfiguration** archiviert
 
 ---
@@ -362,9 +364,9 @@ ultracode-ai --compat vibe
 
 - **Agenten-System:** `/agents build`, `/agents review`
 - **AI-Versionierung:** `version_analyze()`, `release_plan()`
-- **LSP-Integration:** `lsp_hover()`, `lsp_completion()`
-- **80+ Tools:** Viele neue Tools verfügbar
-- **Desktop App:** Voll unterstützte Desktop-Version
+- **MCP-Server:** externe Tools über das Model Context Protocol (stdio/http) anbinden
+- **13 Built-in-Tools + MCP:** plus beliebig viele Tools über MCP-Server
+- **CLI/TUI:** terminal-fokussiert (Desktop/IDE bewusst nicht geplant)
 
 ### 3. Performance-Verbesserungen
 

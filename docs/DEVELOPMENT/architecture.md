@@ -45,7 +45,7 @@ UltraCode AI folgt einem **modularen, layer-basierten Architekturansatz** mit kl
 │  │  │    • Subagent Coordination                                            │││
 │  │  │                                                                       │││
 │  │  │  🛠️  TOOL SYSTEM                                                     │││
-│  │  │    • Tool Registry (14 Tools)                                          │││
+│  │  │    • Tool Registry (13 Built-in-Tools + MCP)                           │││
 │  │  │    • Tool Execution Engine                                            │││
 │  │  │    • Permission System                                                │││
 │  │  │    • Tool Validation & Sanitization                                   │││
