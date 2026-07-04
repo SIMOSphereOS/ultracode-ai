@@ -30,7 +30,7 @@ Drei Pakete, Abhängigkeitsrichtung `cli → core → shared`:
   Quelle der Wahrheit: [`packages/shared/CONTRACTS.md`](./packages/shared/CONTRACTS.md).
 - **`ultracode-core`** — Config, Provider, Tools, Memory, Context, Execution, Agenten,
   AI-Versioning.
-- **`ultracode`** — die CLI (Commander + React/Ink).
+- **`ultracode-ai`** — die CLI (Commander + React/Ink).
 
 `core` und `cli` implementieren gegen die Interfaces aus `shared`. Änderungen an einem
 Kontrakt erfordern, dass alle Implementierungen und Tests mitziehen.
@@ -83,6 +83,21 @@ Release-Regeln stehen in [`VERSIONING.md`](./VERSIONING.md).
 - Halte PRs fokussiert; Build, Tests und Typecheck müssen grün sein.
 - Neue Features brauchen Tests; Bugfixes brauchen einen Regressionstest.
 - Doku aktualisieren, wenn sich Verhalten, CLI-Kommandos oder Config-Schlüssel ändern.
+
+## Development Standards & Agents
+
+**DE:** Dieses Repo hat fünf verbindliche Entwicklungsstandards als Projekt-Skills
+(`.uc-ai/skills/`: `clean-code`, `release-management`, `test-management`,
+`dev-workflow`, `documentation-management`) und fünf Entwicklungs-Agenten
+(`.uc-ai/agents/`). Leitdokument für Coding-Agenten: [`UC-AI.md`](./UC-AI.md);
+Überblick über Standards, Agenten und Quality Gates:
+[`docs/DEVELOPMENT/standards.md`](./docs/DEVELOPMENT/standards.md).
+**EN:** This repo ships five binding development standards as project skills
+(`.uc-ai/skills/`: `clean-code`, `release-management`, `test-management`,
+`dev-workflow`, `documentation-management`) and five development agents
+(`.uc-ai/agents/`). Guide for coding agents: [`UC-AI.md`](./UC-AI.md);
+overview of standards, agents and quality gates:
+[`docs/DEVELOPMENT/standards.md`](./docs/DEVELOPMENT/standards.md).
 
 ## Lizenz
 

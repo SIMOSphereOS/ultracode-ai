@@ -10,10 +10,10 @@ Dieser Abschnitt enthält **detaillierte Anleitungen** für die Integration und 
 
 ```
 INTEGRATION/
-├── 🔄 opencode-migration.md    # Migration von OpenCode
-├── 🔄 vibe-migration.md        # Migration von Mistral Vibe
-├── 🔄 claude-migration.md      # Migration von Claude Code
-└── 🧩 plugin-development.md    # Eigene Plug-ins entwickeln
+├── 🔄 opencode-migration.md     # Migration von OpenCode
+├── 🔄 vibe-migration.md         # Migration von Mistral Vibe
+├── 🔄 assistant-migration.md    # Migration von anderen AI-Coding-Assistenten
+└── 🧩 plugin-development.md     # Eigene Plug-ins entwickeln
 ```
 
 ---
@@ -24,7 +24,7 @@ INTEGRATION/
 |--------------|------------------------|-----------|
 | **OpenCode-Nutzer** | opencode-migration.md | Migration zu UltraCode AI |
 | **Mistral Vibe-Nutzer** | vibe-migration.md | Migration zu UltraCode AI |
-| **Claude Code-Nutzer** | claude-migration.md | Migration zu UltraCode AI |
+| **Nutzer anderer AI-Coding-Assistenten** | assistant-migration.md | Migration zu UltraCode AI |
 | **Entwickler** | plugin-development.md | Eigene Plug-ins erstellen |
 
 ---
@@ -53,14 +53,14 @@ INTEGRATION/
 
 ---
 
-### [Claude Code Migration →](./claude-migration.md)
-- **Ähnlichkeiten und Unterschiede** zwischen Claude Code und UltraCode AI
+### [AI-Coding-Assistent Migration →](./assistant-migration.md)
+- **Gemeinsame Konzepte** zwischen typischen CLI-Assistenten und UltraCode AI
 - **Bun → Node.js Migration** (Runtime-Wechsel)
-- **Terminologie-Mapping** (Claude → UltraCode AI)
-- **Tools-Mapping** (Claude-Tools → UltraCode AI-Tools)
-- **Anthropic API → Multi-Model Migration**
+- **Konzept-Mapping** (bisheriger Assistent → UltraCode AI)
+- **Tools-Mapping** (gewohnte Tools → UltraCode AI-Tools)
+- **Single-Provider → Multi-Model Migration**
 
-**Ziel:** Nahtlose Migration von Claude Code zu UltraCode AI
+**Ziel:** Nahtlose Migration von anderen AI-Coding-Assistenten zu UltraCode AI
 
 ---
 
@@ -117,7 +117,7 @@ ultracode-ai
 
 ---
 
-### Für Claude Code-Nutzer
+### Für Nutzer anderer AI-Coding-Assistenten
 
 ```bash
 # 1. UltraCode AI installieren
@@ -127,8 +127,8 @@ npm install -g ultracode-ai
 export ANTHROPIC_API_KEY=sk-...
 export MISTRAL_API_KEY=sk-...
 
-# 3. Migration-Skript ausführen
-ultracode-ai --migrate-from claude
+# 3. Konfiguration manuell portieren (siehe Anleitung)
+ultracode-ai --setup
 
 # 4. Loslegen!
 ultracode-ai
@@ -140,24 +140,24 @@ ultracode-ai
 
 ### Feature-Vergleich
 
-| **Feature** | **OpenCode** | **Mistral Vibe** | **Claude Code** | **UltraCode AI** |
-|-------------|--------------|------------------|-----------------|---------------|
-| **Sprache** | TypeScript | Python | TypeScript | TypeScript (+ Python) |
-| **Runtime** | Node.js | Python | Bun | Node.js (+ Bun) |
-| **UI** | React + Terminal | React + Rich | React + Ink | React + Ink |
-| **Agenten** | ✅ | ✅ (begrenzt) | ✅ | ✅++ (erweitert) |
-| **Tools** | ~30 | ~25 | ~40 | **80+** |
-| **MCP** | ❌ | ✅ | ✅ | ✅ |
-| **LSP** | ❌ | ❌ | ✅ | ✅ |
-| **IDE-Integration** | ✅ | ❌ | ✅ | ✅++ |
-| **AI-Versionierung** | ❌ | ❌ | ❌ | ✅ **UNIQUE** |
-| **Multi-Model** | ✅ | ✅ | ❌ (nur Anthropic) | ✅ |
+| **Feature** | **OpenCode** | **Mistral Vibe** | **UltraCode AI** |
+|-------------|--------------|------------------|---------------|
+| **Sprache** | TypeScript | Python | TypeScript (+ Python) |
+| **Runtime** | Node.js | Python | Node.js (+ Bun) |
+| **UI** | React + Terminal | React + Rich | React + Ink |
+| **Agenten** | ✅ | ✅ (begrenzt) | ✅++ (erweitert) |
+| **Tools** | ~30 | ~25 | **80+** |
+| **MCP** | ❌ | ✅ | ✅ |
+| **LSP** | ❌ | ❌ | ✅ |
+| **IDE-Integration** | ✅ | ❌ | ✅++ |
+| **AI-Versionierung** | ❌ | ❌ | ✅ **UNIQUE** |
+| **Multi-Model** | ✅ | ✅ | ✅ |
 
 ---
 
 ## 🔄 Automatisierte Migration
 
-UltraCode AI bietet **automatisierte Migrationstools** für alle drei Systeme:
+UltraCode AI bietet **automatisierte Migrationstools** für OpenCode und Mistral Vibe; für andere Assistenten gibt es den [manuellen Migrations-Guide](./assistant-migration.md):
 
 ```bash
 # OpenCode Migration
@@ -167,10 +167,6 @@ ultracode-ai --migrate-from opencode
 # Mistral Vibe Migration
 ultracode-ai --migrate-from vibe --dry-run
 ultracode-ai --migrate-from vibe
-
-# Claude Code Migration
-ultracode-ai --migrate-from claude --dry-run
-ultracode-ai --migrate-from claude
 ```
 
 **Optionen:**
@@ -206,16 +202,9 @@ ultracode-ai --compat vibe
 - Vibe-Skills können direkt verwendet werden
 - Python-Tools haben Aliases
 
-### Claude-Modus
+### Andere Assistenten
 
-```bash
-ultracode-ai --compat claude
-```
-
-**Features:**
-- Claude-Tools haben Aliases
-- Claude-Konfiguration wird konvertiert
-- Bun-spezifische Features werden emuliert
+Für weitere AI-Coding-Assistenten gibt es keinen dedizierten Kompatibilitätsmodus — dank standardisierter Konzepte (MCP, LSP, Slash-Commands) gelingt die Migration mit dem [manuellen Guide](./assistant-migration.md) dennoch schnell.
 
 ---
 
@@ -230,8 +219,8 @@ cp -r ~/.opencode ~/.opencode-backup
 # Mistral Vibe
 cp -r ~/.vibe ~/.vibe-backup
 
-# Claude Code (falls lokal installiert)
-cp -r ~/.claude ~/.claude-backup
+# Anderer Assistent (Pfad anpassen)
+cp -r ~/.mein-assistent ~/.mein-assistent-backup
 ```
 
 ---
@@ -247,7 +236,7 @@ cp -r ~/.claude ~/.claude-backup
 
 ### 3. Parallel betreiben
 
-Du kannst **OpenCode/Vibe/Claude und UltraCode AI parallel** betreiben:
+Du kannst **deinen bisherigen Assistenten und UltraCode AI parallel** betreiben:
 
 ```bash
 # OpenCode
@@ -298,9 +287,9 @@ Führe ein **Migrations-Log**, um Unterschiede zu dokumentieren:
 1. **Wähle dein Herkunftssystem:**
    - [OpenCode Migration →](./opencode-migration.md)
    - [Mistral Vibe Migration →](./vibe-migration.md)
-   - [Claude Code Migration →](./claude-migration.md)
+   - [AI-Coding-Assistent Migration →](./assistant-migration.md)
 
-2. **Führe Migration durch** mit den automatisierten Tools
+2. **Führe Migration durch** mit den automatisierten Tools bzw. dem manuellen Guide
 
 3. **Teste gründlich** und dokumentiere Unterschiede
 

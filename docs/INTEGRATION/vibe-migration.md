@@ -6,7 +6,7 @@
 
 ## 🎯 Übersicht
 
-Diese Anleitung hilft dir, **nahtlos von Mistral Vibe zu UltraCode AI zu migrieren**. UltraCode AI kombiniert die besten Features von Vibe mit OpenCode und Claude Code.
+Diese Anleitung hilft dir, **nahtlos von Mistral Vibe zu UltraCode AI zu migrieren**. UltraCode AI kombiniert die besten Features von Vibe mit OpenCode und weiteren AI-Coding-Assistenten.
 
 ---
 

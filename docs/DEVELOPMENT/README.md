@@ -14,7 +14,8 @@ DEVELOPMENT/
 ├── 🔧 core-system.md           # Kernsystem-Implementierung
 ├── 🤖 ai-versioning.md         # AI-Versionierungssystem
 ├── 📋 tools-reference.md       # Alle 14 Tools im Detail
-└── 🎭 agents-reference.md      # Agenten-System und -Typen
+├── 🎭 agents-reference.md      # Agenten-System und -Typen
+└── 📐 standards.md             # Entwicklungsstandards (Skills, Agenten, Quality Gates)
 ```
 
 ---
@@ -142,6 +143,26 @@ UltraCode AI folgt einem **modularen Mikroarchitektur-Ansatz** mit klaren Verant
 - 📦 **Benutzerdefinierte Agenten** (Wie man eigene Agenten erstellt)
 
 **Zielgruppe:** Agent-Entwickler, System-Integratoren
+
+---
+
+### [📐 Entwicklungsstandards / Development Standards →](./standards.md)
+
+**DE — Enthält:**
+- 🧭 **Die 5 Standards** als Projekt-Skills (`clean-code`, `release-management`, `test-management`, `dev-workflow`, `documentation-management`)
+- 🤝 **Die 5 Repo-Entwicklungs-Agenten** (`.uc-ai/agents/` — nicht zu verwechseln mit den Produkt-Agenten in [agents-reference.md](./agents-reference.md))
+- ✅ **Quality Gates** (`pnpm ci:local`, `pnpm release:check`, GitLab-CI-Jobs)
+- 📐 **Entscheidungen**: [docs/decisions/](../decisions/README.md) — Architecture Decision Records
+- 🧠 **Erkenntnisse**: [docs/lessons-learned/](../lessons-learned/README.md) — Fehler nur einmal
+
+**EN — Contains:**
+- 🧭 **The 5 standards** as project skills (`clean-code`, `release-management`, `test-management`, `dev-workflow`, `documentation-management`)
+- 🤝 **The 5 repo development agents** (`.uc-ai/agents/` — not to be confused with the product agents in [agents-reference.md](./agents-reference.md))
+- ✅ **Quality gates** (`pnpm ci:local`, `pnpm release:check`, GitLab CI jobs)
+- 📐 **Decisions**: [docs/decisions/](../decisions/README.md) — Architecture Decision Records
+- 🧠 **Lessons learned**: [docs/lessons-learned/](../lessons-learned/README.md) — mistakes only once
+
+**Zielgruppe / Audience:** Alle Contributors und Coding-Agenten / all contributors and coding agents
 
 ---
 

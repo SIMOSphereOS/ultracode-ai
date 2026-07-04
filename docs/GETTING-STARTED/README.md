@@ -58,11 +58,11 @@ ultracode-ai
 - Alle Skills und Tools sind kompatibel
 - Siehe [Vibe Migration →](../INTEGRATION/vibe-migration.md)
 
-### Für **Claude Code-Nutzer**
-- Ähnliche Terminal-UI (React + Ink)
+### Für **Umsteiger von anderen AI-Coding-Assistenten**
+- Vertraute Terminal-UI (React + Ink)
 - Alle Tools und Commands sind verfügbar
-- Multi-Model-Unterstützung (nicht nur Anthropic)
-- Siehe [Claude Migration →](../INTEGRATION/claude-migration.md)
+- Multi-Model-Unterstützung (Anthropic, OpenAI, Mistral, lokale Modelle)
+- Siehe [Assistant Migration →](../INTEGRATION/assistant-migration.md)
 
 ---
 

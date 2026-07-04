@@ -136,6 +136,19 @@ suppressions:
   script:
     - bash scripts/check-suppressions.sh
 
+# ── branding gate ─────────────────────────────────────────────────────────────
+# Verbietet Fremd-Branding-Erwähnungen außerhalb des LLM-Provider-Kontexts
+# (Branding-Direktive: UC-AI; Details + Allowlist in scripts/check-branding.sh).
+# Braucht nur grep + pnpm als Script-Runner, kein Install → needs:[], schlank.
+# Strikt (keine Legacy-Toleranz): jede Fremd-Branding-Erwähnung außerhalb der
+# Allowlist (LLM-Provider-Kontext) lässt den Job fehlschlagen.
+branding:
+  <<: *node_setup
+  stage: test
+  needs: []
+  script:
+    - pnpm check:branding
+
 # ── release consistency (SIMO Release Management) ─────────────────────────────
 # Erzwingt, dass VERSION ↔ package.json (×4) ↔ .release.json ↔ CHANGELOG nicht
 # auseinanderdriften. Braucht nur node (kein pnpm) → needs:[], schlank.

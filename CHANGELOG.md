@@ -27,8 +27,35 @@ Release-Prozess / process: siehe `VERSIONING.md` (SIMO Release Management).
   Biome lint+format with a pre-commit gate, a local CI mirror, a TS-suppression
   gate and a dependency-audit CI job.
 - **CI**: dedizierter e2e-Job und JUnit-Testreport. / Dedicated e2e job and JUnit report.
+- **Entwicklungsstandards & Agenten**: sechs Projekt-Skills (`.uc-ai/skills/`:
+  clean-code, release-management, test-management, dev-workflow,
+  documentation-management, iteration-quality-gates), fünf Repo-Entwicklungs-
+  Agenten (`.uc-ai/agents/`), Leitdokument `UC-AI.md` (Root) sowie ADR- und
+  Lessons-Learned-Struktur (`docs/decisions/`, `docs/lessons-learned/`) mit
+  Einstieg `docs/DEVELOPMENT/standards.md`. Der Skill `iteration-quality-gates`
+  verlangt zu Beginn jeder Umsetzung eine detaillierte Anforderungserfragung und
+  iteriert gegen die Qualitäts-Gates bis zur Umsetzungserreichung. /
+  Six project skills, five repo development agents, the root `UC-AI.md` guide
+  and an ADR/lessons-learned structure with `docs/DEVELOPMENT/standards.md` as
+  the entry point. The `iteration-quality-gates` skill requires a detailed
+  requirements elicitation at the start of each implementation and iterates
+  against the quality gates until all acceptance criteria are met.
 
 ### Geändert / Changed
+- **Vollständige Anbieter-Unabhängigkeit der Assistenz-Ebene**: Die
+  Assistent-Konfiguration liegt jetzt durchgängig im UC-AI-Namensraum
+  (`.uc-ai/`, Leitdokument `UC-AI.md`, Env-Variable `UC_AI_PROJECT_DIR`); Hooks,
+  Settings und Doku sind produktneutral (der frühere anbieterspezifische
+  Migrationsguide wurde zum generischen `docs/INTEGRATION/assistant-migration.md`
+  verallgemeinert). Einzige zulässige Anbieter-Nennung ist der Anthropic-LLM-
+  Provider (API-Key, Modell-IDs). Ein Branding-Gate (`scripts/check-branding.sh`,
+  `pnpm check:branding`, CI-Job `branding`) erzwingt dies dauerhaft. /
+  Made the assistant layer fully vendor-independent: all assistant configuration
+  now lives under the UC-AI namespace (`.uc-ai/`, `UC-AI.md`, `UC_AI_PROJECT_DIR`),
+  with hooks, settings and docs made product-neutral (the former vendor-specific
+  migration guide was generalized to `assistant-migration.md`). The only
+  permitted vendor mention is the Anthropic LLM provider, enforced by a branding
+  gate.
 - **Migration von GitHub nach GitLab**: `origin`, CI (GitHub Actions → GitLab CI,
   npm-Publish-Job) und alle Repo-URLs auf `gitlab.simo-online.com/simo/ultracode-ai`. /
   Migrated the project from GitHub to GitLab (remote, CI and all repository URLs).
