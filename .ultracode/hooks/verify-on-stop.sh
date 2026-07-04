@@ -13,7 +13,7 @@ except Exception:
     print(False)' 2>/dev/null || echo False)"
 [ "$active" = "True" ] && exit 0
 
-cd "${UC_AI_PROJECT_DIR:-.}" 2>/dev/null || exit 0
+cd "${ULTRACODE_PROJECT_DIR:-.}" 2>/dev/null || exit 0
 
 # Nur bei gestagten TS-Aenderungen (bewusster Commit-Vorgang) — sonst kein Overhead.
 if ! git diff --cached --name-only 2>/dev/null | grep -qE '\.tsx?$'; then

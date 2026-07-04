@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { DeleteFileTool } from "./DeleteFileTool.js";
 import { EditTool } from "./EditTool.js";
 import { ReadTool } from "./ReadTool.js";
-import { WriteFileTool } from "./WriteFileTool.js";
+import { WRITE_ADVISORY_LINE_THRESHOLD, WriteFileTool } from "./WriteFileTool.js";
 
 let root: string;
 
@@ -232,6 +232,62 @@ describe("WriteFileTool", () => {
   it("throws ValidationError for missing content", () => {
     expect(() => tool.validate({ path: "a.txt" })).toThrow(ValidationError);
     expect(() => tool.validate({ path: "", content: "x" })).toThrow(ValidationError);
+  });
+
+  it("writes small files without a size advisory", async () => {
+    const result = await tool.execute(
+      tool.validate({ path: "small.txt", content: "line1\nline2\nline3" }),
+      ctx(),
+    );
+    expect(result.ok).toBe(true);
+    expect(result.output.advisory).toBeUndefined();
+  });
+
+  it("does not warn at exactly the line threshold (boundary)", async () => {
+    // Exactly WRITE_ADVISORY_LINE_THRESHOLD lines (no trailing newline).
+    const content = Array.from(
+      { length: WRITE_ADVISORY_LINE_THRESHOLD },
+      (_, i) => `line ${i}`,
+    ).join("\n");
+    const result = await tool.execute(tool.validate({ path: "boundary.txt", content }), ctx());
+    expect(result.ok).toBe(true);
+    expect(result.output.advisory).toBeUndefined();
+  });
+
+  it("appends a bilingual advisory when content exceeds the line threshold, still writing", async () => {
+    const lineCount = WRITE_ADVISORY_LINE_THRESHOLD + 1;
+    const content = Array.from({ length: lineCount }, (_, i) => `line ${i}`).join("\n");
+    const result = await tool.execute(tool.validate({ path: "big-lines.txt", content }), ctx());
+
+    // Write must succeed and land the full content despite the advisory.
+    expect(result.ok).toBe(true);
+    expect(await fs.readFile(path.join(root, "big-lines.txt"), "utf8")).toBe(content);
+    expect(result.output.bytesWritten).toBe(Buffer.byteLength(content, "utf8"));
+
+    // Advisory present, bilingual, and reports the line count + threshold.
+    expect(result.output.advisory).toBeDefined();
+    expect(result.output.advisory).toContain(String(lineCount));
+    expect(result.output.advisory).toContain(String(WRITE_ADVISORY_LINE_THRESHOLD));
+    expect(result.output.advisory).toContain("Zeilen"); // DE
+    expect(result.output.advisory).toContain("lines"); // EN
+  });
+
+  it("honours a custom advisoryLineThreshold (still non-blocking)", async () => {
+    const custom = new WriteFileTool({ advisoryLineThreshold: 3 });
+
+    // 4 lines > 3 → advisory, but file written correctly.
+    const over = "a\nb\nc\nd";
+    const result = await custom.execute(
+      custom.validate({ path: "over.txt", content: over }),
+      ctx(),
+    );
+    expect(result.ok).toBe(true);
+    expect(await fs.readFile(path.join(root, "over.txt"), "utf8")).toBe(over);
+    expect(result.output.advisory).toContain("4");
+
+    // 3 lines == threshold → no advisory.
+    const at = await custom.execute(custom.validate({ path: "at.txt", content: "a\nb\nc" }), ctx());
+    expect(at.output.advisory).toBeUndefined();
   });
 });
 

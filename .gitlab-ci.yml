@@ -138,7 +138,7 @@ suppressions:
 
 # ── branding gate ─────────────────────────────────────────────────────────────
 # Verbietet Fremd-Branding-Erwähnungen außerhalb des LLM-Provider-Kontexts
-# (Branding-Direktive: UC-AI; Details + Allowlist in scripts/check-branding.sh).
+# (Branding-Direktive: UltraCode; Details + Allowlist in scripts/check-branding.sh).
 # Braucht nur grep + pnpm als Script-Runner, kein Install → needs:[], schlank.
 # Strikt (keine Legacy-Toleranz): jede Fremd-Branding-Erwähnung außerhalb der
 # Allowlist (LLM-Provider-Kontext) lässt den Job fehlschlagen.
@@ -148,6 +148,18 @@ branding:
   needs: []
   script:
     - pnpm check:branding
+
+# ── file-size gate ────────────────────────────────────────────────────────────
+# Begrenzt die Zeilenzahl von TS-Quelldateien (FAIL > 1000, WARN > 800), damit
+# Module fokussiert und wartbar bleiben (Clean Code). Braucht nur Node als
+# Script-Runner (find/wc), kein Install → needs:[], schlank. Schwellen via Env
+# überschreibbar; Details in scripts/check-file-size.sh.
+file_size:
+  <<: *node_setup
+  stage: test
+  needs: []
+  script:
+    - pnpm check:filesize
 
 # ── release consistency (SIMO Release Management) ─────────────────────────────
 # Erzwingt, dass VERSION ↔ package.json (×4) ↔ .release.json ↔ CHANGELOG nicht

@@ -13,7 +13,7 @@ import { z } from "zod";
 import type { ToolRunOutcome } from "../BaseTool.js";
 import { BaseTool } from "../BaseTool.js";
 import { PathGuard } from "../PathGuard.js";
-import { writeFileAtomic } from "./fsUtils.js";
+import { splitLines, writeFileAtomic } from "./fsUtils.js";
 
 const schema = z.object({
   /** Target path (relative to cwd or absolute inside sandbox). */
@@ -22,12 +22,42 @@ const schema = z.object({
   content: z.string(),
 });
 
+/**
+ * Line count above which a write attaches a **non-blocking** split advisory to
+ * its result. Kept in sync with the repository file-size gate
+ * `scripts/check-file-size.sh` (WARN at 800 lines, hard fail at 1000): a write
+ * that would land in that gate's WARN band gets an early, in-band heads-up so
+ * the model can refactor before CI complains. Overridable per instance via
+ * {@link WriteFileToolOptions.advisoryLineThreshold}.
+ */
+export const WRITE_ADVISORY_LINE_THRESHOLD = 800;
+
+/**
+ * Build the bilingual (DE/EN) split advisory for a file that exceeds the line
+ * threshold. Purely a hint — the write always succeeds regardless.
+ */
+function buildLineAdvisory(lineCount: number, threshold: number): string {
+  return (
+    `⚠ Datei hat ${lineCount} Zeilen (> ${threshold}) — erwäge Aufteilung ` +
+    `(Extract Class/Module). / ` +
+    `File has ${lineCount} lines (> ${threshold}) — consider splitting ` +
+    `(Extract Class/Module).`
+  );
+}
+
 /** Successful output of the `write_file` tool. */
 export interface WriteFileToolOutput {
   /** Fully resolved absolute path that was written. */
   path: string;
   /** UTF-8 byte length of the written content. */
   bytesWritten: number;
+  /**
+   * Non-blocking, bilingual heads-up attached when the written content exceeds
+   * {@link WRITE_ADVISORY_LINE_THRESHOLD} lines (see the repo file-size gate
+   * `scripts/check-file-size.sh`). Absent otherwise. The write itself always
+   * succeeds — this is advisory only, never an error or an abort.
+   */
+  advisory?: string;
 }
 
 /** Construction options for {@link WriteFileTool}. */
@@ -39,6 +69,12 @@ export interface WriteFileToolOptions {
    * that must never be (over)written. Case-insensitive.
    */
   protectedExtensions?: readonly string[];
+  /**
+   * Line count above which a split advisory is attached to the result.
+   * Default {@link WRITE_ADVISORY_LINE_THRESHOLD}. The write is never blocked by
+   * this — it only adds a hint. Non-positive values fall back to the default.
+   */
+  advisoryLineThreshold?: number;
 }
 
 /** Writes files atomically (tmp + rename) with protected-extension checks. */
@@ -61,11 +97,16 @@ export class WriteFileTool extends BaseTool<typeof schema, WriteFileToolOutput> 
 
   private readonly guard: PathGuard;
   private readonly protectedExtensions: string[];
+  private readonly advisoryLineThreshold: number;
 
   constructor(options: WriteFileToolOptions = {}) {
     super();
     this.guard = new PathGuard({ allowedDirs: options.allowedDirs });
     this.protectedExtensions = (options.protectedExtensions ?? []).map((e) => e.toLowerCase());
+    this.advisoryLineThreshold =
+      typeof options.advisoryLineThreshold === "number" && options.advisoryLineThreshold > 0
+        ? options.advisoryLineThreshold
+        : WRITE_ADVISORY_LINE_THRESHOLD;
   }
 
   /**
@@ -101,11 +142,17 @@ export class WriteFileTool extends BaseTool<typeof schema, WriteFileToolOutput> 
     const resolved = await this.guard.resolve(ctx.cwd, args.path, this.definition.name);
     await writeFileAtomic(resolved, args.content);
 
-    return {
-      output: {
-        path: resolved,
-        bytesWritten: Buffer.byteLength(args.content, "utf8"),
-      },
+    // The write has already succeeded above; the advisory below is a pure,
+    // non-blocking heads-up and never affects the write outcome.
+    const output: WriteFileToolOutput = {
+      path: resolved,
+      bytesWritten: Buffer.byteLength(args.content, "utf8"),
     };
+    const lineCount = splitLines(args.content).length;
+    if (lineCount > this.advisoryLineThreshold) {
+      output.advisory = buildLineAdvisory(lineCount, this.advisoryLineThreshold);
+    }
+
+    return { output };
   }
 }

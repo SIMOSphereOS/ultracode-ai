@@ -197,8 +197,8 @@ describe("Example.process", () => {
 
 ## 6. Zusammenspiel mit Agent und CI / Interplay with Agent and CI
 
-**DE:** Der Repo-Agent **test-engineer** (`.uc-ai/agents/test-engineer.md`) wendet diesen Skill an: Er führt Gap-Analysen nach Abschnitt 3 aus, erstellt Scaffolding nach Abschnitt 4 und implementiert Tests TDD-konform. Der **dev-orchestrator** delegiert Test-Aufgaben an ihn; der **code-quality-reviewer** prüft Testqualität im Review (Skill `clean-code`); der **release-manager** verlangt vor jedem Release grüne Gates (Skill `release-management`).
-**EN:** The repo agent **test-engineer** (`.uc-ai/agents/test-engineer.md`) applies this skill: it runs gap analyses per section 3, creates scaffolding per section 4 and implements tests TDD-style. The **dev-orchestrator** delegates testing tasks to it; the **code-quality-reviewer** checks test quality during review (skill `clean-code`); the **release-manager** requires green gates before every release (skill `release-management`).
+**DE:** Der Repo-Agent **test-engineer** (`.ultracode/agents/test-engineer.md`) wendet diesen Skill an: Er führt Gap-Analysen nach Abschnitt 3 aus, erstellt Scaffolding nach Abschnitt 4 und implementiert Tests TDD-konform. Der **dev-orchestrator** delegiert Test-Aufgaben an ihn; der **code-quality-reviewer** prüft Testqualität im Review (Skill `clean-code`); der **release-manager** verlangt vor jedem Release grüne Gates (Skill `release-management`).
+**EN:** The repo agent **test-engineer** (`.ultracode/agents/test-engineer.md`) applies this skill: it runs gap analyses per section 3, creates scaffolding per section 4 and implements tests TDD-style. The **dev-orchestrator** delegates testing tasks to it; the **code-quality-reviewer** checks test quality during review (skill `clean-code`); the **release-manager** requires green gates before every release (skill `release-management`).
 
 **CI-Gates (`.gitlab-ci.yml`):**
 

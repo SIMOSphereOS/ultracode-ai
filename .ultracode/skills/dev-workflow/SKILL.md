@@ -37,7 +37,7 @@ description: "DE: Standardisierte Entwicklungs-Vorgehensweise für ultracode-ai 
 ## 2. Git-Workflow (dieses Repo / this repo)
 
 **DE:**
-- **Niemals direkt auf `main`** — der Push ist serverseitig blockiert und lokal verhindert der Hook `guard-bash` (`.uc-ai/settings.json`) den Versuch. Immer Feature-Branch.
+- **Niemals direkt auf `main`** — der Push ist serverseitig blockiert und lokal verhindert der Hook `guard-bash` (`.ultracode/settings.json`) den Versuch. Immer Feature-Branch.
 - **Branch-Präfixe:** `feat/` | `fix/` | `docs/` | `refactor/` | `test/` | `chore/` | `ci/` — z. B. `feat/version-suggest-json-output`; für Release-Vorbereitung und Hotfixes zusätzlich `release/` (z. B. `release/v1.4.0`) und `hotfix/` (z. B. `hotfix/v1.4.1`), siehe Skill `release-management`.
 - **Commit-Konvention:** `feat|fix|docs|refactor|test|chore|ci: Beschreibung` plus Trailer in jeder Commit-Message:
   `Co-Authored-By: SIMO GmbH, Aschaffenburg, Bavaria Germany`
@@ -45,7 +45,7 @@ description: "DE: Standardisierte Entwicklungs-Vorgehensweise für ultracode-ai 
 - **Pipeline muss grün sein vor Merge:** alle Jobs der `.gitlab-ci.yml` — `install_and_build`, `unit_tests`, `e2e_tests`, `typecheck`, `lint`, `suppressions`, `release_consistency`, `coverage`, `sast`, `secret_detection`, `audit`. Status prüfen mit `glab ci status` bzw. `glab mr view`.
 
 **EN:**
-- **Never push to `main` directly** — the push is blocked server-side and locally the `guard-bash` hook (`.uc-ai/settings.json`) prevents the attempt. Always use a feature branch.
+- **Never push to `main` directly** — the push is blocked server-side and locally the `guard-bash` hook (`.ultracode/settings.json`) prevents the attempt. Always use a feature branch.
 - **Branch prefixes:** `feat/` | `fix/` | `docs/` | `refactor/` | `test/` | `chore/` | `ci/` — e.g. `feat/version-suggest-json-output`; for release preparation and hotfixes additionally `release/` (e.g. `release/v1.4.0`) and `hotfix/` (e.g. `hotfix/v1.4.1`), see the `release-management` skill.
 - **Commit convention:** `feat|fix|docs|refactor|test|chore|ci: description` plus this trailer in every commit message:
   `Co-Authored-By: SIMO GmbH, Aschaffenburg, Bavaria Germany`

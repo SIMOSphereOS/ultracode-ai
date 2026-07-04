@@ -29,6 +29,12 @@ export interface AgentDefinition {
   provider?: ProviderId;
   /** Identifier of the system prompt to load (e.g. `"security"`). */
   systemPromptId?: string;
+  /**
+   * Inline system prompt text. When present it is the agent's full system
+   * prompt verbatim (used by project-local agents whose prompt is authored as a
+   * markdown body rather than referenced by {@link AgentDefinition.systemPromptId}).
+   */
+  systemPrompt?: string;
   /** Allow-list of tool names; overrides {@link AgentDefinition.disabledTools}. */
   enabledTools?: string[];
   /** Deny-list of tool names. */

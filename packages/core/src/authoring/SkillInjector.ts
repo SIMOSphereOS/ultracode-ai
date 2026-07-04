@@ -35,6 +35,14 @@ export interface SkillInjectorOptions {
   maxChars?: number;
   /** Logger for non-fatal warnings (defaults to a no-op). */
   logger?: Logger;
+  /**
+   * Additional skills merged with those from the registry before scoring, e.g.
+   * project-local skills loaded from `<cwd>/.ultracode/skills`. On a name
+   * collision an `extraSkills` entry wins over the registry's (project takes
+   * precedence over the home store). Defaults to none — omitting it leaves the
+   * injector's behaviour exactly as before.
+   */
+  extraSkills?: readonly Skill[];
 }
 
 /** A scored, active skill candidate. */
@@ -64,10 +72,11 @@ export function createSkillInjector(
       ? (opts.maxChars as number)
       : DEFAULT_MAX_CHARS;
   const logger = opts.logger ?? new NoopLogger();
+  const extraSkills = opts.extraSkills ?? [];
 
   return async (prompt: string): Promise<string> => {
     try {
-      const all = await registry.load();
+      const all = mergeByName(await registry.load(), extraSkills);
       const active = all.filter((s) => s.status === "active");
       if (active.length === 0) return "";
 
@@ -112,6 +121,20 @@ export function createSkillInjector(
       return "";
     }
   };
+}
+
+/**
+ * Merge registry skills with `extra` skills, keyed by name. An `extra` entry
+ * with the same name replaces the registry entry (project precedence over the
+ * home store). When `extra` is empty the registry array is returned untouched so
+ * the common case allocates nothing and preserves the previous behaviour exactly.
+ */
+function mergeByName(base: readonly Skill[], extra: readonly Skill[]): Skill[] {
+  if (extra.length === 0) return base as Skill[];
+  const byName = new Map<string, Skill>();
+  for (const skill of base) byName.set(skill.name, skill);
+  for (const skill of extra) byName.set(skill.name, skill);
+  return [...byName.values()];
 }
 
 /**

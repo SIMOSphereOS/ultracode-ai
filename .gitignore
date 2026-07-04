@@ -7,7 +7,12 @@ junit.xml
 .env.*
 *.log
 .DS_Store
-.ultracode/
+# UltraCode-Projektverzeichnis: Autoren-Konfiguration ausliefern, Laufzeit-Artefakte ignorieren /
+# UltraCode project dir: ship authored config, ignore runtime artifacts
+.ultracode/*
+!.ultracode/skills/
+!.ultracode/agents/
+!.ultracode/hooks/
+!.ultracode/settings.json
 .vibe/
 tmp/
-.uc-ai/scheduled_tasks.lock

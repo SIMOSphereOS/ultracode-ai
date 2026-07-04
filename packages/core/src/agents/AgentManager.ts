@@ -203,8 +203,12 @@ export class AgentManager {
 
     const definition = mergeConfigEntry(base, this.config.agents.agents[name]);
     const model = definition.model ?? this.config.core.activeModel;
+    // A project-local agent (loaded from `<cwd>/.ultracode/agents/<name>.md`)
+    // carries its complete system prompt inline as its markdown body. Prefer that
+    // verbatim; otherwise resolve an embedded prompt by id (built-ins/custom).
     const systemPromptId = definition.systemPromptId ?? definition.name;
-    const systemPrompt = SYSTEM_PROMPTS[systemPromptId] ?? SYSTEM_PROMPTS["default"] ?? "";
+    const systemPrompt =
+      definition.systemPrompt ?? SYSTEM_PROMPTS[systemPromptId] ?? SYSTEM_PROMPTS["default"] ?? "";
 
     let provider = this.provider;
     if (definition.provider !== undefined && definition.provider !== this.provider.name) {

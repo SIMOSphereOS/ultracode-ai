@@ -9,6 +9,25 @@ Release-Prozess / process: siehe `VERSIONING.md` (SIMO Release Management).
 ## [Unreleased]
 
 ### Hinzugefügt / Added
+- **Projektlokaler Laufzeit-Loader für Skills und Agenten**: UltraCode lädt Skills
+  und Agenten jetzt zusätzlich zum Home-Store (`~/.ultracode/`) aus dem projektlokalen
+  Verzeichnis `<cwd>/.ultracode/` — Skills aus `.ultracode/skills/<name>/SKILL.md`,
+  Agenten aus `.ultracode/agents/<name>.md`; der projektlokale Store hat Vorrang. Ein
+  Frontmatter-Adapter akzeptiert leichtgewichtiges Frontmatter (`name` + `description`)
+  und füllt Pflichtfelder mit Defaults; ein Agenten-Body wird als additiver
+  `systemPrompt` übernommen. Ein Schreib-Guard hält die Autoring-Schreibpfade auf den
+  Home-Store, und das Anti-Riesendatei-Gate `pnpm check:filesize`
+  (`scripts/check-file-size.sh`) begrenzt die Dateigröße. Hooks bleiben ungenutzt (kein
+  Produkt-Hook-Runtime); Begründung: ADR 0002. /
+  Project-local runtime loader for skills and agents: UltraCode now loads skills and
+  agents from the project-local directory `<cwd>/.ultracode/` in addition to the home
+  store (`~/.ultracode/`) — skills from `.ultracode/skills/<name>/SKILL.md`, agents from
+  `.ultracode/agents/<name>.md`; the project-local store takes precedence. A frontmatter
+  adapter accepts lightweight frontmatter (`name` + `description`) and fills mandatory
+  fields with defaults; an agent body is adopted as an additive `systemPrompt`. A write
+  guard keeps the authoring write paths on the home store, and the anti-giant-file gate
+  `pnpm check:filesize` (`scripts/check-file-size.sh`) caps file size. Hooks stay unused
+  (no product hook runtime); rationale: ADR 0002.
 - **Deklarativer Provider-Katalog** (`PROVIDER_CATALOG`): Single Source of Truth
   für die eingebauten LLM-Provider (id, Wire-Familie, Key-Pflicht, Env-Var,
   Base-URL). Factory, Key-Gate und Env-Mapping leiten sich daraus ab; ein
@@ -27,15 +46,15 @@ Release-Prozess / process: siehe `VERSIONING.md` (SIMO Release Management).
   Biome lint+format with a pre-commit gate, a local CI mirror, a TS-suppression
   gate and a dependency-audit CI job.
 - **CI**: dedizierter e2e-Job und JUnit-Testreport. / Dedicated e2e job and JUnit report.
-- **Entwicklungsstandards & Agenten**: sechs Projekt-Skills (`.uc-ai/skills/`:
+- **Entwicklungsstandards & Agenten**: sechs Projekt-Skills (`.ultracode/skills/`:
   clean-code, release-management, test-management, dev-workflow,
   documentation-management, iteration-quality-gates), fünf Repo-Entwicklungs-
-  Agenten (`.uc-ai/agents/`), Leitdokument `UC-AI.md` (Root) sowie ADR- und
+  Agenten (`.ultracode/agents/`), Leitdokument `ULTRACODE.md` (Root) sowie ADR- und
   Lessons-Learned-Struktur (`docs/decisions/`, `docs/lessons-learned/`) mit
   Einstieg `docs/DEVELOPMENT/standards.md`. Der Skill `iteration-quality-gates`
   verlangt zu Beginn jeder Umsetzung eine detaillierte Anforderungserfragung und
   iteriert gegen die Qualitäts-Gates bis zur Umsetzungserreichung. /
-  Six project skills, five repo development agents, the root `UC-AI.md` guide
+  Six project skills, five repo development agents, the root `ULTRACODE.md` guide
   and an ADR/lessons-learned structure with `docs/DEVELOPMENT/standards.md` as
   the entry point. The `iteration-quality-gates` skill requires a detailed
   requirements elicitation at the start of each implementation and iterates
@@ -43,15 +62,15 @@ Release-Prozess / process: siehe `VERSIONING.md` (SIMO Release Management).
 
 ### Geändert / Changed
 - **Vollständige Anbieter-Unabhängigkeit der Assistenz-Ebene**: Die
-  Assistent-Konfiguration liegt jetzt durchgängig im UC-AI-Namensraum
-  (`.uc-ai/`, Leitdokument `UC-AI.md`, Env-Variable `UC_AI_PROJECT_DIR`); Hooks,
+  Assistent-Konfiguration liegt jetzt durchgängig im UltraCode-Namensraum
+  (`.ultracode/`, Leitdokument `ULTRACODE.md`, Env-Variable `ULTRACODE_PROJECT_DIR`); Hooks,
   Settings und Doku sind produktneutral (der frühere anbieterspezifische
   Migrationsguide wurde zum generischen `docs/INTEGRATION/assistant-migration.md`
   verallgemeinert). Einzige zulässige Anbieter-Nennung ist der Anthropic-LLM-
   Provider (API-Key, Modell-IDs). Ein Branding-Gate (`scripts/check-branding.sh`,
   `pnpm check:branding`, CI-Job `branding`) erzwingt dies dauerhaft. /
   Made the assistant layer fully vendor-independent: all assistant configuration
-  now lives under the UC-AI namespace (`.uc-ai/`, `UC-AI.md`, `UC_AI_PROJECT_DIR`),
+  now lives under the UltraCode namespace (`.ultracode/`, `ULTRACODE.md`, `ULTRACODE_PROJECT_DIR`),
   with hooks, settings and docs made product-neutral (the former vendor-specific
   migration guide was generalized to `assistant-migration.md`). The only
   permitted vendor mention is the Anthropic LLM provider, enforced by a branding

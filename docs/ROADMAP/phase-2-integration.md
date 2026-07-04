@@ -1,12 +1,12 @@
 # Phase 2: Integration
 
-> **Best of Breed - OpenCode, Mistral Vibe & UC-AI Assistant-Kern integrieren**
+> **Best of Breed - OpenCode, Mistral Vibe & UltraCode Assistant-Kern integrieren**
 
 ---
 
 ## 🚀 Übersicht
 
-**Phase 2** fokussiert auf drei Integrations-Säulen: **OpenCode** (172k⭐), **Mistral Vibe** und den **UC-AI Assistant-Kern** — die eigene Assistent-Infrastruktur von UltraCode AI, inspiriert von führenden AI-Coding-Assistenten. Ziel ist es, die besten Features aus jeder Säule zu kombinieren und eine einheitliche, mächtige Schnittstelle zu schaffen.
+**Phase 2** fokussiert auf drei Integrations-Säulen: **OpenCode** (172k⭐), **Mistral Vibe** und den **UltraCode Assistant-Kern** — die eigene Assistent-Infrastruktur von UltraCode AI, inspiriert von führenden AI-Coding-Assistenten. Ziel ist es, die besten Features aus jeder Säule zu kombinieren und eine einheitliche, mächtige Schnittstelle zu schaffen.
 
 - **Status**: 📋 **Geplant** (Startet nach Phase 1)
 - **Dauer**: Q3 2026 (Juli - September)
@@ -21,7 +21,7 @@
 ### Primäre Ziele
 1. **OpenCode integrieren** - Code-Generierung, UI, Workflows
 2. **Mistral Vibe integrieren** - AI-Agenten, Tools, Kontext-Management
-3. **UC-AI Assistant-Kern integrieren** - Code-Analyse, Refactoring, AI-Assistent
+3. **UltraCode Assistant-Kern integrieren** - Code-Analyse, Refactoring, AI-Assistent
 4. **Unified Interface** - Einheitliche API und CLI für alle Features
 5. **Migration Paths** - Einfache Migration von allen Tools zu UltraCode AI
 
@@ -48,10 +48,10 @@
 | INT-009 | Vibe Kontext-Management portieren | P1 | 📋 | - | 4d | INT-008 |
 | INT-010 | Vibe CLI-Kommandos integrieren | P1 | 📋 | - | 3d | INT-009 |
 | INT-011 | Führende AI-Coding-Assistenten analysieren | P1 | 📋 | - | 3d | Phase 1 |
-| INT-012 | UC-AI Assistant-Engine implementieren | P1 | 📋 | - | 7d | INT-011 |
-| INT-013 | UC-AI Code-Analyse integrieren | P1 | 📋 | - | 5d | INT-012 |
-| INT-014 | UC-AI Slash-Commands portieren | P1 | 📋 | - | 4d | INT-013 |
-| INT-015 | UC-AI Refactoring integrieren | P1 | 📋 | - | 4d | INT-014 |
+| INT-012 | UltraCode Assistant-Engine implementieren | P1 | 📋 | - | 7d | INT-011 |
+| INT-013 | UltraCode Code-Analyse integrieren | P1 | 📋 | - | 5d | INT-012 |
+| INT-014 | UltraCode Slash-Commands portieren | P1 | 📋 | - | 4d | INT-013 |
+| INT-015 | UltraCode Refactoring integrieren | P1 | 📋 | - | 4d | INT-014 |
 | INT-016 | Unified API erstellen | P1 | 📋 | - | 5d | INT-002, INT-007, INT-012 |
 | INT-017 | Unified CLI erstellen | P1 | 📋 | - | 5d | INT-016 |
 | INT-018 | Migration Tools erstellen | P1 | 📋 | - | 4d | INT-017 |
@@ -80,13 +80,13 @@ UltraCode AI Phase 2 Integrationsarchitektur
 │   ├── Knowledge Base          # Vibe Wissensdatenbank
 │   └── Multi-Modal             # Vibe Multi-Modal (Vision, etc.)
 │
-├── UC-AI Assistant-Kern
-│   ├── AI Assistant           # UC-AI Assistent
-│   ├── Code Analysis           # UC-AI Code-Analyse
-│   ├── Refactoring Engine      # UC-AI Refactoring
-│   ├── Slash Commands         # UC-AI Slash-Commands
-│   ├── Project Context         # UC-AI Projekt-Kontext (UC-AI.md)
-│   └── Security Checks         # UC-AI Sicherheitschecks
+├── UltraCode Assistant-Kern
+│   ├── AI Assistant           # UltraCode Assistent
+│   ├── Code Analysis           # UltraCode Code-Analyse
+│   ├── Refactoring Engine      # UltraCode Refactoring
+│   ├── Slash Commands         # UltraCode Slash-Commands
+│   ├── Project Context         # UltraCode Projekt-Kontext (ULTRACODE.md)
+│   └── Security Checks         # UltraCode Sicherheitschecks
 │
 └── Unified Interface
     ├── API Layer               # Einheitliche REST API
@@ -461,15 +461,15 @@ class VibeContextManagerAdapter implements UltraCodeContextManager {
 
 ---
 
-## 🤖 UC-AI Assistant-Kern
+## 🤖 UltraCode Assistant-Kern
 
 ### Übersicht
 
-Der UC-AI Assistant-Kern ist die **eigene Assistent-Infrastruktur von UltraCode AI** — inspiriert von führenden AI-Coding-Assistenten — mit:
+Der UltraCode Assistant-Kern ist die **eigene Assistent-Infrastruktur von UltraCode AI** — inspiriert von führenden AI-Coding-Assistenten — mit:
 - ✅ **Sofortige Code-Vervollständigung**
 - ✅ **Slash-Commands** für verschiedene Aufgaben
 - ✅ **Code-Analyse und Refactoring**
-- ✅ **Projekt-Kontext** (UC-AI.md, .uc-ai/)
+- ✅ **Projekt-Kontext** (ULTRACODE.md, .ultracode/)
 - ✅ **Sicherheitschecks**
 - ✅ **Team-Features**
 
@@ -478,11 +478,11 @@ Der UC-AI Assistant-Kern ist die **eigene Assistent-Infrastruktur von UltraCode 
 #### 1. Code-Analyse integrieren
 
 ```typescript
-// UC-AI Code Analyzer
-class UcAiCodeAnalyzer implements CodeAnalyzer {
-  private engine: UcAiEngine;
+// UltraCode Code Analyzer
+class UltraCodeCodeAnalyzer implements CodeAnalyzer {
+  private engine: UltraCodeEngine;
   
-  constructor(engine: UcAiEngine) {
+  constructor(engine: UltraCodeEngine) {
     this.engine = engine;
   }
   
@@ -516,8 +516,8 @@ class UcAiCodeAnalyzer implements CodeAnalyzer {
 #### 2. Slash-Commands portieren
 
 ```typescript
-// UC-AI Slash Command Mapping
-const UC_AI_SLASH_COMMANDS: Record<string, string> = {
+// UltraCode Slash Command Mapping
+const ULTRACODE_SLASH_COMMANDS: Record<string, string> = {
   '/ask': '/ask',                    // 1:1 Mapping
   '/explain': '/explain',            // 1:1 Mapping
   '/optimize': '/optimize',          // 1:1 Mapping
@@ -529,8 +529,8 @@ const UC_AI_SLASH_COMMANDS: Record<string, string> = {
   '/peek': '/peek',                  // 1:1 Mapping
   '/test': '/test',                  // 1:1 Mapping
   '/debug': '/debug',                // 1:1 Mapping
-  // UC-AI-spezifische Commands
-  '/uc-ai': '/ai',                   // Mapping zu UltraCode AI
+  // UltraCode-spezifische Commands
+  '/ultracode': '/ai',                   // Mapping zu UltraCode AI
   '/improve': '/optimize',            // Mapping zu Optimize
   '/fix': '/debug',                  // Mapping zu Debug
   '/new': '/new',                    // 1:1 Mapping
@@ -540,24 +540,24 @@ const UC_AI_SLASH_COMMANDS: Record<string, string> = {
 };
 
 // Slash Command Router
-class UcAiSlashCommandRouter {
-  private ucAiCommands: UcAiCommandManager;
+class UltraCodeSlashCommandRouter {
+  private ultraCodeCommands: UltraCodeCommandManager;
   
   async handleCommand(command: string, args: any[]): Promise<CommandResult> {
-    const ultraCodeCommand = UC_AI_SLASH_COMMANDS[command];
+    const ultraCodeCommand = ULTRACODE_SLASH_COMMANDS[command];
     
     if (ultraCodeCommand) {
       // An UltraCode weiterleiten
       return UltraCodeCommandManager.execute(ultraCodeCommand, args);
     }
     
-    // UC-AI-spezifische Logik
-    return this.handleUcAiSpecificCommand(command, args);
+    // UltraCode-spezifische Logik
+    return this.handleUltraCodeSpecificCommand(command, args);
   }
   
-  async handleUcAiSpecificCommand(command: string, args: any[]): Promise<CommandResult> {
-    // UC-AI-spezifische Implementierung
-    const result = await this.ucAiCommands.execute(command, args);
+  async handleUltraCodeSpecificCommand(command: string, args: any[]): Promise<CommandResult> {
+    // UltraCode-spezifische Implementierung
+    const result = await this.ultraCodeCommands.execute(command, args);
     return this.mapToUltraCodeResult(result);
   }
 }
@@ -566,11 +566,11 @@ class UcAiSlashCommandRouter {
 #### 3. Refactoring-Engine integrieren
 
 ```typescript
-// UC-AI Refactoring Engine
-class UcAiRefactoringEngine implements CodeRefactorer {
-  private engine: UcAiEngine;
+// UltraCode Refactoring Engine
+class UltraCodeRefactoringEngine implements CodeRefactorer {
+  private engine: UltraCodeEngine;
   
-  constructor(engine: UcAiEngine) {
+  constructor(engine: UltraCodeEngine) {
     this.engine = engine;
   }
   
@@ -597,7 +597,7 @@ class UcAiRefactoringEngine implements CodeRefactorer {
 }
 ```
 
-### UC-AI-spezifische Features
+### UltraCode-spezifische Features
 
 | **Feature** | **Beschreibung** | **Integration** | **Priorität** |
 |-------------|------------------|-----------------|--------------|
@@ -621,7 +621,7 @@ class UcAiRefactoringEngine implements CodeRefactorer {
 class UnifiedAPIController {
   private openCodeProvider: OpenCodeProvider;
   private vibeProvider: VibeProvider;
-  private ucAiProvider: UcAiProvider;
+  private ultraCodeProvider: UltraCodeProvider;
   
   async handleRequest(request: APIRequest): Promise<APIResponse> {
     // Provider basierend auf Request auswählen
@@ -650,7 +650,7 @@ class UnifiedAPIController {
       case 'completion':
         return this.openCodeProvider; // OpenCode hat beste Completion
       case 'analysis':
-        return this.ucAiProvider; // UC-AI hat beste Analyse
+        return this.ultraCodeProvider; // UltraCode hat beste Analyse
       case 'agent':
         return this.vibeProvider; // Vibe hat beste Agenten
       default:
@@ -665,8 +665,8 @@ class UnifiedAPIController {
         return this.normalizeOpenCodeResponse(response);
       case 'vibe':
         return this.normalizeVibeResponse(response);
-      case 'uc-ai':
-        return this.normalizeUcAiResponse(response);
+      case 'ultracode':
+        return this.normalizeUltraCodeResponse(response);
       default:
         return response;
     }
@@ -910,7 +910,7 @@ class VibeMigrator implements Migrator {
 ### Assistant-Migration (AI-Coding-Assistenten)
 
 ```typescript
-// Assistant Migrator (führende AI-Coding-Assistenten → UC-AI)
+// Assistant Migrator (führende AI-Coding-Assistenten → UltraCode)
 class AssistantMigrator implements Migrator {
   async migrate(config: AssistantMigrationConfig): Promise<MigrationResult> {
     const result: MigrationResult = {
@@ -924,7 +924,7 @@ class AssistantMigrator implements Migrator {
       },
     };
     
-    // 1. Assistant-Einstellungen migrieren (nach .uc-ai/)
+    // 1. Assistant-Einstellungen migrieren (nach .ultracode/)
     await this.migrateSettings(config);
     result.statistics.settingsMigrated++;
     
@@ -950,7 +950,7 @@ class AssistantMigrator implements Migrator {
   
   async mapSlashCommands(config: AssistantMigrationConfig): Promise<void> {
     // Assistant Slash Commands nach UltraCode mappen
-    const mappings = UC_AI_SLASH_COMMANDS;
+    const mappings = ULTRACODE_SLASH_COMMANDS;
     
     for (const [assistantCommand, ultraCodeCommand] of Object.entries(mappings)) {
       await UltraCodeCommandManager.alias(assistantCommand, ultraCodeCommand);
@@ -1022,7 +1022,7 @@ class IntegrationTestSuite {
 |---------------|------------------|------------------|--------------|
 | OpenCode Integration | OpenCode-Funktionen testen | 20 | P0 |
 | Vibe Integration | Vibe-Features testen | 25 | P0 |
-| UC-AI Integration | UC-AI-Features testen | 20 | P0 |
+| UltraCode Integration | UltraCode-Features testen | 20 | P0 |
 | Unified Interface | Einheitliche Schnittstelle testen | 15 | P0 |
 | Migration | Migrationstools testen | 10 | P1 |
 | Performance | Performance-Tests | 10 | P1 |
@@ -1038,7 +1038,7 @@ class IntegrationTestSuite {
 - [ ] ✅ Führende AI-Coding-Assistenten analysiert
 - [ ] 📋 OpenCode Integration implementiert
 - [ ] 📋 Mistral Vibe Integration implementiert
-- [ ] 📋 UC-AI Assistant-Kern implementiert
+- [ ] 📋 UltraCode Assistant-Kern implementiert
 - [ ] 📋 Unified Interface implementiert
 - [ ] 📋 Migration Tools implementiert
 - [ ] 📋 Integration Tests implementiert
@@ -1053,7 +1053,7 @@ class IntegrationTestSuite {
 ### Akzeptanzkriterien
 - [ ] 📋 OpenCode Plugins funktionieren in UltraCode AI
 - [ ] 📋 Vibe Agenten funktionieren in UltraCode AI
-- [ ] 📋 UC-AI Commands funktionieren in UltraCode AI
+- [ ] 📋 UltraCode Commands funktionieren in UltraCode AI
 - [ ] 📋 Migration von OpenCode funktioniert
 - [ ] 📋 Migration von Vibe funktioniert
 - [ ] 📋 Migration von AI-Coding-Assistenten funktioniert
@@ -1088,8 +1088,8 @@ class IntegrationTestSuite {
   - Kontext-Management integrieren
   - Wissensdatenbank integrieren
 
-### Monat 3: UC-AI Assistant-Kern & Unified Interface
-- **Woche 9-10**: UC-AI Assistant-Kern
+### Monat 3: UltraCode Assistant-Kern & Unified Interface
+- **Woche 9-10**: UltraCode Assistant-Kern
   - Code-Analyse integrieren
   - Refactoring-Engine integrieren
   - Slash-Commands portieren
@@ -1110,7 +1110,7 @@ class IntegrationTestSuite {
 | Integration Lead | - | Gesamtkoordination | integration@ultracode.ai |
 | OpenCode Specialist | - | OpenCode Integration | opencode@ultracode.ai |
 | Vibe Specialist | - | Mistral Vibe Integration | vibe@ultracode.ai |
-| Assistant Specialist | - | UC-AI Assistant-Kern | assistant@ultracode.ai |
+| Assistant Specialist | - | UltraCode Assistant-Kern | assistant@ultracode.ai |
 | QA Engineer | - | Integration Tests | qa@ultracode.ai |
 
 ---
@@ -1120,7 +1120,7 @@ class IntegrationTestSuite {
 - **Integrations-Fragen**: integration@ultracode.ai
 - **OpenCode-Fragen**: opencode@ultracode.ai
 - **Vibe-Fragen**: vibe@ultracode.ai
-- **UC-AI-Fragen**: assistant@ultracode.ai
+- **UltraCode-Fragen**: assistant@ultracode.ai
 - **Allgemeiner Support**: support@ultracode.ai
 
 ---
@@ -1130,7 +1130,7 @@ class IntegrationTestSuite {
 1. **Phase 1 abschließen** - Core-System implementieren
 2. **OpenCode integrieren** - Code-Generierung und Plugins
 3. **Mistral Vibe integrieren** - Agenten und Tools
-4. **UC-AI Assistant-Kern integrieren** - Analyse und Refactoring
+4. **UltraCode Assistant-Kern integrieren** - Analyse und Refactoring
 5. **Unified Interface erstellen** - Einheitliche API und CLI
 6. **Migration Tools erstellen** - Einfache Migration ermöglichen
 

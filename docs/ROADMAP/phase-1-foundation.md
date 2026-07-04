@@ -127,7 +127,7 @@ UltraCode AI Phase 1 Architektur
 ├── Integration Layer (TypeScript/Python)
 │   ├── OpenCode/           # OpenCode Integration
 │   ├── Vibe/               # Mistral Vibe Integration
-│   ├── UcAi/               # UC-AI Assistant-Kern
+│   ├── UltraCode/          # UltraCode Assistant-Kern
 │   └── Legacy/             # Legacy Tool Integration
 │
 ├── CLI (TypeScript)

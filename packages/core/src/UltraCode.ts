@@ -47,6 +47,8 @@ import {
 } from "ultracode-shared";
 import { type AgentManager, createAgentManager } from "./agents/AgentManager.js";
 import type { BaseAgentRunInput, ContextCollector } from "./agents/BaseAgent.js";
+import { loadProjectAgents } from "./agents/projectAgents.js";
+import { loadProjectSkills } from "./authoring/projectSkills.js";
 import { createSkillInjector } from "./authoring/SkillInjector.js";
 import type { ConfigManager } from "./config/ConfigManager.js";
 import type { IToolRunner } from "./execution/types.js";
@@ -592,10 +594,25 @@ export class UltraCode {
     });
     const learning = buildLearningFacade(learnAgent, logger);
 
+    // Project-local skills shipped in the repository under
+    // `<cwd>/.ultracode/skills/<name>/SKILL.md` are loaded in addition to the
+    // home store (`~/.ultracode/skills`). The loader is total and fail-safe (a
+    // missing directory or a corrupt file yields `[]`); the extra `.catch`
+    // guards against any unexpected throw so discovery can never break startup.
+    const projectSkills = await loadProjectSkills(cwd, { logger }).catch((err) => {
+      logger.warn("authoring.project-skill.load-failed", { error: serializeError(err) });
+      return [];
+    });
+
     // Active skills take effect at runtime by injecting their bodies into the
     // agent context (an additional ContextCollector beside the project context
-    // engine). Skills contribute context only — never tool permissions.
-    const skillInjector = createSkillInjector(authoringInstance.registry, { logger });
+    // engine). Skills contribute context only — never tool permissions. The
+    // project-local skills are passed as `extraSkills`; on a name collision the
+    // project skill wins over the same-named home-store skill.
+    const skillInjector = createSkillInjector(authoringInstance.registry, {
+      logger,
+      extraSkills: projectSkills,
+    });
     const contextCollector = composeCollectors([
       (prompt) => contextEngine.collect({ cwd, prompt, maxTokens: config.core.maxTokens }),
       skillInjector,
@@ -617,6 +634,28 @@ export class UltraCode {
       env: options.env ?? (process.env as Readonly<Record<string, string | undefined>>),
       ...(contextCollector !== undefined ? { contextCollector } : {}),
     });
+
+    // Project-local agents shipped in the repository under
+    // `<cwd>/.ultracode/agents/<name>.md` are registered in addition to the
+    // built-in and config-declared agents. Each carries its system prompt inline
+    // as its markdown body (honoured by `AgentManager.get`). On a name collision
+    // the project agent overrides the same-named built-in/custom definition
+    // (`register` replaces by name). Loading is total and fail-safe; a per-agent
+    // `register` failure is isolated so one bad file never blocks the rest.
+    const projectAgents = await loadProjectAgents(cwd, { logger }).catch((err) => {
+      logger.warn("agents.project-agent.load-failed", { error: serializeError(err) });
+      return [];
+    });
+    for (const definition of projectAgents) {
+      try {
+        agents.register(definition);
+      } catch (err) {
+        logger.warn("agents.project-agent.register-failed", {
+          agent: definition.name,
+          error: serializeError(err),
+        });
+      }
+    }
 
     // Register the `task` tool, backed by bounded subagent delegation. Skipped
     // when the tool module already provides one (forward-compatible).
