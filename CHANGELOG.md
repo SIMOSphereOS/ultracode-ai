@@ -7,6 +7,25 @@ Versionierung / Versioning: [Semantic Versioning](https://semver.org/) ·
 Release-Prozess / process: siehe `VERSIONING.md` (SIMO Release Management).
 
 ## [Unreleased]
+### Geändert / Changed
+- **Lizenzmodell auf Open-Core / Dual-License umgestellt**: Das Projekt steht nicht mehr
+  unter MIT, sondern unter **AGPL-3.0-or-later** (Copyleft inkl. Netzwerk-Offenlegung).
+  Wer die AGPL-Pflichten nicht erfüllen will oder kann, kann eine **kommerzielle Lizenz**
+  bei der SIMO GmbH erwerben. Die `license`-Felder aller Paket-Manifeste, der README-Badge
+  und der Lizenz-Abschnitt wurden entsprechend angepasst. /
+  Switched the licensing model to open-core / dual license: the project is no longer under
+  MIT but under **AGPL-3.0-or-later** (copyleft incl. network disclosure). Those who cannot
+  or do not want to comply with the AGPL obligations can obtain a **commercial license** from
+  SIMO GmbH. The `license` fields of all package manifests, the README badge and the licence
+  section were updated accordingly.
+
+### Hinzugefügt / Added
+- **Governance-Dateien**: `COMMERCIAL-LICENSE.md` (kommerzielle Lizenzvorlage), `CLA.md`
+  (Contributor License Agreement), `SECURITY.md` (Security-Policy und Kontakt), `NOTICE`
+  (Urheberrechts- und Attributionshinweise) und `TRADEMARKS.md` (Markenrichtlinie) ergänzt. /
+  Governance files: added `COMMERCIAL-LICENSE.md` (commercial-license template), `CLA.md`
+  (contributor license agreement), `SECURITY.md` (security policy and contact), `NOTICE`
+  (copyright and attribution notices) and `TRADEMARKS.md` (trademark policy).
 
 ## [1.4.0] - 2026-07-04
 ### Hinzugefügt / Added

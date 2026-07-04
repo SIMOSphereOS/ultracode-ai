@@ -2,7 +2,8 @@
   "name": "ultracode-ai",
   "version": "1.4.0",
   "type": "module",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
+  "author": "SIMO GmbH",
   "description": "UltraCode CLI – interactive AI code assistant for the terminal",
   "bin": {
     "ultracode-ai": "./dist/index.js"

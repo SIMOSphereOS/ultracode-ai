@@ -400,6 +400,38 @@ Suche nach Issues mit diesen Labels:
 
 ---
 
+## 🧾 SBOM / Supply-Chain
+
+UltraCode AI pflegt ein **Abhängigkeits- und Lizenz-Inventar** der Produktions-Abhängigkeiten (SBOM — Software Bill of Materials) unter **[`../SBOM.md`](../SBOM.md)**. Es dient der Lieferketten-Transparenz und dem Lizenz-Compliance-Nachweis (alle Produktionslizenzen permissiv und AGPL-kompatibel).
+
+### Menschenlesbares Inventar aktualisieren
+
+`docs/SBOM.md` wird **deterministisch** aus dem Lockfile generiert — nicht von Hand bearbeiten:
+
+```bash
+pnpm install            # Lockfile-Stand herstellen / materialize lockfile state
+node scripts/gen-sbom.mjs
+```
+
+Der Generator liest `pnpm licenses list --prod --json` (nur Produktion, entspricht `--omit dev`), sortiert stabil und schreibt ohne Zeitstempel — zwei Läufe erzeugen byte-gleiche Ausgabe. Nach jedem Abhängigkeits-Update (`package.json`/`pnpm-lock.yaml`) neu erzeugen und mitcommiten.
+
+### Maschinenlesbare CycloneDX-SBOM (CI)
+
+Für Tooling (Scanner, VEX, Vulnerability-Feeds) sollte zusätzlich eine maschinenlesbare **CycloneDX-SBOM (`sbom.json`)** im CI erzeugt werden. In diesem **pnpm-Workspace** ist der pnpm-fähige Generator zu verwenden:
+
+```bash
+# Empfohlen: pnpm-fähiger, universeller Generator (liest pnpm-lock.yaml)
+npx -y @cyclonedx/cdxgen@latest -t pnpm -o sbom.json --spec-version 1.6 --no-recurse
+```
+
+> **Hinweis / Note:** `@cyclonedx/cyclonedx-npm` benötigt eine `package-lock.json` und liefert in einem reinen pnpm-Workspace eine **leere** Komponentenliste; ein Paket `@cyclonedx/cyclonedx-pnpm` existiert in der npm-Registry **nicht**. Deshalb `cdxgen -t pnpm`. `cdxgen` erfasst den **gesamten** Lockfile-Baum (inkl. Dev-Abhängigkeiten); für ein reines Produktions-SBOM ist das menschenlesbare `docs/SBOM.md` maßgeblich.
+
+### Secret-Hygiene
+
+Eine SBOM darf **ausschließlich** Paketnamen, Versionen und Lizenzen enthalten — **niemals** Secrets, Tokens, API-Keys oder lokale Pfade. `docs/SBOM.md` enthält per Konstruktion nur diese drei Felder. Ein generiertes `sbom.json` vor dem Commit prüfen (keine `*_API_KEY`-Werte, keine absoluten Home-Pfade); es ist bereits über `.gitignore`/CI-Artefakt-Handling von versehentlichem Einchecken auszuschließen, sofern nicht bewusst als Release-Artefakt versioniert.
+
+---
+
 ## 📚 Wichtige Links
 
 - **Main Repository**: [https://gitlab.simo-online.com/simo/ultracode-ai](https://gitlab.simo-online.com/simo/ultracode-ai)

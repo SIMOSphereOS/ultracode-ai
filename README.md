@@ -4,7 +4,7 @@
 
 [![CI](https://gitlab.simo-online.com/simo/ultracode-ai/badges/main/pipeline.svg)](https://gitlab.simo-online.com/simo/ultracode-ai/-/pipelines)
 [![Coverage](https://img.shields.io/badge/coverage-~93%25%20stmts%20%7C%20~86%25%20branches-brightgreen.svg)](#teststatus)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22.13-339933.svg)](#installation)
 [![pnpm](https://img.shields.io/badge/pnpm-11.5.2-f69220.svg)](#installation)
 
@@ -336,6 +336,24 @@ Ausführliche Richtlinien: [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ---
 
-## Lizenz
+## Lizenz / License
 
-[MIT](./LICENSE) © 2026 UltraCode AI Team / SIMO GmbH
+**DE:** UltraCode AI ist unter einem **Dual-License-Modell** verfügbar:
+
+- **Open Source:** [AGPL-3.0-or-later](./LICENSE) — frei nutzbar unter den Bedingungen der
+  GNU Affero General Public License v3.0 oder später (Copyleft, inkl. Netzwerk-Offenlegung:
+  Wer eine modifizierte Version über ein Netzwerk anbietet, muss den Quellcode offenlegen).
+- **Kommerzielle Lizenz:** Wer die AGPL-Pflichten (Copyleft, Netzwerk-Offenlegung) nicht
+  erfüllen kann oder will, kann eine kommerzielle Lizenz bei der SIMO GmbH erwerben. Details:
+  [`COMMERCIAL-LICENSE.md`](./COMMERCIAL-LICENSE.md) · Kontakt: licensing@simosphereai.com.
+
+**EN:** UltraCode AI is available under a **dual-license model**:
+
+- **Open source:** [AGPL-3.0-or-later](./LICENSE) — free to use under the terms of the GNU
+  Affero General Public License v3.0 or later (copyleft, including the network-disclosure
+  clause: offering a modified version over a network requires publishing the source).
+- **Commercial license:** those who cannot or do not want to comply with the AGPL obligations
+  (copyleft, network disclosure) can obtain a commercial license from SIMO GmbH. See
+  [`COMMERCIAL-LICENSE.md`](./COMMERCIAL-LICENSE.md) · contact: licensing@simosphereai.com.
+
+© 2026 SIMO GmbH

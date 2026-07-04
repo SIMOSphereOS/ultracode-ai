@@ -2,6 +2,7 @@
   "project": "ultracode-ai",
   "versioning": "semver",
   "currentVersion": "1.4.0",
+  "license": "AGPL-3.0-or-later",
   "repository": "https://github.com/SIMOSphereOS/ultracode-ai",
   "monorepo": {
     "strategy": "lock-step",
