@@ -16,3 +16,9 @@ junit.xml
 !.ultracode/settings.json
 .vibe/
 tmp/
+# Maschinenlesbare CycloneDX-SBOM: CI-Artefakt, nicht einchecken (kann lokale
+# Pfade enthalten). docs/SBOM.md ist die versionierte, menschenlesbare Variante. /
+# Machine-readable CycloneDX SBOM: CI artifact, do not commit (may contain local
+# paths). docs/SBOM.md is the versioned, human-readable inventory.
+sbom.json
+bom.json

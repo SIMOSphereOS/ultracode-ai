@@ -99,7 +99,17 @@ Release-Regeln stehen in [`VERSIONING.md`](./VERSIONING.md).
 overview of standards, agents and quality gates:
 [`docs/DEVELOPMENT/standards.md`](./docs/DEVELOPMENT/standards.md).
 
-## Lizenz
+## Lizenz & CLA / License & CLA
 
-Mit deinem Beitrag stimmst du zu, dass dein Code unter der [MIT-Lizenz](./LICENSE)
-veröffentlicht wird.
+**DE:** UltraCode AI steht unter einem **Dual-License-Modell**: Open-Source-Beiträge werden
+unter der [AGPL-3.0-or-later](./LICENSE) veröffentlicht. Mit deinem Beitrag stimmst du zu,
+dass dein Code unter dieser Lizenz veröffentlicht wird. Damit die SIMO GmbH das Projekt
+zusätzlich unter einer **kommerziellen Lizenz** anbieten kann, ist vor dem Merge ein
+unterzeichnetes **Contributor License Agreement (CLA)** erforderlich — siehe
+[`CLA.md`](./CLA.md). Details zum Lizenzmodell: [`COMMERCIAL-LICENSE.md`](./COMMERCIAL-LICENSE.md).
+
+**EN:** UltraCode AI uses a **dual-license model**: open-source contributions are published
+under the [AGPL-3.0-or-later](./LICENSE). By contributing you agree that your code is released
+under this license. So that SIMO GmbH can also offer the project under a **commercial
+license**, a signed **Contributor License Agreement (CLA)** is required before a merge — see
+[`CLA.md`](./CLA.md). For details on the licensing model: [`COMMERCIAL-LICENSE.md`](./COMMERCIAL-LICENSE.md).

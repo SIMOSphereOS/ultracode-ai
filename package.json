@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "description": "UltraCode – Open-Source AI Code Assistant with AI-powered versioning and release planning",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
+  "author": "SIMO GmbH",
   "engines": {
     "node": ">=22.13.0"
   },

@@ -1,0 +1,44 @@
+UltraCode AI
+============
+
+Copyright (C) 2026 SIMO GmbH — UltraCode AI.
+Licensed under AGPL-3.0-or-later; commercial licensing available
+(see COMMERCIAL-LICENSE.md).
+
+This product is developed and maintained by SIMO GmbH, Aschaffenburg,
+Bavaria, Germany. "UltraCode", "UltraCode AI" and "SIMOSphere" are
+trademarks of SIMO GmbH (see TRADEMARKS.md). The AGPL and commercial
+licenses grant no trademark rights.
+
+The full text of the GNU Affero General Public License, version 3, is
+provided in the LICENSE file at the root of this repository and, byte-
+identical, in each package (packages/*/LICENSE).
+
+
+Third-Party Notices
+-------------------
+
+UltraCode AI bundles or depends on the following third-party components.
+They remain under their own licenses; all are permissive and compatible
+with AGPL-3.0-or-later. This list is provided for convenience and is not
+exhaustive.
+
+Runtime dependencies:
+
+  commander    MIT             https://github.com/tj/commander.js
+  ink          MIT             https://github.com/vadimdemedes/ink
+  react        MIT             https://github.com/facebook/react
+  semver       ISC             https://github.com/npm/node-semver
+  smol-toml    BSD-3-Clause    https://github.com/squirrelchat/smol-toml
+  zod          MIT             https://github.com/colinhacks/zod
+  type-fest    MIT OR CC0-1.0  https://github.com/sindresorhus/type-fest
+                               (transitive)
+
+The complete and authoritative list of dependencies and their licenses —
+including transitive and development dependencies — can be generated from
+the repository with:
+
+  pnpm licenses list
+
+Full copies of each dependency's license text are available in that
+dependency's package directory under node_modules/ after installation.
