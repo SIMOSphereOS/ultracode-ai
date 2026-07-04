@@ -8,6 +8,7 @@ Release-Prozess / process: siehe `VERSIONING.md` (SIMO Release Management).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-07-04
 ### Hinzugefügt / Added
 - **Minimaler LSP-Client (Diagnostics)**: Ein bewusst minimaler Language-Server-Protocol-
   Client (`packages/core/src/lsp/`) verbindet sich über stdio mit **einem** konfigurierten

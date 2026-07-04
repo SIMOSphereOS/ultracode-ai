@@ -1,6 +1,6 @@
 {
   "name": "ultracode-ai",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "type": "module",
   "license": "MIT",
   "description": "UltraCode CLI – interactive AI code assistant for the terminal",
@@ -16,12 +16,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.simo-online.com/simo/ultracode-ai.git",
+    "url": "git+https://github.com/SIMOSphereOS/ultracode-ai.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://gitlab.simo-online.com/simo/ultracode-ai#readme",
+  "homepage": "https://github.com/SIMOSphereOS/ultracode-ai#readme",
   "bugs": {
-    "url": "https://gitlab.simo-online.com/simo/ultracode-ai/-/issues"
+    "url": "https://github.com/SIMOSphereOS/ultracode-ai/issues"
   },
   "scripts": {
     "build": "tsc -b",
@@ -42,5 +42,8 @@
   },
   "engines": {
     "node": ">=22.13.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
