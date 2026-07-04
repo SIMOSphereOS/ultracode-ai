@@ -2,7 +2,7 @@
 
 > UltraCode AI core: agents, tools, memory, context, execution, providers, config and AI versioning.
 
-Part of the [UltraCode AI](https://gitlab.simo-online.com/simo/ultracode-ai) monorepo.
+Part of the [UltraCode AI](https://github.com/SIMOSphereOS/ultracode-ai) monorepo.
 This package contains the engine that powers the [`ultracode`](https://www.npmjs.com/package/ultracode)
 CLI; most users should install the CLI instead of consuming this package directly.
 

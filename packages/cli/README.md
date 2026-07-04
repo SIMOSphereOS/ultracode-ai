@@ -2,7 +2,7 @@
 
 > Interactive AI code assistant for the terminal — with AI-powered versioning and release planning.
 
-Part of the [UltraCode AI](https://gitlab.simo-online.com/simo/ultracode-ai) monorepo.
+Part of the [UltraCode AI](https://github.com/SIMOSphereOS/ultracode-ai) monorepo.
 
 ## Installation
 

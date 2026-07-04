@@ -23,7 +23,7 @@ function readManifest(pkgDir: string): Record<string, unknown> {
   return JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>;
 }
 
-const REPO_URL = "git+https://gitlab.simo-online.com/simo/ultracode-ai.git";
+const REPO_URL = "git+https://github.com/SIMOSphereOS/ultracode-ai.git";
 
 describe("packaging invariants", () => {
   const publishable: Array<{ dir: string; name: string; scoped: boolean }> = [
@@ -57,13 +57,13 @@ describe("packaging invariants", () => {
         expect(scripts.prepublishOnly).toBe("tsc -b");
       });
 
-      it("points repository, homepage and bugs at the GitLab repo", () => {
+      it("points repository, homepage and bugs at the public GitHub repo", () => {
         const repo = manifest.repository as { url: string; directory: string };
         expect(repo.url).toBe(REPO_URL);
         expect(repo.directory).toBe(`packages/${dir}`);
-        expect(manifest.homepage).toBe("https://gitlab.simo-online.com/simo/ultracode-ai#readme");
+        expect(manifest.homepage).toBe("https://github.com/SIMOSphereOS/ultracode-ai#readme");
         expect(manifest.bugs).toEqual({
-          url: "https://gitlab.simo-online.com/simo/ultracode-ai/-/issues",
+          url: "https://github.com/SIMOSphereOS/ultracode-ai/issues",
         });
       });
 
