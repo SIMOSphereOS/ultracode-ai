@@ -2,6 +2,8 @@
 
 > **Komplette Anleitung für die Migration von anderen AI-Coding-Assistenten zu UltraCode AI**
 
+> **⚠️ Reifegrad-Hinweis / Maturity note:** Teile dieser Anleitung sind aspirativ. Der verbindliche, tatsächlich implementierte Funktionsstand steht in [`docs/comparison.md`](../comparison.md) und im [README](../../README.md). **Nicht implementiert:** LSP (geplant), Desktop-App und IDE-Plugins (bewusst nicht geplant — UltraCode ist CLI/TUI); manche unten gezeigten Tools/Commands (z. B. `lsp_*`, `web_search`, `packages/desktop`, `packages/ide`) sind generische bzw. geplante Konzepte, keine implementierten Features. **Real:** 13 Built-in-Tools (plus beliebig viele über MCP), 6 eingebaute Agenten, 5 LLM-Provider (inkl. LM Studio via OpenAI-kompatiblem Endpoint). / Parts of this guide are aspirational; the authoritative implemented state is in `docs/comparison.md` and the README.
+
 ---
 
 ## 🎯 Übersicht
@@ -14,17 +16,17 @@ Diese Anleitung hilft dir, **von deinem bisherigen CLI-Assistenten zu UltraCode 
 
 | **Feature** | **Typischer CLI-Assistent** | **UltraCode AI** | **Hinweise** |
 |-------------|------------------------------|---------------|--------------|
-| **Sprache** | TypeScript oder Python | TypeScript (+ Python) | ✅ Multi-Language in UltraCode AI |
-| **Runtime** | Node.js oder Bun | Node.js (+ Bun) | ⚠️ Bun ist optional in UltraCode AI |
+| **Sprache** | TypeScript oder Python | TypeScript | ✅ Striktes ESM/NodeNext |
+| **Runtime** | Node.js oder Bun | Node.js ≥22.13 | ⚠️ Runtime-Anforderung |
 | **UI** | Terminal-UI (oft React + Ink) | React + Ink | ✅ Vertrautes Bedienkonzept |
-| **Agenten** | ✅ (meist wenige) | ✅++ (10+ Agenten) | ✅ Gängige Agenten-Konzepte + weitere |
-| **Tools** | ~25–40 | **80+** | ✅ Alle üblichen Tools + viele mehr |
-| **Commands** | ~30–50 | 50+ | ✅ Gängige Slash-Commands + weitere |
-| **MCP Support** | teils | ✅ | ✅ Voll unterstützt |
-| **LSP Support** | teils | ✅ | ✅ Voll unterstützt |
-| **Bridge System** | teils (VS Code/JB) | ✅++ | ✅ Verbessert |
+| **Agenten** | ✅ (meist wenige) | 6 eingebaut + projektlokale | ✅ Built-in-Agenten + `.ultracode/agents` |
+| **Tools** | ~25–40 | 13 eingebaut + MCP | ✅ 13 Built-in-Tools plus beliebig viele über MCP |
+| **Commands** | ~30–50 | Kern-Kommandos | ⚠️ CLI-Kommandos (run/config/skills/versioning …) |
+| **MCP Support** | teils | ✅ | ✅ MCP-Client (stdio/http) |
+| **LSP Support** | teils | ❌ (geplant) | Noch nicht implementiert |
+| **Bridge System** | teils (VS Code/JB) | ❌ (nicht geplant) | UltraCode bleibt CLI/TUI |
 | **AI-Versionierung** | ❌ | ✅ **UNIQUE** | ✅ UltraCode AI USP |
-| **Multi-Model** | oft ❌ (nur ein Anbieter) | ✅ (Mistral, Anthropic, OpenAI, lokal) | ✅ **Hauptvorteil!** |
+| **Multi-Model** | oft ❌ (nur ein Anbieter) | ✅ (Anthropic, OpenAI, Mistral, Ollama, OpenAI-kompatibel) | ✅ **Hauptvorteil!** 5 Provider inkl. LM Studio |
 | **Konfiguration** | JSON/TOML/YAML | TOML | ⚠️ Format-Portierung |
 | **Skills System** | teils | ✅++ (erweitert) | ✅ Kompatible Konzepte |
 | **Voice Mode** | teils | ✅ | ✅ Unterstützt |
@@ -114,7 +116,7 @@ echo "OPENAI_API_KEY=sk-..." >> ~/.ultracode/.env
 | Subagent-/Task-Tool | `task` | ✅ Verbessert (Subagents) |
 | Skill-Tool | `skill` | ✅ Identisches Konzept |
 | MCP-Tools | `mcp_*` | ✅ Erweitert |
-| LSP-Tools | `lsp_*` | ✅ Identisches Konzept |
+| LSP-Tools | `lsp_*` | ❌ In UltraCode noch nicht implementiert (geplant) |
 | Nachrichten an Agenten | `send_message` | ✅ Neu in UltraCode AI |
 | Git-Tools | `git_*` | ✅ Erweitert |
 
@@ -220,7 +222,7 @@ args = ["mcp-server-fetch"]
 
 ### Phase 6: LSP-Integration migrieren
 
-Falls dein bisheriger Assistent eine **LSP-/IDE-Bridge** hatte: In UltraCode AI ist sie **voll unterstützt**:
+UltraCode AI ist bewusst CLI/TUI-fokussiert: eine LSP-/IDE-Bridge ist **noch nicht implementiert** (LSP ist geplant, Desktop/IDE nicht):
 
 - VS Code Extension
 - JetBrains Plugin
@@ -310,7 +312,7 @@ ultracode-ai --compat opencode
 ultracode-ai --compat vibe
 ```
 
-Bei anderen Assistenten empfiehlt sich die manuelle Migration nach dieser Anleitung — dank standardisierter Konzepte (MCP, LSP, Slash-Commands) ist der Umstieg in der Regel schnell erledigt.
+Bei anderen Assistenten empfiehlt sich die manuelle Migration nach dieser Anleitung — dank standardisierter Konzepte (MCP, Skills, TOML-Config) ist der Umstieg in der Regel schnell erledigt.
 
 ---
 
@@ -335,7 +337,7 @@ Bei anderen Assistenten empfiehlt sich die manuelle Migration nach dieser Anleit
 - [ ] **Konfiguration** portiert
 - [ ] **Tools/Commands** getestet
 - [ ] **MCP-Server** migriert
-- [ ] **LSP-Integration** eingerichtet
+
 - [ ] **Neue Features** ausprobiert (Multi-Model, AI-Versionierung)
 - [ ] **Bun** installiert (optional)
 - [ ] **Alte Konfiguration** archiviert
@@ -348,7 +350,7 @@ Bei anderen Assistenten empfiehlt sich die manuelle Migration nach dieser Anleit
 
 ✅ **Multi-Model-Unterstützung** - Kein Anbieter-Lock-in!
 ✅ **AI-Versionierung** - Einzigartiges USP
-✅ **80+ Tools** - Mehr als doppelt so viele wie üblich
+✅ **13 Built-in-Tools + MCP** - plus beliebig viele über MCP-Server
 ✅ **Verbesserte Agenten** - 10+ verschiedene Agenten
 ✅ **Open Source** - Volle Transparenz
 ✅ **Community-getrieben** - Schnelle Entwicklung

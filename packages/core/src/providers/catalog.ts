@@ -40,6 +40,18 @@ export function defaultApiKeyEnvVar(provider: string): string {
 }
 
 /**
+ * Canonical `<PROVIDER>_BASE_URL` env-var convention, mirroring
+ * {@link defaultApiKeyEnvVar}. Resolves the endpoint of a custom,
+ * user-configured OpenAI-compatible provider (one WITHOUT a catalog entry) from
+ * the environment / `~/.ultracode/.env` — the same credential/endpoint layer
+ * the API keys live in. Built-in providers ignore this: their base URL is the
+ * `defaultBaseUrl` constant declared in {@link PROVIDER_CATALOG}.
+ */
+export function defaultBaseUrlEnvVar(provider: string): string {
+  return `${provider.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_BASE_URL`;
+}
+
+/**
  * Wire protocol family a provider speaks. Documents the transport family per
  * provider and is pinned by the contract test; the factory itself maps ids to
  * concrete classes (a `wire`-driven transport selection is a later step).

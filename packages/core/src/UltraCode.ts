@@ -58,7 +58,7 @@ import {
   buildLearningFacade,
 } from "./facade/ext-adapters.js";
 import type { AuthoringFacade, BudgetFacade, LearningFacade } from "./facade/ext-types.js";
-import { defaultApiKeyEnvVar } from "./providers/catalog.js";
+import { defaultApiKeyEnvVar, defaultBaseUrlEnvVar, isKnownProvider } from "./providers/catalog.js";
 import type { SessionOptimizer } from "./session-optimizer/index.js";
 import { createSessionOptimizer } from "./session-optimizer/index.js";
 
@@ -232,9 +232,28 @@ function composeCollectors(
  */
 const apiKeyEnvVar = defaultApiKeyEnvVar;
 
+/**
+ * Environment variable name that holds the base URL for a custom, user-defined
+ * OpenAI-compatible provider — mirrors {@link apiKeyEnvVar} ({@link
+ * defaultBaseUrlEnvVar}). Built-in providers ignore this (their base URL is a
+ * catalog constant).
+ */
+const baseUrlEnvVar = defaultBaseUrlEnvVar;
+
 /** Resolve a provider API key from the environment (provider- or UltraCode-prefixed). */
 function resolveApiKeyFromEnv(provider: string, env: NodeJS.ProcessEnv): string | undefined {
   return env[apiKeyEnvVar(provider)] ?? env[`${ENV_PREFIX}${apiKeyEnvVar(provider)}`];
+}
+
+/**
+ * Resolve the base URL of a custom (non-catalog) provider from the environment,
+ * accepting both `<PROVIDER>_BASE_URL` and the UltraCode-prefixed variant. The
+ * factory routes such an id to a {@link import("./providers/index.js").CustomProvider}
+ * once a base URL is present. Returns `undefined` for a missing/blank value.
+ */
+function resolveBaseUrlFromEnv(provider: string, env: NodeJS.ProcessEnv): string | undefined {
+  const raw = env[baseUrlEnvVar(provider)] ?? env[`${ENV_PREFIX}${baseUrlEnvVar(provider)}`];
+  return typeof raw === "string" && raw.trim() !== "" ? raw : undefined;
 }
 
 /**
@@ -496,6 +515,11 @@ export class UltraCode {
 
     const events = new EventBus();
 
+    // Cleanup callbacks invoked by `UltraCode.dispose()` (LIFO not required).
+    // Long-lived resources acquired during wiring (e.g. MCP server connections)
+    // register their teardown here.
+    const disposables: Array<() => void | Promise<void>> = [];
+
     const providersModule = await import("./providers/index.js");
     const providerOptionsFor = (name: ProviderId): ProviderOptions & { logger?: Logger } => {
       const opts: ProviderOptions & { logger?: Logger } = {
@@ -506,7 +530,16 @@ export class UltraCode {
       };
       const apiKey = resolveApiKey(String(name), config, process.env);
       if (apiKey !== undefined) opts.apiKey = apiKey;
-      if (name === "local") opts.baseUrl = config.providers.local.endpoint;
+      if (name === "local") {
+        opts.baseUrl = config.providers.local.endpoint;
+      } else if (!isKnownProvider(String(name))) {
+        // A custom, user-configured provider (no catalog entry): its endpoint
+        // comes from `<PROVIDER>_BASE_URL` (env / ~/.ultracode/.env), mirroring
+        // the `<PROVIDER>_API_KEY` convention used for its credentials. With a
+        // base URL set, the factory builds an OpenAI-compatible CustomProvider.
+        const baseUrl = resolveBaseUrlFromEnv(String(name), process.env);
+        if (baseUrl !== undefined) opts.baseUrl = baseUrl;
+      }
       return opts;
     };
     const activeProviderName = config.core.activeProvider;
@@ -524,6 +557,32 @@ export class UltraCode {
       execute: (name, args, ctx) => executor.execute(name, args, ctx),
       list: () => registry.list(),
     };
+
+    // Model Context Protocol: for every configured server, connect, discover its
+    // tools and register them into the SAME registry as the built-ins — each
+    // namespaced "<server>.<tool>" (category "mcp") by the adapter. Fully
+    // defensive: `registerMcpTools` connects in parallel, never throws for a
+    // per-server failure (it collects them), and skips duplicate tool names, so
+    // one bad MCP server can never crash the session. The live handles are
+    // disposed on `UltraCode.dispose()`. Skipped entirely when none configured.
+    if (config.mcpServers.length > 0) {
+      const mcpModule = await import("./mcp/index.js");
+      const mcp = await mcpModule.registerMcpTools(config.mcpServers, {
+        registry,
+        logger,
+        env: options.env ?? (process.env as Readonly<Record<string, string | undefined>>),
+      });
+      if (mcp.errors.length > 0) {
+        logger.warn("some MCP servers failed to connect; continuing without them", {
+          failed: mcp.errors.map((e) => e.server),
+        });
+      }
+      logger.debug("MCP tools registered", {
+        servers: mcp.handles.length,
+        tools: mcp.tools.length,
+      });
+      disposables.push(() => mcp.dispose());
+    }
 
     const memoryModule = await import("./memory/index.js");
     const sessions = await memoryModule.createSessionStore(config, logger);
@@ -677,6 +736,11 @@ export class UltraCode {
     const ensureProviderReady = (): void => {
       const name = String(config.core.activeProvider);
       if (name === "local") return;
+      // Custom, user-configured OpenAI-compatible providers (no catalog entry)
+      // may be key-less (e.g. a local LM Studio / vLLM gateway). We cannot know
+      // whether a key is required, so we do not block startup on a missing one;
+      // an actually required key surfaces as the backend's own 401 on first use.
+      if (!isKnownProvider(name)) return;
       if (resolveApiKey(name, config, process.env) === undefined) {
         throw new ProviderError(
           `No API key configured for provider "${name}". Set the ${apiKeyEnvVar(name)} ` +
@@ -700,6 +764,7 @@ export class UltraCode {
       learning,
       configManager,
       ensureProviderReady,
+      disposables,
       cwd,
       sessionOptimizer,
     });

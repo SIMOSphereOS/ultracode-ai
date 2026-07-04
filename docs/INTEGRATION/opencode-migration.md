@@ -2,6 +2,8 @@
 
 > **Komplette Anleitung für die Migration von OpenCode zu UltraCode AI**
 
+> **⚠️ Reifegrad-Hinweis / Maturity note:** Teile dieser Anleitung sind aspirativ. Der verbindliche, tatsächlich implementierte Funktionsstand steht in [`docs/comparison.md`](../comparison.md) und im [README](../../README.md). **Nicht implementiert:** LSP (geplant), Desktop-App und IDE-Plugins (bewusst nicht geplant — UltraCode ist CLI/TUI). Einige Tool-/Command-Beispiele unten beschreiben geplante oder generische Konzepte. **Real:** 13 Built-in-Tools (plus beliebig viele über MCP), 6 eingebaute Agenten, 5 LLM-Provider (inkl. LM Studio via OpenAI-kompatiblem Endpoint). / Parts of this guide are aspirational; the authoritative implemented state is in `docs/comparison.md` and the README.
+
 ---
 
 ## 🎯 Übersicht
@@ -14,17 +16,17 @@ Diese Anleitung hilft dir, **nahtlos von OpenCode zu UltraCode AI zu migrieren**
 
 | **Feature** | **OpenCode** | **UltraCode AI** | **Hinweise** |
 |-------------|--------------|---------------|--------------|
-| **Agenten** | build, plan, general | build, plan, review, release, security, +custom | ✅ Alle OpenCode-Agenten verfügbar + weitere |
-| **Tools** | ~30 | **80+** | ✅ Alle OpenCode-Tools verfügbar + weitere |
-| **UI** | React + Terminal | React + Ink | ⚠️ Ähnliche, aber verbesserte UI |
-| **Desktop App** | Beta | ✅ Voll unterstützt | ✅ Verbessert |
-| **IDE Integration** | ✅ | ✅++ (VS Code, JetBrains, Neovim) | ✅ Erweitert |
-| **MCP Support** | ❌ | ✅ | ✅ Neu in UltraCode AI |
-| **LSP Support** | ❌ | ✅ | ✅ Neu in UltraCode AI |
+| **Agenten** | build, plan, general | default, build, plan, review, release, security (6 eingebaut) + projektlokale | ✅ 6 Built-in-Agenten plus projektlokale `.ultracode/agents` |
+| **Tools** | ~30 | 13 eingebaut + MCP | ✅ 13 Built-in-Tools plus beliebig viele über MCP-Server |
+| **UI** | React + Terminal | React + Ink | ⚠️ CLI/TUI-fokussiert |
+| **Desktop App** | Beta | ❌ (bewusst nicht geplant) | UltraCode bleibt CLI/TUI |
+| **IDE Integration** | ✅ | ❌ (bewusst nicht geplant) | Keine IDE-Plugins |
+| **MCP Support** | ❌ | ✅ | ✅ MCP-Client (stdio/http) |
+| **LSP Support** | ❌ | ❌ (geplant) | Noch nicht implementiert |
 | **AI-Versionierung** | ❌ | ✅ **UNIQUE** | ✅ UltraCode AI USP |
-| **Multi-Model** | ✅ | ✅ (Mistral, Anthropic, OpenAI, lokal) | ✅ Erweitert |
+| **Multi-Model** | ✅ | ✅ (Anthropic, OpenAI, Mistral, Ollama, OpenAI-kompatibel) | ✅ 5 Provider inkl. LM Studio |
 | **Konfiguration** | JSON/YAML | TOML | ⚠️ Format ändert sich |
-| **Skills System** | ❌ | ✅ | ✅ Neu in UltraCode AI |
+| **Skills System** | ❌ | ✅ | ✅ Skills + projektlokaler Loader |
 
 ---
 
@@ -319,9 +321,9 @@ ultracode-ai --compat opencode
 | Tool-Name `write` | ✅ | ❌ (nur `write_file`) | `write_file` verwenden oder Kompatibilitätsmodus |
 | Git-Tools | `git` (ein Tool) | `git_*` (mehrere Tools) | `git_status`, `git_commit`, etc. verwenden |
 | Konfiguration | JSON | TOML | Konvertierungsskript verwenden |
-| Desktop App | Beta | Voll unterstützt | UltraCode AI Desktop installieren |
+| Desktop App | Beta | ❌ (nicht geplant) | UltraCode bleibt CLI/TUI |
 | MCP Support | ❌ | ✅ | MCP-Server manuell hinzufügen |
-| LSP Support | ❌ | ✅ | LSP-Tools verwenden |
+| LSP Support | ❌ | ❌ (geplant) | Noch nicht implementiert |
 
 ---
 
@@ -333,9 +335,9 @@ ultracode-ai --compat opencode
 - [ ] **Konfiguration** migriert (automatisch/manuell)
 - [ ] **Agenten** getestet
 - [ ] **Tools** getestet
-- [ ] **Neue Features** ausprobiert (AI-Versionierung, MCP, LSP)
-- [ ] **IDE-Integration** eingerichtet (optional)
-- [ ] **Desktop App** installiert (optional)
+- [ ] **Neue Features** ausprobiert (AI-Versionierung, MCP)
+
+
 - [ ] **Alte Konfiguration** archiviert
 
 ---
@@ -357,8 +359,8 @@ ultracode-ai --compat opencode
 - **AI-Versionierung:** `version_analyze()`, `version_suggest()`, `release_plan()`
 - **Quality Gates:** `quality_check()`
 - **MCP-Integration:** `mcp_list()`, `mcp_call()`
-- **LSP-Integration:** `lsp_hover()`, `lsp_completion()`
-- **80+ Tools:** Viele neue Tools verfügbar
+- **MCP-Server:** externe Tools über das Model Context Protocol (stdio/http) anbinden
+- **13 Built-in-Tools + MCP:** plus beliebig viele Tools über MCP-Server
 
 ### 3. Performance-Verbesserungen
 

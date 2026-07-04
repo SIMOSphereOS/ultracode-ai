@@ -596,6 +596,110 @@ describe("UltraCode.create", () => {
       await ultra.dispose();
     }
   });
+
+  // MCP: a configured server that cannot be reached must never crash startup —
+  // the error is isolated, the session comes up without that server's tools.
+  it("survives an unreachable MCP server at bootstrap (defensive)", async () => {
+    cwd = await fs.mkdtemp(path.join(os.tmpdir(), "uc-create-mcp-"));
+    clearKey("ANTHROPIC_API_KEY");
+    clearKey("ULTRACODE_ANTHROPIC_API_KEY");
+
+    const ultra = await UltraCode.create({
+      cwd,
+      logger: new NoopLogger(),
+      configOverrides: {
+        core: { activeProvider: "anthropic", defaultAgent: "default" },
+        sessions: { enablePersistence: false },
+        // A stdio server whose command does not exist: spawn fails with ENOENT,
+        // registerMcpTools records the error and the session continues.
+        mcpServers: [
+          {
+            name: "brokensrv",
+            transport: "stdio",
+            command: "ultracode-nonexistent-mcp-binary-xyz",
+          },
+        ],
+      },
+    });
+
+    try {
+      const tools = ultra.listTools().map((t) => t.name);
+      // Built-ins are present; the unreachable server contributed nothing.
+      expect(tools).toContain("task");
+      expect(tools.some((n) => n.startsWith("brokensrv."))).toBe(false);
+    } finally {
+      // dispose() must tolerate the (empty) MCP handle set registered as a
+      // disposable during create().
+      await expect(ultra.dispose()).resolves.toBeUndefined();
+    }
+  });
+
+  it("a key-less custom provider passes the missing-key pre-flight (no API-key error)", async () => {
+    cwd = await fs.mkdtemp(path.join(os.tmpdir(), "uc-create-custom-nokey-"));
+    // Custom id, no API key AND no base URL configured. ensureProviderReady must
+    // NOT demand a key (unlike a keyed built-in); the failure only surfaces when
+    // the factory is asked to build the provider without an endpoint. Fully
+    // deterministic: createProvider throws before any network I/O.
+    clearKey("OPENROUTER_API_KEY");
+    clearKey("ULTRACODE_OPENROUTER_API_KEY");
+    clearKey("OPENROUTER_BASE_URL");
+    clearKey("ULTRACODE_OPENROUTER_BASE_URL");
+
+    const ultra = await UltraCode.create({
+      cwd,
+      logger: new NoopLogger(),
+      configOverrides: {
+        core: { activeProvider: "openrouter", defaultAgent: "default" },
+        sessions: { enablePersistence: false },
+      },
+    });
+
+    try {
+      const err = await ultra.run("hello").catch((e: unknown) => e);
+      // The provider error surfaces (wrapped by the agent as an AgentError):
+      // the pre-flight did NOT reject on a missing key; instead the custom
+      // backend was found to have no configured endpoint.
+      expect(err).toBeInstanceOf(Error);
+      expect((err as Error).message).not.toContain("API key");
+      expect((err as Error).message).toMatch(/Unknown provider "openrouter"/);
+    } finally {
+      await ultra.dispose();
+    }
+  });
+
+  it("resolves a custom provider's endpoint from <PROVIDER>_BASE_URL", async () => {
+    cwd = await fs.mkdtemp(path.join(os.tmpdir(), "uc-create-custom-url-"));
+    // With a base URL set, the same custom id is now a real, constructible
+    // OpenAI-compatible provider. Point it at a reserved `.test` host (RFC 6761,
+    // never resolves) with retries disabled so first use fails FAST with a
+    // network/provider error rather than the "Unknown provider" of the case
+    // above — proving the env base-URL was actually picked up.
+    clearKey("OPENROUTER_API_KEY");
+    clearKey("ULTRACODE_OPENROUTER_API_KEY");
+    savedEnv.OPENROUTER_BASE_URL = process.env.OPENROUTER_BASE_URL;
+    process.env.OPENROUTER_BASE_URL = "https://openrouter.example.test/api/v1";
+
+    const ultra = await UltraCode.create({
+      cwd,
+      logger: new NoopLogger(),
+      configOverrides: {
+        core: { activeProvider: "openrouter", defaultAgent: "default" },
+        sessions: { enablePersistence: false },
+        providers: { maxRetries: 0, timeout: 5 },
+      },
+    });
+
+    try {
+      const err = await ultra.run("hello").catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(Error);
+      // The endpoint WAS resolved: no "Unknown provider", no missing-key error —
+      // only the unreachable backend surfaces.
+      expect((err as Error).message).not.toContain("API key");
+      expect((err as Error).message).not.toMatch(/Unknown provider/);
+    } finally {
+      await ultra.dispose();
+    }
+  });
 });
 
 /* ----------------------------------------------------------------------------

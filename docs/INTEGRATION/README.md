@@ -142,16 +142,16 @@ ultracode-ai
 
 | **Feature** | **OpenCode** | **Mistral Vibe** | **UltraCode AI** |
 |-------------|--------------|------------------|---------------|
-| **Sprache** | TypeScript | Python | TypeScript (+ Python) |
-| **Runtime** | Node.js | Python | Node.js (+ Bun) |
+| **Sprache** | TypeScript | Python | TypeScript |
+| **Runtime** | Node.js | Python | Node.js |
 | **UI** | React + Terminal | React + Rich | React + Ink |
-| **Agenten** | ✅ | ✅ (begrenzt) | ✅++ (erweitert) |
-| **Tools** | ~30 | ~25 | **80+** |
+| **Agenten** | ✅ | ✅ | 6 eingebaut + projektlokale |
+| **Tools** | ~30 | ~25 | 13 eingebaut + MCP |
 | **MCP** | ❌ | ✅ | ✅ |
-| **LSP** | ❌ | ❌ | ✅ |
-| **IDE-Integration** | ✅ | ❌ | ✅++ |
+| **LSP** | ❌ | ❌ | ❌ (geplant) |
+| **IDE-Integration** | ✅ | ❌ | ❌ (nicht geplant) |
 | **AI-Versionierung** | ❌ | ❌ | ✅ **UNIQUE** |
-| **Multi-Model** | ✅ | ✅ | ✅ |
+| **Multi-Model** | ✅ | ✅ | ✅ (5 Provider inkl. LM Studio) |
 
 ---
 
