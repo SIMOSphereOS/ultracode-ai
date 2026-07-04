@@ -1,9 +1,7 @@
-<!-- Interne Analyse / internal analysis — kein Kunden-Lieferobjekt. -->
-
-> **DE:** Faktenbasierter Wettbewerbsvergleich. „UltraCode" beruht auf dem echten Code des Repos, die drei Wettbewerber auf Web-Recherche mit adversarialem Fakten-Check (Stand 2026-07-04). Eine visuell aufbereitete Fassung existiert als Artefakt.
-> **EN:** Fact-based competitive comparison. "UltraCode" is grounded in the repo's actual code, the three competitors in web research with adversarial fact-checking (as of 2026-07-04). A visual version exists as an artifact.
+> **DE:** Faktenbasierter Wettbewerbsvergleich. „UltraCode" beruht auf dem echten Code des Repos, die drei Wettbewerber auf Web-Recherche mit adversarialem Fakten-Check. Wettbewerber-Stand: 2026-07-04 — Modell-Versionen und Preise ändern sich schnell.
+> **EN:** Fact-based competitive comparison. "UltraCode" is grounded in the repo's actual code, the three competitors in web research with adversarial fact-checking. Competitor snapshot: 2026-07-04 — model versions and prices change quickly.
 >
-> **Hinweis / Note:** Die im Vergleich als „nur Schema/fehlt" markierten Lücken werden testgetrieben geschlossen; **LSP** ist inzwischen **minimal vorhanden** — Diagnostics on-demand über einen konfigurierbaren Language-Server (Tool `lsp_diagnostics`), bewusst ohne Auto-Management vieler Sprachen und ohne IDE-Bridge. Desktop-, Web- und IDE-Varianten bleiben bewusst **nicht** geplant. / The gaps marked "schema only/missing" are being closed test-driven; **LSP** is now **minimally present** — on-demand diagnostics via a configurable language server (tool `lsp_diagnostics`), deliberately without multi-language auto-management and without an IDE bridge. Desktop, web and IDE variants remain deliberately **not** planned.
+> **Stand / Status (UltraCode 1.4.0):** MCP-Client (stdio/http), Custom/OpenAI-kompatibler Provider (inkl. LM Studio) und ein minimaler **LSP**-Diagnostics-Client (Tool `lsp_diagnostics`) sind ausgeliefert. Bewusst **nicht** geplant: Desktop-, Web- und IDE-Varianten. / MCP client (stdio/http), a custom OpenAI-compatible provider (incl. LM Studio) and a minimal **LSP** diagnostics client (tool `lsp_diagnostics`) have shipped. Deliberately **not** planned: desktop, web and IDE variants.
 
 # Coding-Agent-Vergleich fuer SIMO — UltraCode AI vs. OpenCode vs. Claude Code vs. Mistral Vibe
 **Entscheidungsvorlage / Decision brief — Stand / As of: 2026-07-04**
