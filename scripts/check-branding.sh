@@ -57,6 +57,7 @@ ALLOWLIST=(
   "docs/ENTERPRISE/team-collaboration.md" # Modell-Permission-Beispiel (claude-3-sonnet) / model permission example
   "docs/REFERENCE/api.md"                 # Usage-Statistik-Beispiel mit Modell-IDs / usage stats example with model ids
   "docs/REFERENCE/parameters.md"          # Preis-/Routing-Tabellen (claude-3-5-*) / price + routing tables
+  "docs/comparison.md"                    # Wettbewerbsvergleich benennt Wettbewerber (Claude Code) — keine Produkt-Abhängigkeit / competitive analysis names competitors (Claude Code), not a product dependency
 )
 
 # Alle Treffer einsammeln (Format: pfad:zeile:inhalt). / Collect all hits.

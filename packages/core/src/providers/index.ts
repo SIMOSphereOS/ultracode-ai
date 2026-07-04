@@ -15,6 +15,7 @@ import type {
 } from "ultracode-shared";
 import { ProviderError } from "ultracode-shared";
 import { AnthropicProvider } from "./AnthropicProvider.js";
+import { CustomProvider } from "./CustomProvider.js";
 import { isKeyedProvider, PROVIDER_CATALOG, PROVIDER_IDS } from "./catalog.js";
 import { LocalProvider } from "./LocalProvider.js";
 import { MistralProvider } from "./MistralProvider.js";
@@ -32,9 +33,11 @@ export {
 } from "./AnthropicProvider.js";
 export type { ProviderRequestInit } from "./BaseProvider.js";
 export { BaseProvider, isRetryableStatus, parseRetryAfter } from "./BaseProvider.js";
+export { CustomProvider } from "./CustomProvider.js";
 export type { ProviderDescriptor, WireFamily } from "./catalog.js";
 export {
   defaultApiKeyEnvVar,
+  defaultBaseUrlEnvVar,
   isKeyedProvider,
   isKnownProvider,
   PROVIDER_CATALOG,
@@ -82,10 +85,17 @@ const FACTORIES: Readonly<
  * Driven by {@link PROVIDER_CATALOG}: key requirements and the set of known
  * providers come from the catalog, not from hardcoded lists.
  *
- * @param name - a {@link PROVIDER_IDS} member.
+ * A provider id that is NOT a built-in catalog entry is treated as a **custom,
+ * user-configured OpenAI-compatible backend** (OpenRouter, LM Studio, vLLM,
+ * self-hosted gateways): it is instantiated as a {@link CustomProvider} as long
+ * as `options.baseUrl` names its endpoint. Without a `baseUrl` there is nowhere
+ * to send requests, so the id is genuinely unknown and rejected.
+ *
+ * @param name - a {@link PROVIDER_IDS} member, or a custom id paired with a
+ *   `baseUrl`.
  * @param options - provider options; `logger` is optional.
- * @throws {ProviderError} for an unknown provider name or a missing `apiKey`
- *   on key-requiring providers (`local` needs no key).
+ * @throws {ProviderError} for a missing `apiKey` on key-requiring built-ins
+ *   (`local` needs no key), or for an unknown id without a `baseUrl`.
  */
 export function createProvider(name: ProviderId, options: CreateProviderOptions): ILLMProvider {
   const { logger, ...providerOptions } = options;
@@ -100,11 +110,25 @@ export function createProvider(name: ProviderId, options: CreateProviderOptions)
     }
   }
 
-  if (!Object.hasOwn(PROVIDER_CATALOG, name)) {
-    throw new ProviderError(
-      `Unknown provider "${name}". Known providers: ${PROVIDER_IDS.join(", ")}`,
-      { provider: String(name), retryable: false, details: { reason: "unknown_provider" } },
-    );
+  if (Object.hasOwn(PROVIDER_CATALOG, name)) {
+    return FACTORIES[name as ProviderName](providerOptions, logger);
   }
-  return FACTORIES[name as ProviderName](providerOptions, logger);
+
+  // Not a built-in: a custom OpenAI-compatible backend, allowed once it names
+  // its own endpoint. A key is optional here (local gateways need none), so no
+  // key check applies. Custom providers deliberately carry no catalog entry.
+  const baseUrl = providerOptions.baseUrl;
+  if (typeof baseUrl === "string" && baseUrl.trim() !== "") {
+    return new CustomProvider(name, providerOptions, logger);
+  }
+
+  throw new ProviderError(
+    `Unknown provider "${name}". Known providers: ${PROVIDER_IDS.join(", ")}. ` +
+      `For a custom OpenAI-compatible backend, configure its base URL ` +
+      `(e.g. ${name
+        .toString()
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "_")}_BASE_URL).`,
+    { provider: String(name), retryable: false, details: { reason: "unknown_provider" } },
+  );
 }
