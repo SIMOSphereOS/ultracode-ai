@@ -148,7 +148,7 @@ ultracode-ai
 | **Agenten** | ✅ | ✅ | 6 eingebaut + projektlokale |
 | **Tools** | ~30 | ~25 | 13 eingebaut + MCP |
 | **MCP** | ❌ | ✅ | ✅ |
-| **LSP** | ❌ | ❌ | ❌ (geplant) |
+| **LSP** | ❌ | ❌ | ✅ minimal (Diagnostics) |
 | **IDE-Integration** | ✅ | ❌ | ❌ (nicht geplant) |
 | **AI-Versionierung** | ❌ | ❌ | ✅ **UNIQUE** |
 | **Multi-Model** | ✅ | ✅ | ✅ (5 Provider inkl. LM Studio) |

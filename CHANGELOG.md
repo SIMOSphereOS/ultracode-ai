@@ -9,6 +9,48 @@ Release-Prozess / process: siehe `VERSIONING.md` (SIMO Release Management).
 ## [Unreleased]
 
 ### Hinzugefügt / Added
+- **Minimaler LSP-Client (Diagnostics)**: Ein bewusst minimaler Language-Server-Protocol-
+  Client (`packages/core/src/lsp/`) verbindet sich über stdio mit **einem** konfigurierten
+  Language-Server (LSP-Wire-Format mit `Content-Length`-Header-Framing), führt den Handshake
+  aus (`initialize` → `initialized`-Notification), öffnet eine Datei via
+  `textDocument/didOpen` und sammelt die vom Server gepushten Diagnostics
+  (`textDocument/publishDiagnostics`); `shutdown`/`exit` und Dispose räumen sauber ab. Das
+  neue on-demand-Tool `lsp_diagnostics` routet eine Datei anhand Endung/Sprach-ID an den
+  passenden konfigurierten Server, startet ihn faul, hält die Verbindung offen und gibt
+  Fehler/Warnungen/Hinweise zurück; ohne passenden Server oder bei Fehlern liefert es
+  defensiv ein leeres Ergebnis mit Hinweis (nie Session-Crash). Additives, rückwärtskompatibles
+  Config-Schema `LspServerConfig` (`name`, `command`, `args?`, `languages?`, `rootUri?`) und
+  `UltraCodeConfig.lspServers` (`[[lsp_servers]]`, Default `[]`). Bewusst **kein**
+  Auto-Management vieler Sprachen und **keine** IDE-Bridge (Begründung: ADR 0003). /
+  Minimal LSP client (diagnostics): a deliberately minimal Language Server Protocol client
+  (`packages/core/src/lsp/`) connects over stdio to **one** configured language server (LSP
+  wire format with `Content-Length` header framing), runs the handshake
+  (`initialize` → `initialized` notification), opens a file via `textDocument/didOpen` and
+  collects the diagnostics the server pushes (`textDocument/publishDiagnostics`);
+  `shutdown`/`exit` and dispose clean up. The new on-demand `lsp_diagnostics` tool routes a
+  file by its extension/language id to the matching configured server, spawns it lazily,
+  keeps the connection open and returns errors/warnings/hints; with no matching server or on
+  failure it defensively returns an empty result with a note (never crashes the session). An
+  additive, backward-compatible config schema `LspServerConfig` (`name`, `command`, `args?`,
+  `languages?`, `rootUri?`) and `UltraCodeConfig.lspServers` (`[[lsp_servers]]`, default
+  `[]`). Deliberately **no** multi-language auto-management and **no** IDE bridge (rationale:
+  ADR 0003).
+- **MCP-Client (stdio/http)**: UltraCode bindet jetzt externe Tools über das Model Context
+  Protocol an (`packages/core/src/mcp/`) — Transport (stdio/HTTP), JSON-RPC-Schicht,
+  `McpClient` und ein Tool-Adapter, der entdeckte MCP-Tools in die Tool-Registry einhängt;
+  Registrierung nur bei konfigurierten `[[mcp_servers]]`. /
+  MCP client (stdio/http): UltraCode now connects external tools over the Model Context
+  Protocol (`packages/core/src/mcp/`) — transport (stdio/HTTP), a JSON-RPC layer, an
+  `McpClient` and a tool adapter that registers discovered MCP tools into the tool registry;
+  wired only when `[[mcp_servers]]` are configured.
+- **Custom-/OpenAI-kompatibler Provider (inkl. LM Studio)**: Ein zusätzlicher Provider für
+  beliebige OpenAI-kompatible Endpunkte mit konfigurierbarer Base-URL (`CustomProvider`),
+  wodurch lokale/self-hosted Backends wie **LM Studio**, vLLM oder OpenRouter neben den
+  Katalog-Providern (Anthropic/OpenAI/Mistral/lokal) nutzbar sind. /
+  Custom / OpenAI-compatible provider (incl. LM Studio): an additional provider for any
+  OpenAI-compatible endpoint with a configurable base URL (`CustomProvider`), enabling
+  local/self-hosted backends such as **LM Studio**, vLLM or OpenRouter alongside the catalog
+  providers (Anthropic/OpenAI/Mistral/local).
 - **Projektlokaler Laufzeit-Loader für Skills und Agenten**: UltraCode lädt Skills
   und Agenten jetzt zusätzlich zum Home-Store (`~/.ultracode/`) aus dem projektlokalen
   Verzeichnis `<cwd>/.ultracode/` — Skills aus `.ultracode/skills/<name>/SKILL.md`,

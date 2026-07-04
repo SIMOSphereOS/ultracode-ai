@@ -91,6 +91,26 @@ describe("validateConfig", () => {
     expect(ok.mcpServers).toHaveLength(2);
   });
 
+  it("accepts LSP server registrations and rejects a missing command", () => {
+    const okConfig = validateConfig(
+      candidate({
+        lspServers: [
+          {
+            name: "ts",
+            command: "typescript-language-server",
+            args: ["--stdio"],
+            languages: ["ts"],
+          },
+        ],
+      }),
+    );
+    expect(okConfig.lspServers).toHaveLength(1);
+    expect(okConfig.lspServers[0]?.command).toBe("typescript-language-server");
+    expect(() => validateConfig(candidate({ lspServers: [{ name: "x" }] }))).toThrow(
+      /lspServers\.0\.command/,
+    );
+  });
+
   it("rejects completely invalid input types", () => {
     for (const bad of [null, undefined, 42, "config", [], () => undefined]) {
       expect(() => validateConfig(bad)).toThrow(ConfigError);

@@ -270,6 +270,35 @@ export interface McpServerConfig {
   apiKeyEnv?: string;
 }
 
+/**
+ * `[[lsp_servers]]` — a single Language Server registration (minimal).
+ *
+ * Describes one Language Server Protocol server launched over stdio. The scope
+ * is deliberately small: connect to one configured server, run the handshake,
+ * open a document and collect its diagnostics. There is no auto-management of
+ * many languages — one entry, one server.
+ */
+export interface LspServerConfig {
+  /** Unique server name; used in log context and for namespacing. */
+  name: string;
+  /** Executable to launch (the language server). */
+  command: string;
+  /** Arguments passed to {@link LspServerConfig.command}. */
+  args?: string[];
+  /**
+   * File extensions or LSP language IDs this server handles (e.g.
+   * `["ts", "tsx"]` or `["typescript"]`). Advisory — used to route a file to
+   * the right server.
+   */
+  languages?: string[];
+  /**
+   * Workspace root URI advertised during `initialize` (e.g.
+   * `"file:///home/user/project"`). Defaults to the working directory's file
+   * URI when omitted.
+   */
+  rootUri?: string;
+}
+
 /** The fully-resolved UltraCode configuration. */
 export interface UltraCodeConfig {
   core: CoreConfig;
@@ -282,6 +311,8 @@ export interface UltraCodeConfig {
   versioning: VersioningConfig;
   /** Registered MCP servers. */
   mcpServers: McpServerConfig[];
+  /** Registered Language Server Protocol servers. */
+  lspServers: LspServerConfig[];
 }
 
 /**
@@ -376,4 +407,5 @@ export const DEFAULT_CONFIG: UltraCodeConfig = {
     },
   },
   mcpServers: [],
+  lspServers: [],
 };

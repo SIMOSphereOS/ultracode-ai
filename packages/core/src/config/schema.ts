@@ -159,6 +159,14 @@ const mcpServerSchema = z
     }
   });
 
+const lspServerSchema = z.object({
+  name: z.string().min(1),
+  command: z.string().min(1),
+  args: z.array(z.string()).optional(),
+  languages: z.array(z.string()).optional(),
+  rootUri: z.string().min(1).optional(),
+});
+
 /** Schema of the full, merged configuration (camelCase). */
 export const configSchema = z.object({
   core: coreSchema,
@@ -170,6 +178,7 @@ export const configSchema = z.object({
   git: gitSchema,
   versioning: versioningSchema,
   mcpServers: z.array(mcpServerSchema),
+  lspServers: z.array(lspServerSchema),
 });
 
 /** `providers` section extended with the in-memory API key store. */

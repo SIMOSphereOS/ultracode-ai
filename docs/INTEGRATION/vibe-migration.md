@@ -2,7 +2,7 @@
 
 > **Komplette Anleitung für die Migration von Mistral Vibe zu UltraCode AI**
 
-> **⚠️ Reifegrad-Hinweis / Maturity note:** Teile dieser Anleitung sind aspirativ. Der verbindliche, tatsächlich implementierte Funktionsstand steht in [`docs/comparison.md`](../comparison.md) und im [README](../../README.md). **Nicht implementiert:** LSP (geplant), Desktop-App und IDE-Plugins (bewusst nicht geplant — UltraCode ist CLI/TUI). Einige Tool-/Command-Beispiele unten beschreiben geplante oder generische Konzepte. **Real:** 13 Built-in-Tools (plus beliebig viele über MCP), 6 eingebaute Agenten, 5 LLM-Provider (inkl. LM Studio via OpenAI-kompatiblem Endpoint). / Parts of this guide are aspirational; the authoritative implemented state is in `docs/comparison.md` and the README.
+> **⚠️ Reifegrad-Hinweis / Maturity note:** Teile dieser Anleitung sind aspirativ. Der verbindliche, tatsächlich implementierte Funktionsstand steht in [`docs/comparison.md`](../comparison.md) und im [README](../../README.md). **Minimal implementiert:** LSP — nur Diagnostics on-demand (Tool `lsp_diagnostics`) über einen konfigurierbaren Language-Server, bewusst ohne Auto-Management vieler Sprachen und ohne IDE-Bridge. **Nicht implementiert:** Desktop-App und IDE-Plugins (bewusst nicht geplant — UltraCode ist CLI/TUI). Einige Tool-/Command-Beispiele unten beschreiben geplante oder generische Konzepte. **Real:** 13 Built-in-Tools (plus beliebig viele über MCP), 6 eingebaute Agenten, 5 LLM-Provider (inkl. LM Studio via OpenAI-kompatiblem Endpoint). / Parts of this guide are aspirational; the authoritative implemented state is in `docs/comparison.md` and the README.
 
 ---
 
@@ -23,7 +23,7 @@ Diese Anleitung hilft dir, **nahtlos von Mistral Vibe zu UltraCode AI zu migrier
 | **Tools** | ~25 | 13 eingebaut + MCP | ✅ 13 Built-in-Tools plus beliebig viele über MCP-Server |
 | **Skills** | ✅ | ✅ (SKILL.md + Loader) | ✅ Kompatibles Format |
 | **MCP Support** | ✅ | ✅ | ✅ MCP-Client (stdio/http) |
-| **LSP Support** | ❌ | ❌ (geplant) | Noch nicht implementiert |
+| **LSP Support** | ❌ | ✅ minimal (Diagnostics) | on-demand `lsp_diagnostics` via konfigurierbaren Language-Server |
 | **AI-Versionierung** | ❌ | ✅ **UNIQUE** | ✅ UltraCode AI USP |
 | **Multi-Model** | ✅ | ✅ (Anthropic, OpenAI, Mistral, Ollama, OpenAI-kompatibel) | ✅ 5 Provider inkl. LM Studio |
 | **Konfiguration** | TOML | TOML | ✅ Kompatibel |
@@ -329,7 +329,7 @@ ultracode-ai --compat vibe
 | **Skills** | Python-basiert | TypeScript + Python | Beide unterstützt |
 | **Agenten** | Begrenzt | Vollständig | UltraCode AI-Agenten verwenden |
 | **Tools** | ~25 | 13 + MCP | 13 Built-in-Tools plus MCP-Server |
-| **LSP** | ❌ | ❌ (geplant) | Noch nicht implementiert |
+| **LSP** | ❌ | ✅ minimal (Diagnostics) | on-demand `lsp_diagnostics`, kein Auto-Management/keine IDE-Bridge |
 | **AI-Versionierung** | ❌ | ✅ | Neue Features nutzen |
 
 ---
