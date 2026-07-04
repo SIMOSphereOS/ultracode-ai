@@ -534,6 +534,68 @@ describe("UltraCode.create", () => {
       await ultra.dispose();
     }
   });
+
+  it("loads project-local skills and agents from <cwd>/.ultracode", async () => {
+    cwd = await fs.mkdtemp(path.join(os.tmpdir(), "uc-create-proj-"));
+    clearKey("ANTHROPIC_API_KEY");
+    clearKey("ULTRACODE_ANTHROPIC_API_KEY");
+
+    // A project-local agent: flat file, lightweight frontmatter, body = the
+    // agent's full system prompt.
+    const agentsDir = path.join(cwd, ".ultracode", "agents");
+    await fs.mkdir(agentsDir, { recursive: true });
+    await fs.writeFile(
+      path.join(agentsDir, "doc-curator.md"),
+      [
+        "---",
+        "name: doc-curator",
+        'description: "Keeps the project docs fresh"',
+        "---",
+        "",
+        "You are the project doc curator. Keep documentation bilingual and current.",
+      ].join("\n"),
+      "utf8",
+    );
+
+    // A project-local skill: nested <name>/SKILL.md, lightweight frontmatter.
+    const skillDir = path.join(cwd, ".ultracode", "skills", "release-management");
+    await fs.mkdir(skillDir, { recursive: true });
+    await fs.writeFile(
+      path.join(skillDir, "SKILL.md"),
+      [
+        "---",
+        "name: release-management",
+        'description: "Release rules"',
+        "triggers: [release]",
+        "---",
+        "",
+        "Follow SemVer for every release.",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const ultra = await UltraCode.create({
+      cwd,
+      logger: new NoopLogger(),
+      configOverrides: {
+        core: { activeProvider: "anthropic", defaultAgent: "default" },
+        sessions: { enablePersistence: false },
+      },
+    });
+
+    try {
+      const names = ultra.listAgents().map((a) => a.name);
+      // The project agent is registered beside the built-ins.
+      expect(names).toContain("doc-curator");
+      expect(names).toContain("security");
+      // It is a custom agent whose inline system prompt is its markdown body.
+      const def = ultra.getAgent("doc-curator").definition;
+      expect(def.type).toBe("custom");
+      expect(def.systemPrompt).toContain("project doc curator");
+    } finally {
+      await ultra.dispose();
+    }
+  });
 });
 
 /* ----------------------------------------------------------------------------

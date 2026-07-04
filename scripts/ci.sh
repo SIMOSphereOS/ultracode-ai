@@ -7,7 +7,7 @@
 # Nutzung:
 #   scripts/ci.sh [--fix] [--only "<steps>"] [--skip "<steps>"] [--dry-run]
 #
-#   Schritte (Reihenfolge): lint suppressions branding release typecheck build test e2e coverage audit
+#   Schritte (Reihenfolge): lint suppressions filesize branding release typecheck build test e2e coverage audit
 #
 #   --fix        Repair-Modus: 'lint' läuft als 'biome check --write' (formatiert +
 #                fixt), statt read-only 'biome ci'. Nur lokal sinnvoll; CI ist immer
@@ -21,7 +21,7 @@ set -uo pipefail
 
 cd "$(dirname "$0")/.."
 
-ALL_STEPS=(lint suppressions branding release typecheck build test e2e coverage audit)
+ALL_STEPS=(lint suppressions filesize branding release typecheck build test e2e coverage audit)
 FIX=0
 DRY=0
 ONLY=""
@@ -83,6 +83,7 @@ else
   run lint pnpm biome ci .
 fi
 run suppressions bash scripts/check-suppressions.sh
+run filesize bash scripts/check-file-size.sh
 run branding bash scripts/check-branding.sh
 run release bash scripts/release-check.sh
 run typecheck pnpm typecheck

@@ -1,8 +1,8 @@
 # UltraCode — Projekt-Hooks / Project Hooks
 
-**DE** · Projekt-lokale Hooks des UC-AI-Assistenten für den UltraCode-Dev-Workflow. Sie
-aktivieren sich automatisch, sobald der UC-AI-Assistent in diesem Repository läuft —
-registriert in [`.uc-ai/settings.json`](../settings.json).
+**DE** · Projekt-lokale Hooks des UltraCode-Assistenten für den UltraCode-Dev-Workflow. Sie
+aktivieren sich automatisch, sobald der UltraCode-Assistent in diesem Repository läuft —
+registriert in [`.ultracode/settings.json`](../settings.json).
 
 > **Echte Hooks:** Jeder Hook ist ein Shell-Command, der das Event-JSON auf **stdin**
 > empfängt und über den **Exit-Code** steuert. Das ist das tatsächliche Hook-Modell des
@@ -37,24 +37,24 @@ registriert in [`.uc-ai/settings.json`](../settings.json).
 
 - **Hook hart erzwingen:** In `verify-on-stop.sh` das abschließende `exit 0` im Fehlerzweig auf `exit 2` setzen — dann muss der Typecheck vor dem Beenden grün sein.
 - **Pfad-Schutz erweitern:** Weitere `case`-Muster in `protect-paths.sh` ergänzen.
-- **Hook deaktivieren:** Den jeweiligen Eintrag aus `.uc-ai/settings.json` entfernen.
+- **Hook deaktivieren:** Den jeweiligen Eintrag aus `.ultracode/settings.json` entfernen.
 
 ### Manuell testen
 
 ```bash
 # PreToolUse: destruktiver Befehl wird geblockt (Exit 2 erwartet)
-echo '{"tool_input":{"command":"rm -rf /"}}' | bash .uc-ai/hooks/guard-bash.sh; echo "exit=$?"
+echo '{"tool_input":{"command":"rm -rf /"}}' | bash .ultracode/hooks/guard-bash.sh; echo "exit=$?"
 
 # PreToolUse: Schreibschutz auf Lockfile (Exit 2 erwartet)
-echo '{"tool_input":{"file_path":"pnpm-lock.yaml"}}' | bash .uc-ai/hooks/protect-paths.sh; echo "exit=$?"
+echo '{"tool_input":{"file_path":"pnpm-lock.yaml"}}' | bash .ultracode/hooks/protect-paths.sh; echo "exit=$?"
 
 # SessionStart: Statusabriss
-echo '{}' | UC_AI_PROJECT_DIR="$PWD" bash .uc-ai/hooks/session-start.sh
+echo '{}' | ULTRACODE_PROJECT_DIR="$PWD" bash .ultracode/hooks/session-start.sh
 ```
 
 ### Hinweise
 
-- Der UC-AI-Assistent lädt Hooks beim **Session-Start**. Änderungen an `settings.json` oder den
+- Der UltraCode-Assistent lädt Hooks beim **Session-Start**. Änderungen an `settings.json` oder den
   Skripten greifen erst in einer **neuen Session** (oder nach `/config`-Reload).
 - Aus Sicherheitsgründen prüft der Assistent Hook-Änderungen: neue/veränderte Hooks werden
   erst nach Bestätigung im Review aktiv.
@@ -62,9 +62,9 @@ echo '{}' | UC_AI_PROJECT_DIR="$PWD" bash .uc-ai/hooks/session-start.sh
 
 ---
 
-**EN** · Project-local hooks of the UC-AI assistant for the UltraCode dev workflow. They
-activate automatically as soon as the UC-AI assistant runs in this repository — registered in
-[`.uc-ai/settings.json`](../settings.json).
+**EN** · Project-local hooks of the UltraCode assistant for the UltraCode dev workflow. They
+activate automatically as soon as the UltraCode assistant runs in this repository — registered in
+[`.ultracode/settings.json`](../settings.json).
 
 > **Real hooks:** each hook is a shell command that receives the event JSON on **stdin** and
 > steers via its **exit code**. This is the assistant's actual hook model — no imported TS
@@ -99,24 +99,24 @@ activate automatically as soon as the UC-AI assistant runs in this repository �
 
 - **Enforce a hook hard:** in `verify-on-stop.sh`, change the trailing `exit 0` in the failure branch to `exit 2` — then the typecheck must be green before stopping.
 - **Extend path protection:** add further `case` patterns in `protect-paths.sh`.
-- **Disable a hook:** remove the respective entry from `.uc-ai/settings.json`.
+- **Disable a hook:** remove the respective entry from `.ultracode/settings.json`.
 
 ### Testing manually
 
 ```bash
 # PreToolUse: destructive command is blocked (exit 2 expected)
-echo '{"tool_input":{"command":"rm -rf /"}}' | bash .uc-ai/hooks/guard-bash.sh; echo "exit=$?"
+echo '{"tool_input":{"command":"rm -rf /"}}' | bash .ultracode/hooks/guard-bash.sh; echo "exit=$?"
 
 # PreToolUse: write protection on the lockfile (exit 2 expected)
-echo '{"tool_input":{"file_path":"pnpm-lock.yaml"}}' | bash .uc-ai/hooks/protect-paths.sh; echo "exit=$?"
+echo '{"tool_input":{"file_path":"pnpm-lock.yaml"}}' | bash .ultracode/hooks/protect-paths.sh; echo "exit=$?"
 
 # SessionStart: status summary
-echo '{}' | UC_AI_PROJECT_DIR="$PWD" bash .uc-ai/hooks/session-start.sh
+echo '{}' | ULTRACODE_PROJECT_DIR="$PWD" bash .ultracode/hooks/session-start.sh
 ```
 
 ### Notes
 
-- The UC-AI assistant loads hooks at **session start**. Changes to `settings.json` or the
+- The UltraCode assistant loads hooks at **session start**. Changes to `settings.json` or the
   scripts only take effect in a **new session** (or after a `/config` reload).
 - For safety reasons the assistant reviews hook changes: new/modified hooks only become active
   after confirmation in the review.

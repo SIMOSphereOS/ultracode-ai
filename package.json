@@ -23,6 +23,7 @@
     "biome:ci": "biome ci .",
     "check:suppressions": "bash scripts/check-suppressions.sh",
     "check:branding": "bash scripts/check-branding.sh",
+    "check:filesize": "bash scripts/check-file-size.sh",
     "release:check": "bash scripts/release-check.sh",
     "release": "bash scripts/release.sh",
     "ci:local": "bash scripts/ci.sh",

@@ -5,7 +5,7 @@
 | **Status** | akzeptiert / accepted |
 | **Datum / Date** | 2026-07-03 |
 | **Entscheider / Deciders** | SIMO GmbH Engineering (ultracode-ai Maintainer) |
-| **Betroffene Bereiche / Affected areas** | `.uc-ai/skills/`, `.uc-ai/agents/`, `docs/decisions/`, `docs/lessons-learned/`, `docs/DEVELOPMENT/standards.md` |
+| **Betroffene Bereiche / Affected areas** | `.ultracode/skills/`, `.ultracode/agents/`, `docs/decisions/`, `docs/lessons-learned/`, `docs/DEVELOPMENT/standards.md` |
 
 ## Kontext / Context
 
@@ -15,7 +15,7 @@
 (`pnpm ci:local`) bekommen. Das Wissen darüber, *wie* hier entwickelt, getestet,
 released und dokumentiert wird, lag verstreut in Scripts, CI-Konfiguration und Köpfen —
 für KI-Agenten und neue Contributors nicht zuverlässig auffindbar. Betrachtete
-Alternativen: (a) alles in ein einzelnes großes `UC-AI.md` — skaliert nicht, lädt immer
+Alternativen: (a) alles in ein einzelnes großes `ULTRACODE.md` — skaliert nicht, lädt immer
 alles; (b) nur externe Wiki-Doku — driftet vom Code weg und steuert keine Agenten.
 **EN:** In quick succession the repo gained a complete release system (`VERSION`,
 `.release.json`, bilingual `CHANGELOG.md`, `VERSIONING.md`, CI job
@@ -23,22 +23,22 @@ alles; (b) nur externe Wiki-Doku — driftet vom Code weg und steuert keine Agen
 (`pnpm ci:local`). The knowledge of *how* to develop, test, release and document here
 was scattered across scripts, CI configuration and people's heads — not reliably
 discoverable for AI agents or new contributors. Alternatives considered: (a) everything
-in one large `UC-AI.md` — does not scale, always loads everything; (b) external wiki
+in one large `ULTRACODE.md` — does not scale, always loads everything; (b) external wiki
 docs only — drift away from the code and cannot steer agents.
 
 ## Entscheidung / Decision
 
 **DE:** Wir führen fünf repo-spezifische Entwicklungsstandards als Skills unter
-`.uc-ai/skills/` ein — `clean-code`, `release-management`, `test-management`,
+`.ultracode/skills/` ein — `clean-code`, `release-management`, `test-management`,
 `dev-workflow`, `documentation-management` — sowie fünf Projekt-Agenten unter
-`.uc-ai/agents/` — `code-quality-reviewer`, `release-manager`, `test-engineer`,
+`.ultracode/agents/` — `code-quality-reviewer`, `release-manager`, `test-engineer`,
 `doc-curator`, `dev-orchestrator`. Ergänzend etablieren wir `docs/decisions/` (ADRs)
 und `docs/lessons-learned/` als verbindliche Wissensablagen; die Übersicht liegt in
 `docs/DEVELOPMENT/standards.md`.
 **EN:** We introduce five repo-specific development standards as skills under
-`.uc-ai/skills/` — `clean-code`, `release-management`, `test-management`,
+`.ultracode/skills/` — `clean-code`, `release-management`, `test-management`,
 `dev-workflow`, `documentation-management` — plus five project agents under
-`.uc-ai/agents/` — `code-quality-reviewer`, `release-manager`, `test-engineer`,
+`.ultracode/agents/` — `code-quality-reviewer`, `release-manager`, `test-engineer`,
 `doc-curator`, `dev-orchestrator`. In addition we establish `docs/decisions/` (ADRs)
 and `docs/lessons-learned/` as mandatory knowledge stores; the overview lives in
 `docs/DEVELOPMENT/standards.md`.

@@ -32,12 +32,13 @@ rationale here instead of digging through git history and chat logs.
    [`VERSIONING.md`](../../VERSIONING.md)).
 
 **DE:** Details und Doku-Pflichten: Skill `documentation-management`
-(`.uc-ai/skills/documentation-management/SKILL.md`); Review durch Agent `doc-curator`.
+(`.ultracode/skills/documentation-management/SKILL.md`); Review durch Agent `doc-curator`.
 **EN:** Details and documentation duties: skill `documentation-management`
-(`.uc-ai/skills/documentation-management/SKILL.md`); reviewed by the `doc-curator` agent.
+(`.ultracode/skills/documentation-management/SKILL.md`); reviewed by the `doc-curator` agent.
 
 ## Index
 
 | Nr. | ADR | Status | Datum / Date |
 |---|---|---|---|
 | 0001 | [Einführung der SIMO-Entwicklungsstandards und Projekt-Agenten / Adoption of the SIMO development standards and project agents](./0001-simo-dev-standards.md) | akzeptiert / accepted | 2026-07-03 |
+| 0002 | [Projektlokaler Laufzeit-Loader für Skills und Agenten / Project-local runtime loader for skills and agents](./0002-project-local-assistant-loader.md) | akzeptiert / accepted | 2026-07-04 |

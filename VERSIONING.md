@@ -5,8 +5,8 @@
 > Kein Release ohne Version, kein Version-Bump ohne CHANGELOG, kein CHANGELOG ohne Inhalt.
 
 Die Schritt-für-Schritt-Prozessanleitung zu dieser Policy liefert der Projekt-Skill
-[`release-management`](./.uc-ai/skills/release-management/SKILL.md); der Agent
-[`release-manager`](./.uc-ai/agents/release-manager.md) führt Prüfung und Bump aus. /
+[`release-management`](./.ultracode/skills/release-management/SKILL.md); der Agent
+[`release-manager`](./.ultracode/agents/release-manager.md) führt Prüfung und Bump aus. /
 The step-by-step process guide for this policy is the project skill
 `release-management`; the `release-manager` agent runs the check and the bump.
 

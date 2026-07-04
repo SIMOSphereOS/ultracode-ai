@@ -131,6 +131,28 @@ describe("AgentManager registry", () => {
     );
   });
 
+  it("uses an inline definition.systemPrompt verbatim (project-local agents)", async () => {
+    const { manager, provider } = makeManager();
+    manager.register({
+      name: "proj-agent",
+      description: "project-local agent",
+      type: "custom",
+      systemPrompt: "PROJECT INLINE SYSTEM PROMPT BODY",
+    });
+    await manager.get("proj-agent").run({ prompt: "go" });
+    const sys = provider.requests[0]?.messages[0];
+    expect(sys?.role).toBe("system");
+    expect(sys?.content).toBe("PROJECT INLINE SYSTEM PROMPT BODY");
+  });
+
+  it("still resolves the embedded prompt when no inline systemPrompt is present", async () => {
+    const { manager, provider } = makeManager();
+    await manager.get("review").run({ prompt: "check this" });
+    const sys = provider.requests[0]?.messages[0];
+    expect(sys?.role).toBe("system");
+    expect(sys?.content).toContain("code-review mode");
+  });
+
   it("creates custom definitions for config-only agents", () => {
     const config = makeConfig((c) => {
       c.agents.agents["mybot"] = { disabledTools: ["grep"] };

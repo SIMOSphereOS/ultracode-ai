@@ -98,12 +98,12 @@ if [ -n "$violations" ]; then
     echo "  Branding-Direktive (Stufe 1): UltraCode ist vollständig unabhängig von Claude/Claude Code."
     echo "  Erlaubt ist AUSSCHLIESSLICH der LLM-Provider-Kontext (AnthropicProvider, claude-*-Modell-IDs,"
     echo "  Preis-/Cache-/Kontextfenster-Daten) in den Allowlist-Pfaden dieses Scripts."
-    echo "  → Erwähnung entfernen oder auf UC-AI bzw. produktneutral (\"AI coding assistants\") umformulieren;"
+    echo "  → Erwähnung entfernen oder auf UltraCode bzw. produktneutral (\"AI coding assistants\") umformulieren;"
     echo "    echten Provider-Kontext ggf. mit Begründung in der Allowlist oben freigeben."
     echo "  Branding directive (level 1): UltraCode is fully independent of Claude/Claude Code."
     echo "  ONLY the LLM provider context (AnthropicProvider, claude-* model ids, price/cache/context-window"
     echo "  data) inside this script's allowlisted paths is permitted."
-    echo "  → Remove the mention or rephrase to UC-AI / product-neutral wording (\"AI coding assistants\");"
+    echo "  → Remove the mention or rephrase to UltraCode / product-neutral wording (\"AI coding assistants\");"
     echo "    genuine provider context may be allowlisted above with a justification."
   } >&2
   exit 1

@@ -87,15 +87,15 @@ Release-Regeln stehen in [`VERSIONING.md`](./VERSIONING.md).
 ## Development Standards & Agents
 
 **DE:** Dieses Repo hat fünf verbindliche Entwicklungsstandards als Projekt-Skills
-(`.uc-ai/skills/`: `clean-code`, `release-management`, `test-management`,
+(`.ultracode/skills/`: `clean-code`, `release-management`, `test-management`,
 `dev-workflow`, `documentation-management`) und fünf Entwicklungs-Agenten
-(`.uc-ai/agents/`). Leitdokument für Coding-Agenten: [`UC-AI.md`](./UC-AI.md);
+(`.ultracode/agents/`). Leitdokument für Coding-Agenten: [`ULTRACODE.md`](./ULTRACODE.md);
 Überblick über Standards, Agenten und Quality Gates:
 [`docs/DEVELOPMENT/standards.md`](./docs/DEVELOPMENT/standards.md).
 **EN:** This repo ships five binding development standards as project skills
-(`.uc-ai/skills/`: `clean-code`, `release-management`, `test-management`,
+(`.ultracode/skills/`: `clean-code`, `release-management`, `test-management`,
 `dev-workflow`, `documentation-management`) and five development agents
-(`.uc-ai/agents/`). Guide for coding agents: [`UC-AI.md`](./UC-AI.md);
+(`.ultracode/agents/`). Guide for coding agents: [`ULTRACODE.md`](./ULTRACODE.md);
 overview of standards, agents and quality gates:
 [`docs/DEVELOPMENT/standards.md`](./docs/DEVELOPMENT/standards.md).
 

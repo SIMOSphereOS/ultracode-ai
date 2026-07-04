@@ -204,6 +204,27 @@ function findSession(id: string): Result<Session, SessionNotFoundError> {
 
 ---
 
+## Datei-Größen-Budget / File-size budget
+
+**DE:** Große Dateien sind ein Sammelbecken für Code Smells (siehe **Large Class** und **Long Method** in der Tabelle oben). Zeilenzahl ist die einfachste messbare Bremse dagegen. Für Quelldateien unter `packages/*/src/**/*.ts` gilt dieses Budget:
+**EN:** Large files are a collecting basin for code smells (see **Large Class** and **Long Method** in the table above). Line count is the simplest measurable guard against them. For source files under `packages/*/src/**/*.ts` this budget applies:
+
+| Schwelle / Threshold | Zeilen / Lines | Bedeutung / Meaning |
+|----------------------|----------------|---------------------|
+| Ziel / Target | < 400 | Anzustreben — eine Datei, eine klare Verantwortung / aim here — one file, one clear responsibility |
+| Warnung / Warning | ab / from 800 | Nicht-fataler Hinweis, Refactoring einplanen / non-fatal warning, plan a refactoring |
+| Harte Grenze / Hard limit | > 1000 | Verstoß — Gate schlägt fehl / violation — the gate fails |
+
+**DE:** Verstöße werden nicht per Ausnahme unterdrückt, sondern behoben: eine Datei mit mehreren Verantwortungen über **Extract Class** aufteilen (SRP), überlange Funktionen über **Extract Method** zerlegen — genau die Gegenmittel aus der Code-Smells-Tabelle oben (**Large Class**, **Long Method**).
+**EN:** Violations are not suppressed by exception — they are fixed: split a file with multiple responsibilities via **Extract Class** (SRP) and break overlong functions apart via **Extract Method** — exactly the remedies from the code-smells table above (**Large Class**, **Long Method**).
+
+**Gate:** `pnpm check:filesize` (Script `scripts/check-file-size.sh`, CI-Job **`file_size`** in Stage `test`). Exit 0 = ok, Exit 1 = Verstoß; beide Schwellen sind per Env-Var überschreibbar (`MAX_LINES` Default 1000, `WARN_LINES` Default 800). / `pnpm check:filesize` (script `scripts/check-file-size.sh`, CI job **`file_size`** in stage `test`). Exit 0 = ok, exit 1 = violation; both thresholds are overridable via env vars (`MAX_LINES` default 1000, `WARN_LINES` default 800).
+
+**DE — Aktuelle Kandidaten:** Die größten Quelldateien liegen bereits im Warnbereich und sind vorrangige Refactoring-Kandidaten: `packages/core/src/budget/BudgetPlanner.ts` (~941 Zeilen), `UltraCode.ts` (~846) und `Authoring.ts` (~818). Alle drei sind gegenüber der harten Grenze (1000) noch grün, aber nahe genug, um sie vor dem nächsten Feature aufzuteilen.
+**EN — Current candidates:** The largest source files already sit in the warning band and are priority refactoring candidates: `packages/core/src/budget/BudgetPlanner.ts` (~941 lines), `UltraCode.ts` (~846), and `Authoring.ts` (~818). All three still pass against the hard limit (1000) but are close enough to split before the next feature lands.
+
+---
+
 ## Architektur: Die Dependency Rule dieses Repos / This Repo's Dependency Rule
 
 **DE:** Statt generischer Clean-Architecture-Ringe gilt hier die konkrete Monorepo-Regel. Abhängigkeiten zeigen ausschließlich in eine Richtung:
@@ -328,9 +349,10 @@ const theme = config?.ui?.theme ?? "default";
 | Biome Lint + Format | `pnpm lint` (Fix: `pnpm lint:fix`) | Lint-Regeln und Formatierung / lint rules and formatting | `lint` |
 | Suppression-Gate | `pnpm check:suppressions` (`scripts/check-suppressions.sh`) | `@ts-ignore`/`@ts-nocheck` überall verboten; `@ts-expect-error` in `packages/*/src` (Produktions-Code) verboten, in `*.test.*` erlaubt / `@ts-ignore`/`@ts-nocheck` banned everywhere; `@ts-expect-error` banned in production source, allowed in tests | `suppressions` |
 | Typecheck | `pnpm typecheck` (`tsc -b`) | Typen + Dependency-Richtung shared → core → cli / types + dependency direction | `typecheck` |
+| Datei-Größen-Gate / File-size gate | `pnpm check:filesize` (`scripts/check-file-size.sh`) | Quelldateien ≤ 1000 Zeilen, Warnung ab 800 (siehe Datei-Größen-Budget oben) / source files ≤ 1000 lines, warning from 800 (see file-size budget above) | `file_size` |
 | Pre-Commit | automatisch via husky + lint-staged | `biome check --write` auf gestagten Dateien / on staged files | — |
 | Lokaler CI-Spiegel / local CI mirror | `pnpm ci:local` (`scripts/ci.sh`) | Alle Gates vor dem Push / all gates before pushing | — |
-| Agent-Review | Agent `code-quality-reviewer` (`.uc-ai/agents/code-quality-reviewer.md`) | Review gegen die Checkliste unten / review against the checklist below | — |
+| Agent-Review | Agent `code-quality-reviewer` (`.ultracode/agents/code-quality-reviewer.md`) | Review gegen die Checkliste unten / review against the checklist below | — |
 
 ---
 

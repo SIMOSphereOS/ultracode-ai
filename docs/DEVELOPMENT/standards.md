@@ -9,14 +9,14 @@ and five project agents, plus the quality gates they enforce. Foundation:
 
 > **DE:** Nicht verwechseln: [`agents-reference.md`](./agents-reference.md) beschreibt die
 > **Produkt-Agenten des UltraCode-Tools selbst**. Diese Seite beschreibt die Agenten für
-> die **Entwicklung dieses Repos** (`.uc-ai/agents/`).
+> die **Entwicklung dieses Repos** (`.ultracode/agents/`).
 > **EN:** Do not confuse: [`agents-reference.md`](./agents-reference.md) describes the
 > **product agents of the UltraCode tool itself**. This page describes the agents for
-> **developing this repo** (`.uc-ai/agents/`).
+> **developing this repo** (`.ultracode/agents/`).
 
 ---
 
-## Skills (`.uc-ai/skills/`)
+## Skills (`.ultracode/skills/`)
 
 | Skill | Zweck / Purpose | Greift bei / Applies when |
 |---|---|---|
@@ -28,7 +28,7 @@ and five project agents, plus the quality gates they enforce. Foundation:
 
 ---
 
-## Agenten / Agents (`.uc-ai/agents/`)
+## Agenten / Agents (`.ultracode/agents/`)
 
 | Agent | Zweck / Purpose | Greift bei / Applies when |
 |---|---|---|
@@ -37,6 +37,27 @@ and five project agents, plus the quality gates they enforce. Foundation:
 | `test-engineer` | **DE:** Entwirft und härtet Tests (unit/e2e), schließt Coverage-Lücken, baut Regressionstests aus Lessons Learned — wendet Skill `test-management` an. **EN:** Designs and hardens tests (unit/e2e), closes coverage gaps, builds regression tests from lessons learned — applies the `test-management` skill. | **DE:** Neue Features ohne Tests, flakige Tests, `unit_tests`/`e2e_tests` rot. **EN:** New untested features, flaky tests, red `unit_tests`/`e2e_tests`. |
 | `doc-curator` | **DE:** Reviewt Doku auf tote Links, veraltete Beispiele, fehlende Index-Einträge und Zweisprachigkeit — wendet Skill `documentation-management` an. **EN:** Reviews docs for dead links, stale samples, missing index entries and bilingualism — applies the `documentation-management` skill. | **DE:** Doku-lastige MRs, neue ADRs/Lessons, Release-Notes. **EN:** Docs-heavy MRs, new ADRs/lessons, release notes. |
 | `dev-orchestrator` | **DE:** Zerlegt größere Aufträge, plant die passenden Agenten ein (inkl. Doku-Pflichten) und konsolidiert Ergebnisse — wendet Skill `dev-workflow` an. **EN:** Decomposes larger tasks, schedules the right agents (incl. docs duties) and consolidates results — applies the `dev-workflow` skill. | **DE:** Mehrschrittige Vorhaben über mehrere Packages oder Standards hinweg. **EN:** Multi-step efforts spanning packages or standards. |
+
+---
+
+## Laufzeit-Loader / Runtime Loader
+
+**DE:** Die obigen Skills und Agenten sind **laufzeit-aktiv, nicht nur Doku**: UltraCode lädt
+sie beim Start aus dem projektlokalen Store `<cwd>/.ultracode/` — Skills aus
+`.ultracode/skills/<name>/SKILL.md`, Agenten aus `.ultracode/agents/<name>.md`. Der
+projektlokale Store hat **Vorrang vor dem Home-Store** `~/.ultracode/`; leichtgewichtiges
+Frontmatter (`name` + `description`, optional `triggers`) wird per Adapter mit Defaults auf
+das volle Format gehoben, ein Agenten-Body landet als additiver `systemPrompt` in der
+Agentendefinition. **Hooks werden bewusst nicht geladen** (kein Produkt-Hook-Runtime).
+Details und Begründung: [ADR 0002](../decisions/0002-project-local-assistant-loader.md).
+**EN:** The skills and agents above are **runtime-active, not just docs**: UltraCode loads
+them at startup from the project-local store `<cwd>/.ultracode/` — skills from
+`.ultracode/skills/<name>/SKILL.md`, agents from `.ultracode/agents/<name>.md`. The
+project-local store **takes precedence over the home store** `~/.ultracode/`; lightweight
+frontmatter (`name` + `description`, optional `triggers`) is lifted to the full format via an
+adapter with defaults, and an agent body is adopted as an additive `systemPrompt` on the
+agent definition. **Hooks are deliberately not loaded** (no product hook runtime). Details
+and rationale: [ADR 0002](../decisions/0002-project-local-assistant-loader.md).
 
 ---
 

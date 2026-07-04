@@ -41,11 +41,11 @@ matching documentation duty (see table below).
 
 > **Achtung / Caution:** `docs/DEVELOPMENT/agents-reference.md` dokumentiert die
 > **Produkt-Agenten des UltraCode-Tools selbst** — nicht verwechseln mit den
-> Repo-Entwicklungs-Agenten unter `.uc-ai/agents/` (dokumentiert in
+> Repo-Entwicklungs-Agenten unter `.ultracode/agents/` (dokumentiert in
 > `docs/DEVELOPMENT/standards.md`). /
 > `docs/DEVELOPMENT/agents-reference.md` documents the **product agents of the
 > UltraCode tool itself** — do not confuse them with the repo development agents
-> under `.uc-ai/agents/` (documented in `docs/DEVELOPMENT/standards.md`).
+> under `.ultracode/agents/` (documented in `docs/DEVELOPMENT/standards.md`).
 
 ---
 
@@ -145,9 +145,9 @@ the same commit.
 ## 6. Qualitätsregeln / Quality Rules
 
 **DE:** Diese Regeln prüft der Agent `code-quality-reviewer` mit, die Doku-Tiefe prüft
-der Agent `doc-curator` (`.uc-ai/agents/doc-curator.md`).
+der Agent `doc-curator` (`.ultracode/agents/doc-curator.md`).
 **EN:** These rules are co-checked by the `code-quality-reviewer` agent; documentation
-depth is reviewed by the `doc-curator` agent (`.uc-ai/agents/doc-curator.md`).
+depth is reviewed by the `doc-curator` agent (`.ultracode/agents/doc-curator.md`).
 
 - **Keine toten Links / No dead links:** relative Links müssen auf existierende Dateien
   zeigen. Schnelltest / quick check:

@@ -170,6 +170,45 @@ describe("createSkillInjector", () => {
     expect(skip?.ctx).toMatchObject({ skill: "tainted" });
   });
 
+  it("injects extraSkills (project-local) alongside the registry's skills", async () => {
+    const reg = new SkillRegistry(home);
+    await seed(reg, [makeSkill()]); // home skill triggers on "dora"
+    const projectSkill = makeSkill({
+      name: "proj-skill",
+      catalog: "project",
+      triggers: ["widget"],
+      body: "PROJECT WIDGET GUIDANCE",
+    });
+    const inject = createSkillInjector(reg, { extraSkills: [projectSkill] });
+
+    // The project skill matches its own trigger and is injected.
+    const out = await inject("please configure the widget now");
+    expect(out).toContain(SKILL_CONTEXT_HEADER);
+    expect(out).toContain("proj-skill");
+    expect(out).toContain("PROJECT WIDGET GUIDANCE");
+
+    // The home skill still works too.
+    expect(await inject("How do we handle DORA reporting?")).toContain("dora-compliance");
+  });
+
+  it("gives an extraSkills entry precedence over a same-named registry skill", async () => {
+    const reg = new SkillRegistry(home);
+    await seed(reg, [
+      makeSkill({ name: "shared", triggers: ["dora"], body: "This is the HOME variant body." }),
+    ]);
+    const projectSkill = makeSkill({
+      name: "shared",
+      catalog: "project",
+      triggers: ["dora"],
+      body: "This is the PROJECT variant body.",
+    });
+    const inject = createSkillInjector(reg, { extraSkills: [projectSkill] });
+    const out = await inject("a question about dora");
+
+    expect(out).toContain("This is the PROJECT variant body.");
+    expect(out).not.toContain("This is the HOME variant body.");
+  });
+
   it("returns '' when the only matching active skill is unsafe", async () => {
     const reg = new SkillRegistry(home);
     await seed(reg, [

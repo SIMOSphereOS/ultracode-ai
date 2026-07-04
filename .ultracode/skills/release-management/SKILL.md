@@ -14,7 +14,7 @@ description: "DE: Verbindlicher Release-Prozess für ultracode-ai — SemVer-Ent
 - **Reads / Liest:** `VERSION`, `.release.json`, `CHANGELOG.md`, `VERSIONING.md`, Git-History, `.gitlab-ci.yml`
 - **Writes / Schreibt:** `VERSION`, `.release.json`, `package.json` ×4, `CHANGELOG.md`, `UPGRADE.md` (nur bei Major / major only), Git-Tags `vX.Y.Z`
 - **Done when / Fertig wenn:** `pnpm release:check` grün, CI-Pipeline grün, `v*`-Tag gepusht, npm-Publish erfolgreich
-- **Agent:** Der Agent **`release-manager`** (`.uc-ai/agents/release-manager.md`) führt diesen Prozess autonom aus / The **`release-manager`** agent executes this process autonomously
+- **Agent:** Der Agent **`release-manager`** (`.ultracode/agents/release-manager.md`) führt diesen Prozess autonom aus / The **`release-manager`** agent executes this process autonomously
 
 ---
 
