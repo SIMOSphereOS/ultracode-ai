@@ -83,6 +83,7 @@ export type {
   GitConfig,
   GitProtectionConfig,
   LocalProviderConfig,
+  LspServerConfig,
   McpServerConfig,
   McpTransport,
   PerToolConfig,

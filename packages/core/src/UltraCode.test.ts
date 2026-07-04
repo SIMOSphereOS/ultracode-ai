@@ -634,6 +634,63 @@ describe("UltraCode.create", () => {
     }
   });
 
+  // LSP: the on-demand `lsp_diagnostics` tool is registered into the shared
+  // registry only when at least one language server is configured. It is not
+  // spawned at bootstrap (only on first use), so a nonexistent command is safe.
+  it("registers the lsp_diagnostics tool when a language server is configured", async () => {
+    cwd = await fs.mkdtemp(path.join(os.tmpdir(), "uc-create-lsp-"));
+    clearKey("ANTHROPIC_API_KEY");
+    clearKey("ULTRACODE_ANTHROPIC_API_KEY");
+
+    const ultra = await UltraCode.create({
+      cwd,
+      logger: new NoopLogger(),
+      configOverrides: {
+        core: { activeProvider: "anthropic", defaultAgent: "default" },
+        sessions: { enablePersistence: false },
+        lspServers: [
+          {
+            name: "ts",
+            command: "ultracode-nonexistent-lsp-binary-xyz",
+            args: ["--stdio"],
+            languages: ["ts", "tsx"],
+          },
+        ],
+      },
+    });
+
+    try {
+      const tools = ultra.listTools().map((t) => t.name);
+      expect(tools).toContain("lsp_diagnostics");
+    } finally {
+      // dispose() must tolerate the (never-connected) LSP tool registered as a
+      // disposable during create().
+      await expect(ultra.dispose()).resolves.toBeUndefined();
+    }
+  });
+
+  it("does not register the lsp_diagnostics tool when no language server is configured", async () => {
+    cwd = await fs.mkdtemp(path.join(os.tmpdir(), "uc-create-nolsp-"));
+    clearKey("ANTHROPIC_API_KEY");
+    clearKey("ULTRACODE_ANTHROPIC_API_KEY");
+
+    const ultra = await UltraCode.create({
+      cwd,
+      logger: new NoopLogger(),
+      configOverrides: {
+        core: { activeProvider: "anthropic", defaultAgent: "default" },
+        sessions: { enablePersistence: false },
+      },
+    });
+
+    try {
+      const tools = ultra.listTools().map((t) => t.name);
+      expect(tools).not.toContain("lsp_diagnostics");
+    } finally {
+      await ultra.dispose();
+    }
+  });
+
   it("a key-less custom provider passes the missing-key pre-flight (no API-key error)", async () => {
     cwd = await fs.mkdtemp(path.join(os.tmpdir(), "uc-create-custom-nokey-"));
     // Custom id, no API key AND no base URL configured. ensureProviderReady must

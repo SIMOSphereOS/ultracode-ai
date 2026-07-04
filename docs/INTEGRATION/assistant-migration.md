@@ -2,7 +2,7 @@
 
 > **Komplette Anleitung für die Migration von anderen AI-Coding-Assistenten zu UltraCode AI**
 
-> **⚠️ Reifegrad-Hinweis / Maturity note:** Teile dieser Anleitung sind aspirativ. Der verbindliche, tatsächlich implementierte Funktionsstand steht in [`docs/comparison.md`](../comparison.md) und im [README](../../README.md). **Nicht implementiert:** LSP (geplant), Desktop-App und IDE-Plugins (bewusst nicht geplant — UltraCode ist CLI/TUI); manche unten gezeigten Tools/Commands (z. B. `lsp_*`, `web_search`, `packages/desktop`, `packages/ide`) sind generische bzw. geplante Konzepte, keine implementierten Features. **Real:** 13 Built-in-Tools (plus beliebig viele über MCP), 6 eingebaute Agenten, 5 LLM-Provider (inkl. LM Studio via OpenAI-kompatiblem Endpoint). / Parts of this guide are aspirational; the authoritative implemented state is in `docs/comparison.md` and the README.
+> **⚠️ Reifegrad-Hinweis / Maturity note:** Teile dieser Anleitung sind aspirativ. Der verbindliche, tatsächlich implementierte Funktionsstand steht in [`docs/comparison.md`](../comparison.md) und im [README](../../README.md). **Minimal implementiert:** LSP — nur Diagnostics on-demand (Tool `lsp_diagnostics`) über einen konfigurierbaren Language-Server, bewusst ohne Auto-Management vieler Sprachen und ohne IDE-Bridge. **Nicht implementiert:** Desktop-App und IDE-Plugins (bewusst nicht geplant — UltraCode ist CLI/TUI); manche unten gezeigten Tools/Commands (z. B. `web_search`, `packages/desktop`, `packages/ide`) sind generische bzw. geplante Konzepte, keine implementierten Features. **Real:** 13 Built-in-Tools (plus beliebig viele über MCP), 6 eingebaute Agenten, 5 LLM-Provider (inkl. LM Studio via OpenAI-kompatiblem Endpoint). / Parts of this guide are aspirational; the authoritative implemented state is in `docs/comparison.md` and the README.
 
 ---
 
@@ -23,7 +23,7 @@ Diese Anleitung hilft dir, **von deinem bisherigen CLI-Assistenten zu UltraCode 
 | **Tools** | ~25–40 | 13 eingebaut + MCP | ✅ 13 Built-in-Tools plus beliebig viele über MCP |
 | **Commands** | ~30–50 | Kern-Kommandos | ⚠️ CLI-Kommandos (run/config/skills/versioning …) |
 | **MCP Support** | teils | ✅ | ✅ MCP-Client (stdio/http) |
-| **LSP Support** | teils | ❌ (geplant) | Noch nicht implementiert |
+| **LSP Support** | teils | ✅ minimal (Diagnostics) | on-demand `lsp_diagnostics` via konfigurierbaren Language-Server |
 | **Bridge System** | teils (VS Code/JB) | ❌ (nicht geplant) | UltraCode bleibt CLI/TUI |
 | **AI-Versionierung** | ❌ | ✅ **UNIQUE** | ✅ UltraCode AI USP |
 | **Multi-Model** | oft ❌ (nur ein Anbieter) | ✅ (Anthropic, OpenAI, Mistral, Ollama, OpenAI-kompatibel) | ✅ **Hauptvorteil!** 5 Provider inkl. LM Studio |
@@ -116,7 +116,7 @@ echo "OPENAI_API_KEY=sk-..." >> ~/.ultracode/.env
 | Subagent-/Task-Tool | `task` | ✅ Verbessert (Subagents) |
 | Skill-Tool | `skill` | ✅ Identisches Konzept |
 | MCP-Tools | `mcp_*` | ✅ Erweitert |
-| LSP-Tools | `lsp_*` | ❌ In UltraCode noch nicht implementiert (geplant) |
+| LSP-Diagnostics | `lsp_diagnostics` | ✅ minimal (on-demand via konfigurierbaren Language-Server; kein Auto-Management/keine IDE-Bridge) |
 | Nachrichten an Agenten | `send_message` | ✅ Neu in UltraCode AI |
 | Git-Tools | `git_*` | ✅ Erweitert |
 
@@ -220,25 +220,26 @@ args = ["mcp-server-fetch"]
 
 ---
 
-### Phase 6: LSP-Integration migrieren
+### Phase 6: LSP-Diagnostics einrichten (IDE-Bridge nicht geplant)
 
-UltraCode AI ist bewusst CLI/TUI-fokussiert: eine LSP-/IDE-Bridge ist **noch nicht implementiert** (LSP ist geplant, Desktop/IDE nicht):
+UltraCode AI ist bewusst CLI/TUI-fokussiert. **LSP ist minimal vorhanden**: on-demand-Diagnostics über einen konfigurierbaren Language-Server (Tool `lsp_diagnostics`) — bewusst ohne Auto-Management vieler Sprachen und ohne IDE-Bridge. Registriere **einen** Language-Server pro Eintrag:
+
+```toml
+# ~/.ultracode/config.toml
+[[lsp_servers]]
+name = "typescript"
+command = "typescript-language-server"
+args = ["--stdio"]
+languages = ["ts", "tsx", "js", "jsx"]
+```
+
+Danach liefert `lsp_diagnostics` Fehler/Warnungen/Hinweise für eine Datei on-demand; ist kein passender Server konfiguriert oder schlägt der Start fehl, kommt defensiv ein leeres Ergebnis mit Hinweis zurück (kein Session-Crash).
+
+Eine **IDE-Anbindung** ist dagegen **nicht geplant** (UltraCode bleibt CLI/TUI):
 
 - VS Code Extension
 - JetBrains Plugin
 - Neovim Integration
-
-**Einrichtung:**
-```bash
-# VS Code
-code --install-extension ultracode.vscode
-
-# JetBrains
-# UltraCode AI Plugin installieren
-
-# Neovim
-# UltraCode AI Neovim Plugin installieren
-```
 
 ---
 

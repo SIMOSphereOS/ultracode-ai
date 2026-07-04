@@ -85,6 +85,18 @@ export const MCP_SERVER_SPEC: ObjectSpec = {
   },
 };
 
+/** Spec of a single `[[lsp_servers]]` entry. */
+export const LSP_SERVER_SPEC: ObjectSpec = {
+  kind: "object",
+  keys: {
+    name: value,
+    command: value,
+    args: value,
+    languages: value,
+    rootUri: value,
+  },
+};
+
 /**
  * The full configuration tree in camelCase. Mirrors `UltraCodeConfig` from
  * `ultracode-shared`, plus the in-memory-only `providers.apiKeys` record.
@@ -199,6 +211,7 @@ export const CONFIG_SPEC: ObjectSpec = {
       },
     },
     mcpServers: { kind: "arrayOfObjects", item: MCP_SERVER_SPEC },
+    lspServers: { kind: "arrayOfObjects", item: LSP_SERVER_SPEC },
   },
 };
 

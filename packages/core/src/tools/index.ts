@@ -38,6 +38,13 @@ export {
   matchGlob,
 } from "./builtin/globMatch.js";
 export type {
+  LspDiagnosticsOutput,
+  LspDiagnosticsSummary,
+  LspDiagnosticsToolOptions,
+  LspDiagnosticView,
+} from "./builtin/LspDiagnosticsTool.js";
+export { LspDiagnosticsTool, matchLspServer } from "./builtin/LspDiagnosticsTool.js";
+export type {
   DependenciesOutput,
   DependencyEntry,
   ManifestKind,

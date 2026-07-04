@@ -584,6 +584,25 @@ export class UltraCode {
       disposables.push(() => mcp.dispose());
     }
 
+    // Language Server Protocol: register a single, on-demand `lsp_diagnostics`
+    // tool backed by the configured language servers. It lazily spawns (and
+    // reuses) one server per language on first use, opens a file and returns the
+    // diagnostics the server publishes. Registered into the SAME registry as the
+    // built-ins. Skipped entirely when none is configured (no overhead), and its
+    // live connections are torn down on `UltraCode.dispose()`.
+    if (config.lspServers.length > 0) {
+      const lspTool = new toolsModule.LspDiagnosticsTool({
+        servers: config.lspServers,
+        logger,
+        env: options.env ?? (process.env as Readonly<Record<string, string | undefined>>),
+      });
+      if (!registry.has(lspTool.definition.name)) {
+        registry.register(lspTool);
+        disposables.push(() => lspTool.dispose());
+        logger.debug("LSP diagnostics tool registered", { servers: config.lspServers.length });
+      }
+    }
+
     const memoryModule = await import("./memory/index.js");
     const sessions = await memoryModule.createSessionStore(config, logger);
 

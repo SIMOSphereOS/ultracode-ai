@@ -135,6 +135,10 @@ export function tomlToOverlay(raw: Record<string, unknown>, warn: WarnFn): Confi
       doc["mcpServers"] = valueIn;
       continue;
     }
+    if (sectionKey === "lsp_servers") {
+      doc["lspServers"] = valueIn;
+      continue;
+    }
     // The documentation uses `[session.compaction]` while the contract section
     // is `[sessions]` — accept the singular form as an alias.
     if (sectionKey === "session" && isPlainObject(valueIn)) {
