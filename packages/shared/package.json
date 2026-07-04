@@ -1,6 +1,6 @@
 {
   "name": "ultracode-shared",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "type": "module",
   "license": "MIT",
   "description": "Shared types, contracts, errors and utilities for UltraCode",
@@ -22,12 +22,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.simo-online.com/simo/ultracode-ai.git",
+    "url": "git+https://github.com/SIMOSphereOS/ultracode-ai.git",
     "directory": "packages/shared"
   },
-  "homepage": "https://gitlab.simo-online.com/simo/ultracode-ai#readme",
+  "homepage": "https://github.com/SIMOSphereOS/ultracode-ai#readme",
   "bugs": {
-    "url": "https://gitlab.simo-online.com/simo/ultracode-ai/-/issues"
+    "url": "https://github.com/SIMOSphereOS/ultracode-ai/issues"
   },
   "scripts": {
     "build": "tsc -b",

@@ -242,8 +242,20 @@ publish:
   needs: [install_and_build]
   rules:
     - if: $CI_COMMIT_TAG =~ /^v\d+/
+  # Supply-Chain: Provenance ist vorbereitet. Nach Bestaetigung, dass diese
+  # GitLab-Instanz Sigstore-OIDC ausstellt, folgende Zeilen aktivieren und
+  # unten `--provenance` an den publish-Befehl anhaengen:
+  #   id_tokens:
+  #     SIGSTORE_ID_TOKEN:
+  #       aud: sigstore
   script:
+    # 1. Reproduzierbare Installation + Build
     - pnpm install --frozen-lockfile
     - pnpm build
+    # 2. Vuln-Gate: kein Publish bei High/Critical in Produktions-Deps
+    - pnpm audit --prod --audit-level=high
+    # 3. Release-Konsistenz (VERSION == package.json == .release.json == CHANGELOG)
+    - bash scripts/release-check.sh
+    # 4. npm-Auth + Publish (Lock-Step, shared -> core -> cli via Topo-Order)
     - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
     - pnpm -r publish --no-git-checks --access public
